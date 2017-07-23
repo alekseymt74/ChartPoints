@@ -5,6 +5,8 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartPoints", "ChartPoints\ChartPoints.csproj", "{0F68F55B-BC27-452D-A544-51D064978F33}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartPointsTests", "ChartPointsTests\ChartPointsTests.csproj", "{F1618B7C-5823-4672-A287-7B4A44BF1CD8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{0F68F55B-BC27-452D-A544-51D064978F33}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0F68F55B-BC27-452D-A544-51D064978F33}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0F68F55B-BC27-452D-A544-51D064978F33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1618B7C-5823-4672-A287-7B4A44BF1CD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1618B7C-5823-4672-A287-7B4A44BF1CD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1618B7C-5823-4672-A287-7B4A44BF1CD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1618B7C-5823-4672-A287-7B4A44BF1CD8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
