@@ -51,6 +51,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ChartPntToggleCmd.cs" />
     <Compile Include="ChartPointsPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -165,6 +166,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <VSCTCompile Include="ChartPointsPackage.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+    </VSCTCompile>
+    <Content Include="Resources\ChartPntToggleCmd.png" />
     <Content Include="Resources\ChartPointsPackage.ico" />
   </ItemGroup>
   <ItemGroup>
