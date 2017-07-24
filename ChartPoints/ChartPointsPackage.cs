@@ -42,6 +42,8 @@ namespace ChartPoints
   [ProvideMenuResource("Menus.ctmenu", 1)]
   public sealed class ChartPointsPackage : Package
   {
+    private ChartPntFactory factory;
+
     /// <summary>
     /// ChartPointsPackage GUID string.
     /// </summary>
@@ -52,10 +54,7 @@ namespace ChartPoints
     /// </summary>
     public ChartPointsPackage()
     {
-      // Inside this method you can place any initialization code that does not require
-      // any Visual Studio service because at this point the package object is created but
-      // not sited yet inside Visual Studio environment. The place to do all the other
-      // initialization is the Initialize method.
+      factory = new ChartPntFactoryImpl();
     }
 
     #region Package Members

@@ -14,6 +14,7 @@ namespace ChartPointsTests
   [TestClass]
   public class InitializationUTest
   {
+    public static ChartPntFactoryStub stubFactory;
     public static ChartPointsPackage chartPntPackage;
     [ClassInitialize]
     [HostType("VS IDE")]
@@ -32,9 +33,10 @@ namespace ChartPointsTests
       }
       var shellService = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsShell)) as IVsShell;
       Guid packageGuid = new Guid("a6b9b46f-0163-4255-807e-b3e04aa6ca70");
-      Microsoft.VisualStudio.Shell.Interop.IVsPackage package;
+      IVsPackage package;
+      stubFactory = new ChartPntFactoryStub();
       int res = shellService.LoadPackage(ref packageGuid, out package);
-      InitializationUTest.chartPntPackage = (ChartPointsPackage)package;
+      chartPntPackage = (ChartPointsPackage)package;
     }
 
     [TestMethod]
@@ -43,6 +45,14 @@ namespace ChartPointsTests
     public void TestThePackageAcquisition()
     {
       Assert.AreNotEqual(InitializationUTest.chartPntPackage, null);
+    }
+
+    [TestMethod]
+    [HostType("VS IDE")]
+    [TestProperty("VsHiveName", "14.0Exp")]
+    public void TestStubFactoryInjection()
+    {
+      Assert.AreEqual(InitializationUTest.stubFactory, ChartPntFactory.Instance);
     }
   }
 }
