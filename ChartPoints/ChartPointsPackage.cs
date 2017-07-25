@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -38,9 +39,13 @@ namespace ChartPoints
   [PackageRegistration(UseManagedResourcesOnly = true)]
   [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
   [Guid(ChartPointsPackage.PackageGuidString)]
-  [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
+  //[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
+  [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
+  [ProvideMenuResource("Menus.ctmenu", 1)]
   public sealed class ChartPointsPackage : Package
   {
+    private ChartPntFactory factory;
+
     /// <summary>
     /// ChartPointsPackage GUID string.
     /// </summary>
@@ -51,10 +56,6 @@ namespace ChartPoints
     /// </summary>
     public ChartPointsPackage()
     {
-      // Inside this method you can place any initialization code that does not require
-      // any Visual Studio service because at this point the package object is created but
-      // not sited yet inside Visual Studio environment. The place to do all the other
-      // initialization is the Initialize method.
     }
 
     #region Package Members
@@ -65,7 +66,11 @@ namespace ChartPoints
     /// </summary>
     protected override void Initialize()
     {
-            base.Initialize();
+      base.Initialize();
+      Globals.dte = (DTE)GetService(typeof(DTE));
+      factory = new ChartPntFactoryImpl();
+      Globals.processor = factory.CreateProcessor();
+      ChartPntToggleCmd.Initialize(this);
     }
 
     #endregion
