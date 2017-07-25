@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -38,7 +39,8 @@ namespace ChartPoints
   [PackageRegistration(UseManagedResourcesOnly = true)]
   [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
   [Guid(ChartPointsPackage.PackageGuidString)]
-  [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
+  //[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
+  [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
   [ProvideMenuResource("Menus.ctmenu", 1)]
   public sealed class ChartPointsPackage : Package
   {
@@ -54,7 +56,6 @@ namespace ChartPoints
     /// </summary>
     public ChartPointsPackage()
     {
-      factory = new ChartPntFactoryImpl();
     }
 
     #region Package Members
@@ -65,8 +66,11 @@ namespace ChartPoints
     /// </summary>
     protected override void Initialize()
     {
-            base.Initialize();
-        ChartPntToggleCmd.Initialize(this);
+      base.Initialize();
+      Globals.dte = (DTE)GetService(typeof(DTE));
+      factory = new ChartPntFactoryImpl();
+      Globals.processor = factory.CreateProcessor();
+      ChartPntToggleCmd.Initialize(this);
     }
 
     #endregion

@@ -55,6 +55,8 @@
       <Button guid="guidChartPointsPackageCmdSet" id="ChartPntToggleCmdId" priority="0x0100" type="Button">
         <Parent guid="guidChartPointsPackageCmdSet" id="MyMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Insert ChartPoint</ButtonText>
         </Strings>

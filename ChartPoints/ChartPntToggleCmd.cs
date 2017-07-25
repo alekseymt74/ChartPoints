@@ -7,6 +7,8 @@
 using System;
 using System.ComponentModel.Design;
 using System.Globalization;
+using System.Windows.Forms;
+using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -17,6 +19,10 @@ namespace ChartPoints
   /// </summary>
   internal sealed class ChartPntToggleCmd
   {
+    /// <summary>
+    /// ChartPoint object
+    /// </summary>
+    private IChartPoint chartPnt;
     /// <summary>
     /// Command ID.
     /// </summary>
@@ -56,6 +62,11 @@ namespace ChartPoints
       }
     }
 
+    /// <summary>
+    /// Checks the availability of insert chartpoint menu item
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void CheckAvailability(object sender, EventArgs e)
     {
       // get the menu that fired the event
@@ -64,7 +75,13 @@ namespace ChartPoints
       {
         menuCommand.Visible = false;
         menuCommand.Enabled = false;
-        // TODO: !!! Check !!!
+        TextSelection sel = (TextSelection)Globals.dte.ActiveDocument.Selection;
+        chartPnt = Globals.processor.Check((TextPoint)sel.ActivePoint);
+        if (chartPnt != null)
+        {
+          menuCommand.Visible = true;
+          menuCommand.Enabled = true;
+        }
       }
     }
 
@@ -98,14 +115,13 @@ namespace ChartPoints
     }
 
     /// <summary>
-    /// This function is the callback used to execute the command when the menu item is clicked.
-    /// See the constructor to see how the menu item is associated with this function using
-    /// OleMenuCommandService service and MenuCommand class.
+    /// Toggle chartpoint
     /// </summary>
     /// <param name="sender">Event sender.</param>
     /// <param name="e">Event args.</param>
     private void MenuItemCallback(object sender, EventArgs e)
     {
+      chartPnt.Toggle();
     }
   }
 }
