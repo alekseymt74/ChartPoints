@@ -43,7 +43,7 @@ namespace ChartPointsTests
       int res = shellService.LoadPackage(ref packageGuid, out package);
       chartPntPackage = (ChartPointsPackage)package;
       testProj = new TestProject(dte);
-      testProj.Open("e:/projects/tests/VSIX_VCCodeProject/test/test.sln");//!!!CHECK!!!
+      testProj.Open("../../../cpp_test_proj/test.sln");//!!!CHECK!!!
     }
 
     [TestMethod]
