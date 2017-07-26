@@ -7,7 +7,7 @@ using ChartPoints;
 
 namespace ChartPointsTests
 {
-  public class ChartPntFactoryStub : ChartPntFactory
+  public class ChartPntFactoryStub : ChartPntFactoryImpl
   {
     public ChartPntFactoryStub()
     {

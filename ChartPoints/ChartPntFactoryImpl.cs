@@ -13,7 +13,7 @@ namespace ChartPoints
   /// <summary>
   /// Implementation of IChartPntFactory
   /// </summary>
-  class ChartPntFactoryImpl : ChartPntFactory
+  public class ChartPntFactoryImpl : ChartPntFactory
   {
     public ChartPntFactoryImpl()
     {

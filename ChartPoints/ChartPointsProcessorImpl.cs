@@ -30,7 +30,7 @@ namespace ChartPoints
     public TextPoint pnt
     {
       get { return _textPnt; }
-      set { pnt = value; }
+      set { _textPnt = value; }
     }
     public VCCodeVariable var { get { return _var; } }
 
