@@ -20,6 +20,8 @@ namespace ChartPoints
     private TextPoint _textPnt;
     private VCCodeVariable _var;
     private ETargetPointStatus curStatus;
+    private Func<IChartPoint, bool> addFunc;
+    private Func<IChartPoint, bool> remFunc;
     public ETargetPointStatus status
     {
       get { return curStatus; }
@@ -31,12 +33,14 @@ namespace ChartPoints
     }
     public VCCodeVariable var { get { return _var; } }
 
-    public ChartPoint(TextPoint _startFuncPnt, TextPoint _endFuncPnt, VCCodeElement _targetClassElem)
+    public ChartPoint(TextPoint _startFuncPnt, TextPoint _endFuncPnt, VCCodeElement _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc  )
     {
       startFuncPnt = _startFuncPnt;
       endFuncPnt = _endFuncPnt;
       targetClassElem = _targetClassElem;
       status = ETargetPointStatus.Available;
+      addFunc = _addFunc;
+      remFunc = _remFunc;
     }
 
     /// <summary>
@@ -48,11 +52,34 @@ namespace ChartPoints
       switch (status)
       {
         case ETargetPointStatus.Available:
-          return (status = ETargetPointStatus.ToggledOn);
-        case ETargetPointStatus.ToggledOff:
-          return (status = ETargetPointStatus.ToggledOn);
-        case ETargetPointStatus.ToggledOn:
-          return (status = ETargetPointStatus.ToggledOff);
+          if (addFunc(this))
+            status = ETargetPointStatus.SwitchedOn;
+          return status;
+        case ETargetPointStatus.SwitchedOff:
+          return (status = ETargetPointStatus.SwitchedOn);
+        case ETargetPointStatus.SwitchedOn:
+          return (status = ETargetPointStatus.SwitchedOff);
+      }
+
+      return ETargetPointStatus.NotAvailable;
+    }
+
+    /// <summary>
+    /// Try to remove chartpoint
+    /// </summary>
+    /// <returns>new chartpoint status</returns>
+    public ETargetPointStatus Remove()
+    {
+      switch (status)
+      {
+        case ETargetPointStatus.Available:
+        case ETargetPointStatus.NotAvailable:
+          return status;
+        case ETargetPointStatus.SwitchedOff:
+        case ETargetPointStatus.SwitchedOn:
+          if (remFunc(this))
+            status = ETargetPointStatus.Available;
+          return status;
       }
 
       return ETargetPointStatus.NotAvailable;
@@ -88,15 +115,6 @@ namespace ChartPoints
         var textDoc = activeDoc.Object() as TextDocument;
         if (textDoc == null)
           break;
-        // check if chartpoint is already set
-        IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(activeDoc.FullName);
-        if (fileChartPoints != null)
-        {
-          // if is set - return it
-          IChartPoint chartPnt;
-          if (fileChartPoints.TryGetValue(caretPnt.Line, out chartPnt))
-            return chartPnt;
-        }
         // we work only with project items
         ProjectItem projItem = activeDoc.ProjectItem;
         if (projItem == null)
@@ -158,19 +176,53 @@ namespace ChartPoints
         startFuncPnt = startPnt;
         endFuncPnt = endPnt;
         // all test successfully passed
-        // create ChartPoint object & store it
-        targetPnt = new ChartPoint(startFuncPnt, endFuncPnt, targetClassElem);
-        if (fileChartPoints == null)
+        // check if chartpoint is already set
+        IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(activeDoc.FullName);
+        if (fileChartPoints != null)
         {
-          fileChartPoints = new SortedDictionary<int, IChartPoint>();
-          fileChartPoints.Add(caretPnt.Line, targetPnt);
-          _chartPoints.Add(activeDoc.FullName, fileChartPoints);
+          // if is set - return it
+          IChartPoint chartPnt;
+          if (fileChartPoints.TryGetValue(caretPnt.Line, out chartPnt))
+            return chartPnt;
         }
+        // create ChartPoint object & store it
+        targetPnt = new ChartPoint(startFuncPnt, endFuncPnt, targetClassElem, (cp) => AddChartPoint(cp), cp => RemoveChartPoint(cp));
+        //if (fileChartPoints == null)
+        //{
+        //  fileChartPoints = new SortedDictionary<int, IChartPoint>();
+        //  fileChartPoints.Add(caretPnt.Line, targetPnt);
+        //  _chartPoints.Add(activeDoc.FullName, fileChartPoints);
+        //}
 
         break;
       }
 
       return targetPnt;
+    }
+
+    protected bool AddChartPoint(IChartPoint chartPnt)
+    {
+      if (chartPnt == null || chartPnt.status != ETargetPointStatus.Available)
+        return false;
+      IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.pnt.Parent.Parent.FullName);
+      if (fileChartPoints == null)
+        fileChartPoints = new SortedDictionary<int, IChartPoint>();
+      fileChartPoints.Add(chartPnt.pnt.Line, chartPnt);
+      _chartPoints.Add(chartPnt.pnt.Parent.Parent.FullName, fileChartPoints);
+
+      return true;
+    }
+
+    protected bool RemoveChartPoint(IChartPoint chartPnt)
+    {
+      if (chartPnt == null || chartPnt.status != ETargetPointStatus.SwitchedOn || chartPnt.status != ETargetPointStatus.SwitchedOff)
+        return false;
+      IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.pnt.Parent.Parent.FullName);
+      if (fileChartPoints == null)
+        return false;
+      fileChartPoints.Remove(chartPnt.pnt.Line);
+
+      return true;
     }
 
     public IDictionary<int, IChartPoint> GetFileChartPoints(string fileName)

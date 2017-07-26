@@ -16,8 +16,8 @@ namespace ChartPoints
   {
     Available       /// ready set chartpoint at specified position
     , NotAvailable  /// can't set chartpoint at specified position
-    , ToggledOn     /// chartpoint already exists and is active
-    , ToggledOff    /// chartpoint already exists and is inactive
+    , SwitchedOn     /// chartpoint already exists and is active
+    , SwitchedOff    /// chartpoint already exists and is inactive
   }
 
   /// <summary>
@@ -27,10 +27,15 @@ namespace ChartPoints
   {
     ETargetPointStatus status { get; }
     /// <summary>
-    /// Tries to toggle chartpoint
+    /// Tries to toggle chartpoint. If changed from initial state (Available) -> adds it to IChartPointsProcessor container
     /// </summary>
     /// <returns>result of the operation (see ChartPoints::ETargetPointStatus)</returns>
     ETargetPointStatus Toggle();
+    /// <summary>
+    /// Tries to remove chartpoint. If changed from state (SwitchedOn / SwitchedOff) -> removes it from IChartPointsProcessor container
+    /// </summary>
+    /// <returns>result of the operation (see ChartPoints::ETargetPointStatus)</returns>
+    ETargetPointStatus Remove();
     /// <summary>
     /// Position of toggled chartpoint.
     /// Exact place for code injection will calculated later
