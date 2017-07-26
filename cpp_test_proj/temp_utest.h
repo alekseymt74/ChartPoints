@@ -7,5 +7,6 @@ public:
 void f1(int i);
 void f2() { }
 };
+void temp_utest::f1(int i){}
 
 #endif // _TEMP_UTEST_H
