@@ -30,11 +30,13 @@ namespace ChartPoints
     public TextPoint pnt
     {
       get { return _textPnt; }
+      set { pnt = value; }
     }
     public VCCodeVariable var { get { return _var; } }
 
-    public ChartPoint(TextPoint _startFuncPnt, TextPoint _endFuncPnt, VCCodeElement _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc  )
+    public ChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt, VCCodeElement _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc  )
     {
+      pnt = caretPnt;
       startFuncPnt = _startFuncPnt;
       endFuncPnt = _endFuncPnt;
       targetClassElem = _targetClassElem;
@@ -186,7 +188,7 @@ namespace ChartPoints
             return chartPnt;
         }
         // create ChartPoint object & store it
-        targetPnt = new ChartPoint(startFuncPnt, endFuncPnt, targetClassElem, (cp) => AddChartPoint(cp), cp => RemoveChartPoint(cp));
+        targetPnt = new ChartPoint(caretPnt, startFuncPnt, endFuncPnt, targetClassElem, (cp) => AddChartPoint(cp), cp => RemoveChartPoint(cp));
         //if (fileChartPoints == null)
         //{
         //  fileChartPoints = new SortedDictionary<int, IChartPoint>();
