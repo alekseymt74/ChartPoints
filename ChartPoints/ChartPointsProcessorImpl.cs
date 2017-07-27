@@ -219,7 +219,7 @@ namespace ChartPoints
 
     protected bool RemoveChartPoint(IChartPoint chartPnt)
     {
-      if (chartPnt == null || chartPnt.status != ETargetPointStatus.SwitchedOn || chartPnt.status != ETargetPointStatus.SwitchedOff)
+      if (chartPnt == null || (chartPnt.status != ETargetPointStatus.SwitchedOn && chartPnt.status != ETargetPointStatus.SwitchedOff))
         return false;
       IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.pnt.Parent.Parent.FullName);
       if (fileChartPoints == null)
