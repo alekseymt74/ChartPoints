@@ -74,6 +74,7 @@
         <Icon guid="guidImages" id="bmpPic1" />
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
         <Strings>
           <ButtonText>Insert ChartPoint</ButtonText>
         </Strings>

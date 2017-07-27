@@ -58,9 +58,10 @@ namespace ChartPoints
             status = ETargetPointStatus.SwitchedOn;
           return status;
         case ETargetPointStatus.SwitchedOff:
-          return (status = ETargetPointStatus.SwitchedOn);
         case ETargetPointStatus.SwitchedOn:
-          return (status = ETargetPointStatus.SwitchedOff);
+          if (remFunc(this))
+            status = ETargetPointStatus.Available;
+          return status;
       }
 
       return ETargetPointStatus.NotAvailable;
