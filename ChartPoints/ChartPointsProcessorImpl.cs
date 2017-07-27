@@ -208,9 +208,11 @@ namespace ChartPoints
         return false;
       IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.pnt.Parent.Parent.FullName);
       if (fileChartPoints == null)
+      {
         fileChartPoints = new SortedDictionary<int, IChartPoint>();
+        _chartPoints.Add(chartPnt.pnt.Parent.Parent.FullName, fileChartPoints);
+      }
       fileChartPoints.Add(chartPnt.pnt.Line, chartPnt);
-      _chartPoints.Add(chartPnt.pnt.Parent.Parent.FullName, fileChartPoints);
 
       return true;
     }
