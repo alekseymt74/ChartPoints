@@ -224,9 +224,11 @@ namespace ChartPoints
       IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.pnt.Parent.Parent.FullName);
       if (fileChartPoints == null)
         return false;
-      fileChartPoints.Remove(chartPnt.pnt.Line);
+      bool removed = fileChartPoints.Remove(chartPnt.pnt.Line);
+      if (removed && fileChartPoints.Count == 0)
+        _chartPoints.Remove(chartPnt.pnt.Parent.Parent.FullName);
 
-      return true;
+      return removed;
     }
 
     public IDictionary<int, IChartPoint> GetFileChartPoints(string fileName)
