@@ -20,14 +20,14 @@ namespace ChartPoints
     private Func<IChartPoint, bool> addFunc;
     private Func<IChartPoint, bool> remFunc;
     public ETargetPointStatus status { get; set; }
-    public TextPoint pnt { get; set; }
     public VCCodeVariable var { get; }
     public string fileName { get; set; }
+    public int lineNum { get; set; }
 
     public ChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt, VCCodeElement _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc  )
     {
-      pnt = caretPnt;
-      fileName = pnt.Parent.Parent.FullName;
+      lineNum = caretPnt.Line;
+      fileName = caretPnt.Parent.Parent.FullName;
       startFuncPnt = _startFuncPnt;
       endFuncPnt = _endFuncPnt;
       targetClassElem = _targetClassElem;
@@ -199,7 +199,7 @@ namespace ChartPoints
         fileChartPoints = new SortedDictionary<int, IChartPoint>();
         chartPoints.Add(chartPnt.fileName, fileChartPoints);
       }
-      fileChartPoints.Add(chartPnt.pnt.Line, chartPnt);
+      fileChartPoints.Add(chartPnt.lineNum, chartPnt);
       Globals.taggerUpdater.RaiseChangeTagEvent(chartPnt/*.pnt*/);
 
       return true;
@@ -212,7 +212,7 @@ namespace ChartPoints
       IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.fileName);
       if (fileChartPoints == null)
         return false;
-      bool removed = fileChartPoints.Remove(chartPnt.pnt.Line);
+      bool removed = fileChartPoints.Remove(chartPnt.lineNum);
       if (removed && fileChartPoints.Count == 0)
         chartPoints.Remove(chartPnt.fileName);
       Globals.taggerUpdater.RaiseChangeTagEvent(chartPnt/*.pnt*/);

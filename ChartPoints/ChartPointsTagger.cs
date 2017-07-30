@@ -39,7 +39,7 @@ namespace ChartPoints
       if (tempEvent != null)
       {
         //_view.TextViewLines Span.FromBounds
-        ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(chartPnt.pnt.Line - 1);
+        ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(chartPnt.lineNum - 1);
         tempEvent(this, new SnapshotSpanEventArgs(new SnapshotSpan(line.Start, 1)));
       }
     }

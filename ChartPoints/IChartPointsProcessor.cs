@@ -37,15 +37,11 @@ namespace ChartPoints
     /// <returns>result of the operation (see ChartPoints::ETargetPointStatus)</returns>
     ETargetPointStatus Remove();
     /// <summary>
-    /// Position of toggled chartpoint.
-    /// Exact place for code injection will calculated later
-    /// </summary>
-    TextPoint pnt { get; }
-    /// <summary>
     /// Cpp class variable
     /// </summary>
     VCCodeVariable var { get; }
     string fileName { get; }
+    int lineNum { get; }
   }
 
   /// <summary>
