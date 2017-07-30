@@ -45,6 +45,7 @@ namespace ChartPoints
     /// Cpp class variable
     /// </summary>
     VCCodeVariable var { get; }
+    string fileName { get; }
   }
 
   /// <summary>
@@ -68,5 +69,11 @@ namespace ChartPoints
     /// <param name="fileName">Name of the cpp file</param>
     /// <returns>chartpoints sorted by line numbers in specified file</returns>
     IDictionary<int, IChartPoint> GetFileChartPoints(string fileName);
+  }
+
+  public interface IChartPointTagUpdater
+  {
+    void AddTagger(ChartPointsTagger tagger);
+    void RaiseChangeTagEvent(IChartPoint chartPnt);
   }
 }

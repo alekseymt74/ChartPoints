@@ -12,18 +12,11 @@ namespace ChartPoints
   /// </summary>
   public class Globals
   {
-    private static DTE _dte;
-    private static IChartPointsProcessor _processor;
-    public static DTE dte
-    {
-      get { return _dte; }
-      set { _dte = value; }
-    }
-    public static IChartPointsProcessor processor
-    {
-      get { return _processor; }
-      set { _processor = value; }
-    }
+    public static DTE dte { get; set; }
+
+    public static IChartPointsProcessor processor { get; set; }
+
+    public static IChartPointTagUpdater taggerUpdater { get; set; }
   }
 
   /// <summary>
