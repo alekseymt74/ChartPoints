@@ -79,6 +79,16 @@ namespace ChartPoints
         chartPnt = Globals.processor.Check((TextPoint)sel.ActivePoint);
         if (chartPnt != null)
         {
+          switch (chartPnt.status)
+          {
+            case ETargetPointStatus.Available:
+              menuCommand.Text = "Insert ChartPoint";
+              break;
+            case ETargetPointStatus.SwitchedOn:
+            case ETargetPointStatus.SwitchedOff:
+              menuCommand.Text = "Remove ChartPoint";
+              break;
+          }
           menuCommand.Visible = true;
           menuCommand.Enabled = true;
         }

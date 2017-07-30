@@ -31,13 +31,30 @@
     group; your package should define its own command set in order to avoid collisions
     with command ids defined by other packages. -->
 
+    <Groups>
+      <Group guid="guidChartPointsPackageCmdSet" id="ChartPointsMainMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
+      </Group>
+    </Groups>
+    
+    <Menus>
+      <!-- New menu added -->
+      <Menu guid="guidChartPointsPackageCmdSet" id="ChartPointsSubMenu" priority="0x200"
+        type="Menu">
+        <Parent guid="guidChartPointsPackageCmdSet" id="ChartPointsMainMenuGroup" />
+        <Strings>
+          <ButtonText>ChartPoints</ButtonText>
+          <CommandName>ChartPoints</CommandName>
+        </Strings>
+      </Menu>
+    </Menus>
     <!-- In this section you can define new menu groups. A menu group is a container for
          other menus or buttons (commands); from a visual point of view you can see the
          group as the part of a menu contained between two lines. The parent of a group
          must be a menu. -->
     <Groups>
-      <Group guid="guidChartPointsPackageCmdSet" id="MyMenuGroup" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
+      <Group guid="guidChartPointsPackageCmdSet" id="ChartPointsMenuGroup" priority="0x0600">
+        <Parent guid="guidChartPointsPackageCmdSet" id="ChartPointsSubMenu"/>
       </Group>
     </Groups>
 
@@ -53,10 +70,11 @@
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node /> -->
       <Button guid="guidChartPointsPackageCmdSet" id="ChartPntToggleCmdId" priority="0x0100" type="Button">
-        <Parent guid="guidChartPointsPackageCmdSet" id="MyMenuGroup" />
+        <Parent guid="guidChartPointsPackageCmdSet" id="ChartPointsMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
         <Strings>
           <ButtonText>Insert ChartPoint</ButtonText>
         </Strings>
@@ -80,7 +98,9 @@
 
     <!-- This is the guid used to group the menu commands together -->
     <GuidSymbol name="guidChartPointsPackageCmdSet" value="{14366e93-ed00-403d-8d64-0061064c2054}">
-      <IDSymbol name="MyMenuGroup" value="0x1020" />
+      <IDSymbol name="ChartPointsSubMenu" value="0x1010" />
+      <IDSymbol name="ChartPointsMenuGroup" value="0x1020" />
+      <IDSymbol name="ChartPointsMainMenuGroup" value="0x1030" />
       <IDSymbol name="ChartPntToggleCmdId" value="0x0100" />
     </GuidSymbol>
 

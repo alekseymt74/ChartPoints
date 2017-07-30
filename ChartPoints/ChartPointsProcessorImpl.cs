@@ -17,26 +17,17 @@ namespace ChartPoints
     private TextPoint endFuncPnt;
     private VCCodeElement targetClassElem;
 
-    private TextPoint _textPnt;
-    private VCCodeVariable _var;
-    private ETargetPointStatus curStatus;
     private Func<IChartPoint, bool> addFunc;
     private Func<IChartPoint, bool> remFunc;
-    public ETargetPointStatus status
-    {
-      get { return curStatus; }
-      set { curStatus = value; }
-    }
-    public TextPoint pnt
-    {
-      get { return _textPnt; }
-      set { _textPnt = value; }
-    }
-    public VCCodeVariable var { get { return _var; } }
+    public ETargetPointStatus status { get; set; }
+    public VCCodeVariable var { get; }
+    public string fileName { get; set; }
+    public int lineNum { get; set; }
 
     public ChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt, VCCodeElement _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc  )
     {
-      pnt = caretPnt;
+      lineNum = caretPnt.Line;
+      fileName = caretPnt.Parent.Parent.FullName;
       startFuncPnt = _startFuncPnt;
       endFuncPnt = _endFuncPnt;
       targetClassElem = _targetClassElem;
@@ -58,9 +49,10 @@ namespace ChartPoints
             status = ETargetPointStatus.SwitchedOn;
           return status;
         case ETargetPointStatus.SwitchedOff:
-          return (status = ETargetPointStatus.SwitchedOn);
         case ETargetPointStatus.SwitchedOn:
-          return (status = ETargetPointStatus.SwitchedOff);
+          if (remFunc(this))
+            status = ETargetPointStatus.Available;
+          return status;
       }
 
       return ETargetPointStatus.NotAvailable;
@@ -93,16 +85,11 @@ namespace ChartPoints
   /// </summary>
   public class ChartPointsProcessor : IChartPointsProcessor
   {
-    protected IDictionary<string, IDictionary<int, IChartPoint>> _chartPoints;
-
-    public IDictionary<string, IDictionary<int, IChartPoint>> chartPoints
-    {
-      get { return _chartPoints; }
-    }
+    public IDictionary<string, IDictionary<int, IChartPoint>> chartPoints { get; set; }
 
     public ChartPointsProcessor()
     {
-      _chartPoints = new SortedDictionary<string, IDictionary<int, IChartPoint>>();
+      chartPoints = new SortedDictionary<string, IDictionary<int, IChartPoint>>();
     }
     public IChartPoint Check(TextPoint caretPnt)
     {
@@ -193,7 +180,7 @@ namespace ChartPoints
         //{
         //  fileChartPoints = new SortedDictionary<int, IChartPoint>();
         //  fileChartPoints.Add(caretPnt.Line, targetPnt);
-        //  _chartPoints.Add(activeDoc.FullName, fileChartPoints);
+        //  chartPoints.Add(activeDoc.FullName, fileChartPoints);
         //}
 
         break;
@@ -206,13 +193,14 @@ namespace ChartPoints
     {
       if (chartPnt == null || chartPnt.status != ETargetPointStatus.Available)
         return false;
-      IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.pnt.Parent.Parent.FullName);
+      IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.fileName);
       if (fileChartPoints == null)
       {
         fileChartPoints = new SortedDictionary<int, IChartPoint>();
-        _chartPoints.Add(chartPnt.pnt.Parent.Parent.FullName, fileChartPoints);
+        chartPoints.Add(chartPnt.fileName, fileChartPoints);
       }
-      fileChartPoints.Add(chartPnt.pnt.Line, chartPnt);
+      fileChartPoints.Add(chartPnt.lineNum, chartPnt);
+      Globals.taggerUpdater.RaiseChangeTagEvent(chartPnt/*.pnt*/);
 
       return true;
     }
@@ -221,12 +209,13 @@ namespace ChartPoints
     {
       if (chartPnt == null || (chartPnt.status != ETargetPointStatus.SwitchedOn && chartPnt.status != ETargetPointStatus.SwitchedOff))
         return false;
-      IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.pnt.Parent.Parent.FullName);
+      IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.fileName);
       if (fileChartPoints == null)
         return false;
-      bool removed = fileChartPoints.Remove(chartPnt.pnt.Line);
+      bool removed = fileChartPoints.Remove(chartPnt.lineNum);
       if (removed && fileChartPoints.Count == 0)
-        _chartPoints.Remove(chartPnt.pnt.Parent.Parent.FullName);
+        chartPoints.Remove(chartPnt.fileName);
+      Globals.taggerUpdater.RaiseChangeTagEvent(chartPnt/*.pnt*/);
 
       return removed;
     }
@@ -234,7 +223,7 @@ namespace ChartPoints
     public IDictionary<int, IChartPoint> GetFileChartPoints(string fileName)
     {
       IDictionary<int, IChartPoint> fileChartPoints;
-      _chartPoints.TryGetValue(fileName, out fileChartPoints);
+      chartPoints.TryGetValue(fileName, out fileChartPoints);
 
       return fileChartPoints;
     }
