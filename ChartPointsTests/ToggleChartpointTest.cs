@@ -116,7 +116,7 @@ namespace ChartPointsTests
       chartPnt.Toggle();
       Assert.AreEqual(chartPnt.status, ETargetPointStatus.SwitchedOn);
       chartPnt.Toggle();
-      Assert.AreEqual(chartPnt.status, ETargetPointStatus.SwitchedOff);
+      Assert.AreEqual(chartPnt.status, ETargetPointStatus.Available);
     }
 
     [TestMethod]
@@ -127,6 +127,7 @@ namespace ChartPointsTests
       header.SetPos(pos_f2_body);
       IChartPoint chartPnt1 = ChartPoints.Globals.processor.Check(header.ActivePoint);
       Assert.AreNotEqual(chartPnt1, null);
+      chartPnt1.Toggle();
       header.SetPos(pos_f2_body + 1);
       IChartPoint chartPnt2 = ChartPoints.Globals.processor.Check(header.ActivePoint);
       Assert.AreEqual(chartPnt1, chartPnt2);
