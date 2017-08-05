@@ -67,9 +67,15 @@ namespace ChartPoints
     IDictionary<int, IChartPoint> GetFileChartPoints(string fileName);
   }
 
+  public interface IChartPointsTagger
+  {
+    void RaiseTagsChangedEvent(IChartPoint chartPnt);
+    bool GetFileName(out string fn);
+  }
+
   public interface IChartPointTagUpdater
   {
-    void AddTagger(ChartPointsTagger tagger);
+    void AddTagger(IChartPointsTagger tagger);
     void RaiseChangeTagEvent(IChartPoint chartPnt);
   }
 }

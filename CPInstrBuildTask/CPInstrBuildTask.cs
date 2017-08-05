@@ -8,6 +8,7 @@ using Microsoft.Build.Utilities;
 using Task = Microsoft.Build.Utilities.Task;
 using System.Collections;
 using System.Xml;
+using System.IO;
 
 namespace ChartPoints
 {

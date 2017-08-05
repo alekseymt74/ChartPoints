@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartPointsTests", "ChartPo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CPInstrBuildTask", "CPInstrBuildTask\CPInstrBuildTask.csproj", "{449B3905-9540-4BD1-A920-D47092C6520A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartPointsInstrTests", "ChartPointsInstrTests\ChartPointsInstrTests.csproj", "{BC510CD9-84D0-43CE-9F92-65890BBC6ABD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartPointsLib", "ChartPointsLib\ChartPointsLib.csproj", "{82A926D0-46E9-42D7-80C2-FF4F14F467AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{449B3905-9540-4BD1-A920-D47092C6520A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{449B3905-9540-4BD1-A920-D47092C6520A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{449B3905-9540-4BD1-A920-D47092C6520A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC510CD9-84D0-43CE-9F92-65890BBC6ABD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC510CD9-84D0-43CE-9F92-65890BBC6ABD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC510CD9-84D0-43CE-9F92-65890BBC6ABD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC510CD9-84D0-43CE-9F92-65890BBC6ABD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82A926D0-46E9-42D7-80C2-FF4F14F467AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82A926D0-46E9-42D7-80C2-FF4F14F467AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82A926D0-46E9-42D7-80C2-FF4F14F467AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82A926D0-46E9-42D7-80C2-FF4F14F467AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

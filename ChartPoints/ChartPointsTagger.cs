@@ -17,7 +17,7 @@ namespace ChartPoints
   {
 
   }
-  public class ChartPointsTagger : ITagger<ChartPointTag>
+  public class ChartPointsTagger : ITagger<ChartPointTag>, IChartPointsTagger
   {
     private ITextView _view;
     public ITextBuffer _buffer;
@@ -33,7 +33,7 @@ namespace ChartPoints
       //_buffer = ((ITextView)sender).TextBuffer;
     }
 
-    internal void RaiseTagsChangedEvent(IChartPoint chartPnt)
+    public void RaiseTagsChangedEvent(IChartPoint chartPnt)
     {
       var tempEvent = TagsChanged;
       if (tempEvent != null)
@@ -43,6 +43,23 @@ namespace ChartPoints
         tempEvent(this, new SnapshotSpanEventArgs(new SnapshotSpan(line.Start, 1)));
       }
     }
+
+    public bool GetFileName(out string fn)
+    {
+      ITextDocument textDoc;
+      var rc = _buffer.Properties.TryGetProperty<ITextDocument>(
+        typeof(ITextDocument), out textDoc);
+      if (rc)
+      {
+        fn = textDoc.FilePath;
+        return true;
+      }
+      else
+        fn = null;
+
+      return rc;
+    }
+
 
     IEnumerable<ITagSpan<ChartPointTag>> ITagger<ChartPointTag>.GetTags(NormalizedSnapshotSpanCollection spans)
     {
@@ -77,19 +94,17 @@ namespace ChartPoints
 
   public class ChartPointTagUpdater : IChartPointTagUpdater
   {
-    private SortedDictionary<string, ChartPointsTagger> taggers;
+    private SortedDictionary<string, IChartPointsTagger> taggers;
 
-    public void AddTagger(ChartPointsTagger tagger)
+    public void AddTagger(IChartPointsTagger tagger)
     {
-      ITextDocument textDoc;
-      var rc = tagger._buffer.Properties.TryGetProperty<ITextDocument>(
-        typeof(ITextDocument), out textDoc);
-      if (rc == true)
-        taggers[textDoc.FilePath] = tagger;
+      string fn;
+      if (tagger.GetFileName(out fn))
+        taggers[fn] = tagger;
     }
     public ChartPointTagUpdater()
     {
-      taggers = new SortedDictionary<string, ChartPointsTagger>();
+      taggers = new SortedDictionary<string, IChartPointsTagger>();
       //var componentModel = (IComponentModel)GetService(typeof(SComponentModel));
       //var textManager = (IVsTextManager)Package.GetGlobalService(typeof(SVsTextManager));
       //IVsTextView activeView = null;
@@ -99,7 +114,7 @@ namespace ChartPoints
     }
     public void RaiseChangeTagEvent(IChartPoint chartPnt)
     {
-      ChartPointsTagger tagger;
+      IChartPointsTagger tagger;
       taggers.TryGetValue(chartPnt.fileName, out tagger);
       tagger.RaiseTagsChangedEvent(chartPnt);
     }
