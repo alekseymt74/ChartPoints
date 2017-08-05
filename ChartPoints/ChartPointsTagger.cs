@@ -21,7 +21,7 @@ namespace ChartPoints
   {
     private ITextView _view;
     public ITextBuffer _buffer;
-    internal ChartPointsTagger(ITextView view, ITextBuffer buffer)
+	  internal ChartPointsTagger(ITextView view, ITextBuffer buffer)
     {
       _view = view;
       _buffer = buffer;
@@ -30,7 +30,7 @@ namespace ChartPoints
 
     void OnViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
     {
-      _buffer = ((ITextView)sender).TextBuffer;
+      //_buffer = ((ITextView)sender).TextBuffer;
     }
 
     internal void RaiseTagsChangedEvent(IChartPoint chartPnt)
@@ -47,7 +47,10 @@ namespace ChartPoints
     IEnumerable<ITagSpan<ChartPointTag>> ITagger<ChartPointTag>.GetTags(NormalizedSnapshotSpanCollection spans)
     {
       IDictionary<int, IChartPoint> fileChartPoints;
-      Globals.processor.chartPoints.TryGetValue(Globals.dte.ActiveDocument.FullName, out fileChartPoints);
+      ITextDocument thisTextDoc;
+      var rc = this._buffer.Properties.TryGetProperty<ITextDocument>(
+        typeof(ITextDocument), out thisTextDoc);
+      Globals.processor.chartPoints.TryGetValue(thisTextDoc.FilePath/*Globals.dte.ActiveDocument.FullName*/, out fileChartPoints);
       if (fileChartPoints != null)
       {
         foreach (SnapshotSpan span in spans)
