@@ -45,5 +45,10 @@ namespace ChartPoints
     /// </summary>
     /// <returns>IChartPointsProcessor</returns>
     public virtual IChartPointsProcessor CreateProcessor() {  return null; }
+    /// <summary>
+    /// Creates main ChartPoints object
+    /// </summary>
+    /// <returns>IChartPointsProcessor</returns>
+    public virtual ICPOrchestrator CreateOrchestrator() { return null; }
   }
 }

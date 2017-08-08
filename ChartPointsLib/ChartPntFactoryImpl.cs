@@ -27,5 +27,10 @@ namespace ChartPoints
     {
       return new ChartPointsProcessor();
     }
+
+    public override ICPOrchestrator CreateOrchestrator()
+    {
+      return new CPOrchestrator();
+    }
   }
 }

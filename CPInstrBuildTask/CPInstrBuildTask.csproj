@@ -45,6 +45,12 @@
     <Compile Include="CPInstrBuildTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ChartPointsLib\ChartPointsLib.csproj">
+      <Project>{82a926d0-46e9-42d7-80c2-ff4f14f467ad}</Project>
+      <Name>ChartPointsLib</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

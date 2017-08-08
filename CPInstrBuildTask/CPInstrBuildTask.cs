@@ -9,27 +9,31 @@ using Task = Microsoft.Build.Utilities.Task;
 using System.Collections;
 using System.Xml;
 using System.IO;
+using ChartPoints;
 
-namespace ChartPoints
+namespace ChartPointsBuilder
 {
-  internal class ChartPoint
-  {
-    public bool enabled { get; set; }
-    public string var { get; set; }
 
-    internal ChartPoint()
-    {
-      enabled = false;
-    }
-  }
-
-  internal class FileChartPoints
+  public class FileChartPoints
   {
-    public IDictionary<int, ChartPoint> chartPoints { get; set; }
+    public IDictionary<int, ChartPointData> chartPoints { get; set; }
 
     internal FileChartPoints()
     {
-      chartPoints = new SortedDictionary<int, ChartPoint>();
+      chartPoints = new SortedDictionary<int, ChartPointData>();
+    }
+  }
+
+  public class CPConfLoader : ChartPoints.CPConfLoader
+  {
+    public void LoadChartPoints(ITaskItem[] InputChartPoints, Func<string, Action<int, ChartPointData> > filesChartPoints)
+    {
+      foreach (var item in InputChartPoints)
+      {
+        Action<int, ChartPointData> addCPDataAction = filesChartPoints(item.ItemSpec);
+        string metadata = item.GetMetadata("ChartPoints");
+        LoadChartPoint(metadata, addCPDataAction);
+      }
     }
   }
 
@@ -50,6 +54,7 @@ namespace ChartPoints
     [Output]
     public bool HeaderFilesChanged { get; set; }
 
+    private CPConfLoader confLoader;
     private IDictionary<string, FileChartPoints> filesChartPoints { get; set; }
 
     private bool CheckFiles(ref ITaskItem[] inTaskItems, ref ITaskItem[] outTaskItems)
@@ -75,10 +80,21 @@ namespace ChartPoints
           int pos = 0;
           foreach (var cp in chartPoints.chartPoints)
           {
-            for (int i = pos; i < cp.Key; ++i)
-              streamWriter.WriteLine(txt[i]);
-            streamWriter.WriteLine("std::cout << i << std::endl;");
-            pos = cp.Key;
+            if (cp.Key <= txt.Length)
+            {
+              for (int i = pos; i < cp.Key; ++i)
+                streamWriter.WriteLine(txt[i]);
+              string curLine = txt[cp.Key];
+              if (cp.Value.linePos <= curLine.Length)
+              {
+                string beforeInj = curLine.Substring(0, cp.Value.linePos);
+                streamWriter.WriteLine(beforeInj);
+                streamWriter.WriteLine("std::cout << i << std::endl;");
+                string afterInj = curLine.Substring(cp.Value.linePos, curLine.Length - cp.Value.linePos);
+                streamWriter.WriteLine(afterInj);
+                pos = cp.Key + 1;
+              }
+            }
           }
           for (int i = pos; i < txt.Length; ++i)
             streamWriter.WriteLine(txt[i]);
@@ -89,132 +105,25 @@ namespace ChartPoints
         }
         else
           items.Add(item);
-        //if (item.ItemSpec == "test_01.h")
-        //{
-        //  //string content;
-        //  //hostTaskFileManager.GetFileContents("test_01.h", out content);
-        //  //string ret = content.Replace("++i;", "std::cout << ++i << std::endl");
-        //  //hostTaskFileManager.PutGeneratedFileContents("test_01.h", content);
-
-        //  ITaskItem replacedItem = new TaskItem("test_01.my.h");
-        //  items.Add(replacedItem);
-        //  changed = true;
-        //}
-        //else if (item.ItemSpec == "test.cpp")
-        //{
-        //  ITaskItem replacedItem = new TaskItem("test.my.cpp");
-        //  items.Add(replacedItem);
-        //  changed = true;
-        //}
-        //else
-        //{
-        //  items.Add(item);
-        //}
       }
       outTaskItems = (ITaskItem[])items.ToArray(typeof(ITaskItem));
 
       return changed;
     }
-    enum ETag
-    {
-      Unknown
-      , TagVariable
-      , TagBeforeLine
-      , TagEnable
-    };
-    private bool ChartPointsFromXml(String xml, ref FileChartPoints fileChartPoints)
-    {
-      bool ret = false;
-      try
-      {
-        XmlTextReader tr = new XmlTextReader(xml, XmlNodeType.Element, null);
-        {
-          try
-          {
-            ChartPoint cp = null;
-            ETag tag = ETag.Unknown;
-            int beforeLine = -1;
-            while (tr.Read())
-            {
-              switch (tr.NodeType)
-              {
-                case XmlNodeType.Element:
-                  switch (tr.Name)
-                  {
-                    case "ChartPoint":
-                      cp = new ChartPoint();
-                      break;
-                    case "Variable":
-                      //if (cp == null)
-                      //  throw;
-                      tag = ETag.TagVariable;
-                      break;
-                    case "BeforeLine":
-                      //if (cp == null)
-                      //  throw;
-                      tag = ETag.TagBeforeLine;
-                      break;
-                    case "Enabled":
-                      //if (cp == null)
-                      //  throw;
-                      tag = ETag.TagEnable;
-                      break;
-                    default:
-                      tag = ETag.Unknown;
-                      break;
-                  }
-                  break;
-                case XmlNodeType.Text:
-                  switch (tag)
-                  {
-                    case ETag.TagVariable:
-                      if (cp != null)
-                        cp.var = tr.Value;
-                      break;
-                    case ETag.TagBeforeLine:
-                      beforeLine = Convert.ToInt32(tr.Value, 10);
-                      break;
-                    case ETag.TagEnable:
-                      if (cp != null)
-                        cp.enabled = Convert.ToBoolean(tr.Value);
-                      break;
-                  }
-                  break;
-                case XmlNodeType.EndElement:
-                  if (tr.Name == "ChartPoint" && cp != null && beforeLine >= 0)
-                  {
-                    fileChartPoints.chartPoints.Add(beforeLine, cp);
-                    cp = null;
-                  }
-                  break;
-              }
-              Console.WriteLine("NodeType: {0} NodeName: {1}", tr.NodeType, tr.Name);
-            }
-          }
-          catch (InvalidOperationException)
-          {
-            ;
-          }
-        }
-      }
-      catch (Exception ex)
-      {
-      }
 
-      return ret;
-    }
     public override bool Execute()
     {
+      confLoader = new CPConfLoader();
       filesChartPoints = new SortedDictionary<string, FileChartPoints>();
-      foreach (var chartpointFile in InputChartPoints)
+      IDictionary<string, FileChartPoints> retFilesChartPoints = filesChartPoints;
+      confLoader.LoadChartPoints(InputChartPoints, (fname) =>
       {
         FileChartPoints fileChartPoints = new FileChartPoints();
-        filesChartPoints.Add(chartpointFile.ItemSpec, fileChartPoints);
-        string data = chartpointFile.GetMetadata("ChartPoints");
-        data = data.Replace("xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\"", "");
-        bool ret = ChartPointsFromXml(data, ref fileChartPoints);
-      }
-      if (filesChartPoints.Any())
+        filesChartPoints.Add(fname, fileChartPoints);
+        Action<int, ChartPointData> act = (i, data) => fileChartPoints.chartPoints.Add(i,data);
+        return act;
+      });
+      if(filesChartPoints.Any())
       {
         SrcFilesChanged = false;
         Log.LogMessage(MessageImportance.High, "***Looking for files with chartpoints...");

@@ -39,7 +39,7 @@ namespace ChartPoints
       if (tempEvent != null)
       {
         //_view.TextViewLines Span.FromBounds
-        ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(chartPnt.lineNum - 1);
+        ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(chartPnt.data.lineNum - 1);
         tempEvent(this, new SnapshotSpanEventArgs(new SnapshotSpan(line.Start, 1)));
       }
     }
@@ -67,7 +67,7 @@ namespace ChartPoints
       ITextDocument thisTextDoc;
       var rc = this._buffer.Properties.TryGetProperty<ITextDocument>(
         typeof(ITextDocument), out thisTextDoc);
-      Globals.processor.chartPoints.TryGetValue(thisTextDoc.FilePath/*Globals.dte.ActiveDocument.FullName*/, out fileChartPoints);
+      Globals.processor.data.chartPoints.TryGetValue(thisTextDoc.FilePath/*Globals.dte.ActiveDocument.FullName*/, out fileChartPoints);
       if (fileChartPoints != null)
       {
         foreach (SnapshotSpan span in spans)
@@ -115,7 +115,7 @@ namespace ChartPoints
     public void RaiseChangeTagEvent(IChartPoint chartPnt)
     {
       IChartPointsTagger tagger;
-      taggers.TryGetValue(chartPnt.fileName, out tagger);
+      taggers.TryGetValue(chartPnt.data.fileName, out tagger);
       tagger.RaiseTagsChangedEvent(chartPnt);
     }
   }

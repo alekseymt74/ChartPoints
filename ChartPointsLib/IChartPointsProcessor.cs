@@ -20,6 +20,15 @@ namespace ChartPoints
     , SwitchedOff    /// chartpoint already exists and is inactive
   }
 
+  public interface IChartPointData
+  {
+    string fileName { get; }
+    int lineNum { get; }
+    int linePos { get; }
+    bool enabled { get; }
+    string varName { get; }
+  }
+
   /// <summary>
   /// Interface for chartpoint object
   /// </summary>
@@ -40,8 +49,15 @@ namespace ChartPoints
     /// Cpp class variable
     /// </summary>
     VCCodeVariable var { get; }
-    string fileName { get; }
-    int lineNum { get; }
+    IChartPointData data { get; }
+  }
+
+  public interface IChartPointsProcessorData
+  {
+    /// <summary>
+    /// Container of all chartpoints set in current cpp project
+    /// </summary>
+    IDictionary<string, IDictionary<int, IChartPoint>> chartPoints { get; }
   }
 
   /// <summary>
@@ -49,10 +65,7 @@ namespace ChartPoints
   /// </summary>
   public interface IChartPointsProcessor
   {
-    /// <summary>
-    /// Container of all chartpoints set in current cpp project
-    /// </summary>
-    IDictionary<string, IDictionary<int, IChartPoint>> chartPoints { get; }
+    IChartPointsProcessorData data { get; }
     /// <summary>
     /// Checks the ability to insert chartpoint at specified position
     /// </summary>
@@ -65,6 +78,9 @@ namespace ChartPoints
     /// <param name="fileName">Name of the cpp file</param>
     /// <returns>chartpoints sorted by line numbers in specified file</returns>
     IDictionary<int, IChartPoint> GetFileChartPoints(string fileName);
+    //bool AddChartPoint(IChartPoint chartPnt);
+    bool AddChartPoint(IChartPointData chartPntData);
+    IDictionary<int, IChartPoint> GetOrCreateFileChartPoints(string fname);
   }
 
   public interface IChartPointsTagger

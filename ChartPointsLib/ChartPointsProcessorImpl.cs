@@ -8,6 +8,23 @@ using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
 {
+  public class ChartPointData : IChartPointData
+  {
+    public string fileName { get; set; }
+    public int lineNum { get; set; }
+    public int linePos { get; set; }
+    public bool enabled { get; set; }
+    public string varName { get; set; }
+    public ChartPointData() { }
+    public ChartPointData(IChartPointData _data)
+    {
+      fileName = _data.fileName;
+      lineNum = _data.lineNum;
+      linePos = _data.linePos;
+      enabled = _data.enabled;
+      varName = _data.varName;
+    }
+  }
   /// <summary>
   /// Implementation of IChartPoint interface
   /// </summary>
@@ -21,17 +38,39 @@ namespace ChartPoints
     private Func<IChartPoint, bool> remFunc;
     public ETargetPointStatus status { get; set; }
     public VCCodeVariable var { get; }
-    public string fileName { get; set; }
-    public int lineNum { get; set; }
+    protected ChartPointData theData { get; set; }
 
-    public ChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt, VCCodeElement _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc  )
+    public IChartPointData data
     {
-      lineNum = caretPnt.Line;
-      fileName = caretPnt.Parent.Parent.FullName;
-      startFuncPnt = _startFuncPnt;
-      endFuncPnt = _endFuncPnt;
+      get { return theData; }
+      set { theData = (ChartPointData)value; }
+    }
+    protected ChartPoint() { }
+    public ChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt
+      , VCCodeElement _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+    {
+      theData = new ChartPointData { enabled = false };
+      theData.lineNum = caretPnt.Line;
+      theData.linePos = caretPnt.LineCharOffset;
+      theData.fileName = caretPnt.Parent.Parent.FullName;
+      /*???*/ startFuncPnt = _startFuncPnt;
+      /*???*/ endFuncPnt = _endFuncPnt;
       targetClassElem = _targetClassElem;
       status = ETargetPointStatus.Available;
+      addFunc = _addFunc;
+      remFunc = _remFunc;
+    }
+
+    public ChartPoint(IChartPointData _data, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+    {
+      theData = new ChartPointData(_data);
+      //startFuncPnt = _startFuncPnt;
+      //endFuncPnt = _endFuncPnt;
+      //targetClassElem = _targetClassElem;
+      if (data.enabled)
+        status = ETargetPointStatus.SwitchedOn;
+      else
+        status = ETargetPointStatus.SwitchedOff;
       addFunc = _addFunc;
       remFunc = _remFunc;
     }
@@ -80,16 +119,28 @@ namespace ChartPoints
     }
   }
 
+  public class ChartPointsProcessorData : IChartPointsProcessorData
+  {
+    /// <summary>
+    /// Container of all chartpoints set in current cpp project
+    /// </summary>
+    public IDictionary<string, IDictionary<int, IChartPoint>> chartPoints { get; set; }
+
+    public ChartPointsProcessorData()
+    {
+      chartPoints = new SortedDictionary<string, IDictionary<int, IChartPoint>>();
+    }
+  }
   /// <summary>
   /// Implementation of IChartPointsProcessor
   /// </summary>
   public class ChartPointsProcessor : IChartPointsProcessor
   {
-    public IDictionary<string, IDictionary<int, IChartPoint>> chartPoints { get; set; }
+    public IChartPointsProcessorData data { get; set; }
 
     public ChartPointsProcessor()
     {
-      chartPoints = new SortedDictionary<string, IDictionary<int, IChartPoint>>();
+      data = new ChartPointsProcessorData();
     }
     public IChartPoint Check(TextPoint caretPnt)
     {
@@ -189,18 +240,29 @@ namespace ChartPoints
       return targetPnt;
     }
 
+    public IDictionary<int, IChartPoint> GetOrCreateFileChartPoints(string fname)
+    {
+      IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(fname);
+      if (fileChartPoints == null)
+      {
+        fileChartPoints = new SortedDictionary<int, IChartPoint>();
+        data.chartPoints.Add(fname, fileChartPoints);
+      }
+
+      return fileChartPoints;
+    }
+    protected void StoreChartPnt(IChartPoint chartPnt)
+    {
+      IDictionary<int, IChartPoint> fileChartPoints = GetOrCreateFileChartPoints(chartPnt.data.fileName);
+      fileChartPoints.Add(chartPnt.data.lineNum, chartPnt);
+    }
+    /*public virtual*/
     protected bool AddChartPoint(IChartPoint chartPnt)
     {
       if (chartPnt == null || chartPnt.status != ETargetPointStatus.Available)
         return false;
-      IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.fileName);
-      if (fileChartPoints == null)
-      {
-        fileChartPoints = new SortedDictionary<int, IChartPoint>();
-        chartPoints.Add(chartPnt.fileName, fileChartPoints);
-      }
-      fileChartPoints.Add(chartPnt.lineNum, chartPnt);
-      Globals.taggerUpdater.RaiseChangeTagEvent(chartPnt/*.pnt*/);
+      StoreChartPnt(chartPnt);
+      Globals.taggerUpdater.RaiseChangeTagEvent(chartPnt);
 
       return true;
     }
@@ -209,12 +271,12 @@ namespace ChartPoints
     {
       if (chartPnt == null || (chartPnt.status != ETargetPointStatus.SwitchedOn && chartPnt.status != ETargetPointStatus.SwitchedOff))
         return false;
-      IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.fileName);
+      IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.data.fileName);
       if (fileChartPoints == null)
         return false;
-      bool removed = fileChartPoints.Remove(chartPnt.lineNum);
+      bool removed = fileChartPoints.Remove(chartPnt.data.lineNum);
       if (removed && fileChartPoints.Count == 0)
-        chartPoints.Remove(chartPnt.fileName);
+        data.chartPoints.Remove(chartPnt.data.fileName);
       Globals.taggerUpdater.RaiseChangeTagEvent(chartPnt/*.pnt*/);
 
       return removed;
@@ -223,9 +285,16 @@ namespace ChartPoints
     public IDictionary<int, IChartPoint> GetFileChartPoints(string fileName)
     {
       IDictionary<int, IChartPoint> fileChartPoints;
-      chartPoints.TryGetValue(fileName, out fileChartPoints);
+      data.chartPoints.TryGetValue(fileName, out fileChartPoints);
 
       return fileChartPoints;
+    }
+    public bool AddChartPoint(IChartPointData chartPntData)
+    {
+      IDictionary<int, IChartPoint> fileChartPoints = Globals.processor.GetOrCreateFileChartPoints(chartPntData.fileName);
+      fileChartPoints.Add(chartPntData.lineNum, new ChartPoint(chartPntData, (cp) => AddChartPoint(cp), cp => RemoveChartPoint(cp)));
+
+      return true;
     }
   }
 

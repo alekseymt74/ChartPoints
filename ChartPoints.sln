@@ -4,12 +4,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartPoints", "ChartPoints\ChartPoints.csproj", "{0F68F55B-BC27-452D-A544-51D064978F33}"
+	ProjectSection(ProjectDependencies) = postProject
+		{449B3905-9540-4BD1-A920-D47092C6520A} = {449B3905-9540-4BD1-A920-D47092C6520A}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartPointsTests", "ChartPointsTests\ChartPointsTests.csproj", "{F1618B7C-5823-4672-A287-7B4A44BF1CD8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CPInstrBuildTask", "CPInstrBuildTask\CPInstrBuildTask.csproj", "{449B3905-9540-4BD1-A920-D47092C6520A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartPointsInstrTests", "ChartPointsInstrTests\ChartPointsInstrTests.csproj", "{BC510CD9-84D0-43CE-9F92-65890BBC6ABD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{449B3905-9540-4BD1-A920-D47092C6520A} = {449B3905-9540-4BD1-A920-D47092C6520A}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartPointsLib", "ChartPointsLib\ChartPointsLib.csproj", "{82A926D0-46E9-42D7-80C2-FF4F14F467AD}"
 EndProject
