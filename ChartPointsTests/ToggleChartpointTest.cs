@@ -17,16 +17,27 @@ namespace ChartPointsTests
     private int pos_f2_body;
     private int pos_f1_body;
     private int posHeaderEnd;
+    private int pos_constr1_body;
+    private int pos_constr2_body;
 
     public ToggleChartpointTest()
     {
+      src = InitializationUTest.testProj.projSrcItem;
+      src.Open(true);
+      string utestSrcText = "#include \"temp_utest.h\"\n#include <iostream>\nvoid temp_utest::f3()\n{\n++j;\n}";
+      src.SetContent(utestSrcText);
+
       header = InitializationUTest.testProj.projHeaderItem;
       header.Open(true);
 
       string utestHeaderText = "#ifndef _TEMP_UTEST_H\n#define _TEMP_UTEST_H\n\n"
-                  + "class temp_utest\n{\npublic:\nvoid f1(int i);\nvoid f2() { ";
-      pos_f2_body = utestHeaderText.Length;
-      utestHeaderText += "}\n};\nvoid temp_utest::f1(int i){";
+                               + "class temp_utest\n{\nint j;\npublic:\ntemp_utest():j(0){";
+      pos_constr1_body = utestHeaderText.Length + 1;
+      utestHeaderText += "}\ntemp_utest(int _j):j(_j){";
+      pos_constr2_body = utestHeaderText.Length + 1;
+      utestHeaderText += "}\nvoid f1(int i);\nvoid f2() { ";
+      pos_f2_body = utestHeaderText.Length + 1 - 1;
+      utestHeaderText += "}\nvoid f3();\n};\nvoid temp_utest::f1(int i){";
       pos_f1_body = utestHeaderText.Length + 1;
       utestHeaderText += "}\n\n#endif // _TEMP_UTEST_H";
       posHeaderEnd = utestHeaderText.Length;
@@ -88,7 +99,19 @@ namespace ChartPointsTests
     [TestProperty("VsHiveName", "14.0Exp")]
     public void TestChartpointAvailability()
     {
-      CheckRange(header, 1, pos_f2_body, cp => { Assert.AreEqual(cp, null); });
+      CheckRange(header, 1, pos_constr1_body, cp => { Assert.AreEqual(cp, null); });
+      CheckRange(header, pos_constr1_body, pos_constr1_body + 1, cp =>
+      {
+        Assert.AreNotEqual(cp, null);
+        Assert.AreEqual(cp.status, ETargetPointStatus.Available);
+      });
+      CheckRange(header, pos_constr1_body + 1, pos_constr2_body, cp => { Assert.AreEqual(cp, null); });
+      CheckRange(header, pos_constr2_body, pos_constr2_body + 1, cp =>
+      {
+        Assert.AreNotEqual(cp, null);
+        Assert.AreEqual(cp.status, ETargetPointStatus.Available);
+      });
+      CheckRange(header, pos_constr2_body + 1, pos_f2_body, cp => { Assert.AreEqual(cp, null); });
       CheckRange(header, pos_f2_body, pos_f2_body + 2, cp =>
       {
         Assert.AreNotEqual(cp, null);

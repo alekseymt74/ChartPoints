@@ -16,7 +16,7 @@ class test_01
 	uint32_t ui32_01;
 	my_int my_i_01;
 public:
-	void f_01();
-	void f_02();
-	void f_03() {}
+	void func_01();
+	void func_02();
+	void func_03() {}
 };

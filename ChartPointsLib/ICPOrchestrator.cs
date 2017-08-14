@@ -8,7 +8,7 @@ namespace ChartPoints
 {
   public interface ICPOrchestrator
   {
-    bool CreateSolutionConfigurations();
+    bool InitSolutionConfigurations();
     bool RemoveSolutionConfigurations();
     bool Orchestrate(string projConfFile);
     bool SaveProjChartPonts(string projConfFile);

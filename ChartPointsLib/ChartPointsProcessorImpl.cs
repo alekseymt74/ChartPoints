@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using EnvDTE;
@@ -8,21 +9,32 @@ using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
 {
+  [DataContract]
   public class ChartPointData : IChartPointData
   {
+    [DataMember]
     public string fileName { get; set; }
+    [DataMember]
+    public string fileFullName { get; set;  }
+    [DataMember]
     public int lineNum { get; set; }
+    [DataMember]
     public int linePos { get; set; }
+    [DataMember]
     public bool enabled { get; set; }
+    [DataMember]
     public string varName { get; set; }
+    public string className { get; set; }
     public ChartPointData() { }
     public ChartPointData(IChartPointData _data)
     {
       fileName = _data.fileName;
+      fileFullName = _data.fileFullName;
       lineNum = _data.lineNum;
       linePos = _data.linePos;
       enabled = _data.enabled;
       varName = _data.varName;
+      className = _data.className;
     }
   }
   /// <summary>
@@ -32,7 +44,8 @@ namespace ChartPoints
   {
     private TextPoint startFuncPnt;
     private TextPoint endFuncPnt;
-    private VCCodeElement targetClassElem;
+    //private VCCodeElement targetClassElem;
+    private VCCodeModel vcCodeModel;
 
     private Func<IChartPoint, bool> addFunc;
     private Func<IChartPoint, bool> remFunc;
@@ -47,15 +60,21 @@ namespace ChartPoints
     }
     protected ChartPoint() { }
     public ChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt
-      , VCCodeElement _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+      , VCCodeClass _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
     {
-      theData = new ChartPointData { enabled = false };
-      theData.lineNum = caretPnt.Line;
-      theData.linePos = caretPnt.LineCharOffset;
-      theData.fileName = caretPnt.Parent.Parent.FullName;
+      theData = new ChartPointData
+      {
+        enabled = false,
+        lineNum = caretPnt.Line,
+        linePos = caretPnt.LineCharOffset,
+        fileName = caretPnt.Parent.Parent.Name,
+        fileFullName = caretPnt.Parent.Parent.FullName,
+        className = _targetClassElem.Name//DisplayName
+      };
       /*???*/ startFuncPnt = _startFuncPnt;
       /*???*/ endFuncPnt = _endFuncPnt;
-      targetClassElem = _targetClassElem;
+      //targetClassElem = _targetClassElem;
+      vcCodeModel = _targetClassElem.CodeModel;
       status = ETargetPointStatus.Available;
       addFunc = _addFunc;
       remFunc = _remFunc;
@@ -73,6 +92,63 @@ namespace ChartPoints
         status = ETargetPointStatus.SwitchedOff;
       addFunc = _addFunc;
       remFunc = _remFunc;
+    }
+
+    public virtual void CalcInjectionPoints(out CPClassLayout cpInjPoints)
+    {
+      cpInjPoints = new CPClassLayout();
+      CodeElement theClass = null;
+      foreach (CodeElement _class in vcCodeModel.Classes)
+      {
+        if (_class.Name == data.className)
+        {
+          theClass = _class;
+          break;
+        }
+      }
+      if (theClass != null)
+      {
+        VCCodeClass vcClass = (VCCodeClass) theClass;
+        CodeElement theVar = null;
+        foreach (CodeElement _var in vcClass.Variables)
+        {
+          if (_var.Name == "j"/*data.varName*/)
+          {
+            theVar = _var;
+            break;
+          }
+        }
+        if (theVar != null)
+        {
+          cpInjPoints.traceVarPos = new TextPos();
+          cpInjPoints.traceVarPos.fileName = theVar.ProjectItem.Name;
+          cpInjPoints.traceVarPos.lineNum = theVar.EndPoint.Line - 1;
+          cpInjPoints.traceVarPos.linePos = theVar.EndPoint.LineCharOffset - 1;
+        }
+        CodeElement theFunc = null;
+        bool constructorFound = false;
+        foreach (CodeElement _func in vcClass.Functions)
+        {
+          if (_func.Name == data.className)
+          {
+            theFunc = _func;
+            constructorFound = true;
+            VCCodeFunction vcFunc = (VCCodeFunction)_func;
+            EditPoint pnt = _func.StartPoint.CreateEditPoint();
+            if (pnt.FindPattern("{"))
+            {
+              cpInjPoints.traceVarInitPos.Add(new TextPos() {fileName = _func.ProjectItem.Name, lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset});
+            }
+          }
+        }
+        if (!constructorFound)
+        {
+          EditPoint pnt = vcClass.StartPoint.CreateEditPoint();
+          cpInjPoints.injConstructorPos = new TextPos() { fileName = vcClass.ProjectItem.Name, lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset };
+          if (pnt.FindPattern("{"))
+            cpInjPoints.traceVarInitPos.Add(new TextPos() { fileName = vcClass.ProjectItem.Name, lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset });
+        }
+      }
     }
 
     /// <summary>
@@ -217,7 +293,7 @@ namespace ChartPoints
         endFuncPnt = endPnt;
         // all test successfully passed
         // check if chartpoint is already set
-        IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(activeDoc.FullName);
+        IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(activeDoc.Name);//FullName);
         if (fileChartPoints != null)
         {
           // if is set - return it
@@ -225,8 +301,11 @@ namespace ChartPoints
           if (fileChartPoints.TryGetValue(caretPnt.Line, out chartPnt))
             return chartPnt;
         }
+        VCCodeClass ownerClass = (VCCodeClass)targetClassElem;
+        //VCCodeModel vcCodeModel = _class.CodeModel;
         // create ChartPoint object & store it
-        targetPnt = new ChartPoint(caretPnt, startFuncPnt, endFuncPnt, targetClassElem, (cp) => AddChartPoint(cp), cp => RemoveChartPoint(cp));
+        targetPnt = ChartPntFactory.Instance.CreateChartPoint(caretPnt, startFuncPnt, endFuncPnt, ownerClass, (cp) => AddChartPoint(cp), cp => RemoveChartPoint(cp));
+        // new ChartPoint(caretPnt, startFuncPnt, endFuncPnt, /*targetClassElem*/ownerClass, (cp) => AddChartPoint(cp), cp => RemoveChartPoint(cp));
         //if (fileChartPoints == null)
         //{
         //  fileChartPoints = new SortedDictionary<int, IChartPoint>();
@@ -289,10 +368,21 @@ namespace ChartPoints
 
       return fileChartPoints;
     }
+
+    public virtual IChartPoint GetChartPoint(IChartPointData cpData)
+    {
+      IChartPoint cp = null;
+      IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(cpData.fileName);
+      fileChartPoints.TryGetValue(cpData.lineNum, out cp);
+
+      return cp;
+    }
+
     public bool AddChartPoint(IChartPointData chartPntData)
     {
       IDictionary<int, IChartPoint> fileChartPoints = Globals.processor.GetOrCreateFileChartPoints(chartPntData.fileName);
-      fileChartPoints.Add(chartPntData.lineNum, new ChartPoint(chartPntData, (cp) => AddChartPoint(cp), cp => RemoveChartPoint(cp)));
+      fileChartPoints.Add(chartPntData.lineNum, ChartPntFactory.Instance.CreateChartPoint(chartPntData, (cp) => AddChartPoint(cp), cp => RemoveChartPoint(cp)));
+      //new ChartPoint(chartPntData, (cp) => AddChartPoint(cp), cp => RemoveChartPoint(cp)));
 
       return true;
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using EnvDTE;
@@ -65,9 +66,9 @@ namespace ChartPoints
     {
       IDictionary<int, IChartPoint> fileChartPoints;
       ITextDocument thisTextDoc;
-      var rc = this._buffer.Properties.TryGetProperty<ITextDocument>(
-        typeof(ITextDocument), out thisTextDoc);
-      Globals.processor.data.chartPoints.TryGetValue(thisTextDoc.FilePath/*Globals.dte.ActiveDocument.FullName*/, out fileChartPoints);
+      var rc = this._buffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out thisTextDoc);
+      string fileName = Path.GetFileName(thisTextDoc.FilePath);
+      Globals.processor.data.chartPoints.TryGetValue(fileName/*Globals.dte.ActiveDocument.FullName*/, out fileChartPoints);
       if (fileChartPoints != null)
       {
         foreach (SnapshotSpan span in spans)
@@ -79,6 +80,7 @@ namespace ChartPoints
           {
             foreach (KeyValuePair<int, IChartPoint> pair in fileChartPoints)
             {
+              //pair.Value.f();
               // TextPoint::Line is 1-based 
               // Text Snapshots - 0-based
               if (pair.Key - 1 == firstLineNum)
@@ -115,8 +117,8 @@ namespace ChartPoints
     public void RaiseChangeTagEvent(IChartPoint chartPnt)
     {
       IChartPointsTagger tagger;
-      taggers.TryGetValue(chartPnt.data.fileName, out tagger);
-      tagger.RaiseTagsChangedEvent(chartPnt);
+      if(taggers.TryGetValue(chartPnt.data.fileFullName, out tagger))
+        tagger?.RaiseTagsChangedEvent(chartPnt);
     }
   }
 

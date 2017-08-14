@@ -3,12 +3,19 @@
 
 class temp_utest
 {
+int j;
+/*trace_elem __cp_trace_j;*/
 public:
-void f1(int i);
-void f2() {
-std::cout << i << std::endl;
- }
+temp_utest():j(0){
+/*j.init();*/
+}
+temp_utest(int _j):j(_j){
+/*j.init();*/
+}
+//void f1(int i);
+void f2() { }
+void f3();
 };
-void temp_utest::f1(int i){}
+//void temp_utest::f1(int i){}
 
 #endif // _TEMP_UTEST_H

@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartPointsInstrTests", "Ch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChartPointsLib", "ChartPointsLib\ChartPointsLib.csproj", "{82A926D0-46E9-42D7-80C2-FF4F14F467AD}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{8E42B197-3564-414F-8B07-DCE0844827F3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F1618B7C-5823-4672-A287-7B4A44BF1CD8} = {8E42B197-3564-414F-8B07-DCE0844827F3}
+		{BC510CD9-84D0-43CE-9F92-65890BBC6ABD} = {8E42B197-3564-414F-8B07-DCE0844827F3}
 	EndGlobalSection
 EndGlobal

@@ -23,10 +23,12 @@ namespace ChartPoints
   public interface IChartPointData
   {
     string fileName { get; }
+    string fileFullName { get; }
     int lineNum { get; }
     int linePos { get; }
     bool enabled { get; }
     string varName { get; }
+    string className { get; }
   }
 
   /// <summary>
@@ -45,6 +47,8 @@ namespace ChartPoints
     /// </summary>
     /// <returns>result of the operation (see ChartPoints::ETargetPointStatus)</returns>
     ETargetPointStatus Remove();
+
+    void CalcInjectionPoints(out CPClassLayout cpInjPoints);
     /// <summary>
     /// Cpp class variable
     /// </summary>
@@ -80,6 +84,7 @@ namespace ChartPoints
     IDictionary<int, IChartPoint> GetFileChartPoints(string fileName);
     //bool AddChartPoint(IChartPoint chartPnt);
     bool AddChartPoint(IChartPointData chartPntData);
+    IChartPoint GetChartPoint(IChartPointData cpData);
     IDictionary<int, IChartPoint> GetOrCreateFileChartPoints(string fname);
   }
 

@@ -36,14 +36,14 @@ namespace ChartPointsTests
         //    proc.Attach();
         //}
       }
+      testProj = new TestProject(dte);
+      testProj.Open("../../../cpp_test_proj/test.sln");//!!!CHECK!!!
       var shellService = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsShell)) as IVsShell;
       Guid packageGuid = new Guid("a6b9b46f-0163-4255-807e-b3e04aa6ca70");
       IVsPackage package;
       stubFactory = new ChartPntFactoryStub();
       int res = shellService.LoadPackage(ref packageGuid, out package);
       chartPntPackage = (ChartPointsPackage)package;
-      testProj = new TestProject(dte);
-      testProj.Open("../../../cpp_test_proj/test.sln");//!!!CHECK!!!
     }
 
     [TestMethod]

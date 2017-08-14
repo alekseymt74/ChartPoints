@@ -3,9 +3,13 @@
 
 #include "stdafx.h"
 
+#include "temp_utest.h"
 
 int main()
 {
+	temp_utest tst;
+	for(int i = 0; i < 1000; ++i)
+		tst.f3();
     return 0;
 }
 

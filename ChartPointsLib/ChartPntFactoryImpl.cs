@@ -32,5 +32,16 @@ namespace ChartPoints
     {
       return new CPOrchestrator();
     }
+
+    public override IChartPoint CreateChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt
+      , VCCodeClass _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+    {
+      return new ChartPoint(caretPnt, _startFuncPnt, _endFuncPnt, _targetClassElem, _addFunc, _remFunc);
+    }
+
+    public override IChartPoint CreateChartPoint(IChartPointData _data, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+    {
+      return new ChartPoint(_data, _addFunc, _remFunc);
+    }
   }
 }

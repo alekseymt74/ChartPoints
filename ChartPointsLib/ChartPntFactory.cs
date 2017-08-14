@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EnvDTE;
+using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
 {
@@ -15,6 +16,7 @@ namespace ChartPoints
     public static DTE dte { get; set; }
 
     public static IChartPointsProcessor processor { get; set; }
+    public static ICPOrchestrator orchestrator { get; set; }
 
     public static IChartPointTagUpdater taggerUpdater { get; set; }
   }
@@ -50,5 +52,8 @@ namespace ChartPoints
     /// </summary>
     /// <returns>IChartPointsProcessor</returns>
     public virtual ICPOrchestrator CreateOrchestrator() { return null; }
+    public virtual IChartPoint CreateChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt
+          , VCCodeClass _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc) { return null; }
+    public virtual IChartPoint CreateChartPoint(IChartPointData _data, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc) { return null; }
   }
 }

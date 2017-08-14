@@ -157,12 +157,12 @@
     <ClCompile Include="test_01.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ChartPointFile Include="temp_utest.h">
+    <ChartPointFile Include="temp_utest.cpp">
       <ChartPoints>
         <ChartPoint xmlns="">
-          <Variable>i</Variable>
-          <LineNum>7</LineNum>
-          <LinePos>11</LinePos>
+          <Variable>j</Variable>
+          <LineNum>4</LineNum>
+          <LinePos>2</LinePos>
           <Enabled>true</Enabled>
         </ChartPoint>
       </ChartPoints>

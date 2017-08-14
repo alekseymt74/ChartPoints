@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.MetadataServices;
+using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -17,37 +18,94 @@ namespace ChartPoints
 {
   public class CPOrchestrator : ICPOrchestrator
   {
-    public void OnBuildProjConfigBegin(string Project, string ProjectConfig
-      , string Platform, string SolutionConfig)
+    private ServiceHost serviceHost;
+    public void OnBuildProjConfigBegin(string projName, string projConfig
+      , string platform, string solConfig)
     {
-      if (SolutionConfig.Contains("|ChartPoints"))
-        Orchestrate(ProjectConfig);
-    }
-
-    private void CheckAndAddSolConf(ref SolutionBuild2 solBuild
-      , ref IEnumerable<SolutionConfiguration> solConfs, string confType)
-    {
-      if (!solConfs.Any(sc => (sc.Name.Contains(confType))))
+      if (solConfig.Contains(" [ChartPoints]"))
       {
-        IEnumerable<SolutionConfiguration> scCont
-          = ((IEnumerable<SolutionConfiguration>)solBuild.SolutionConfigurations.GetEnumerator())
-          .Where(sc => (sc.Name.Contains("Debug")));
-        foreach (SolutionConfiguration solConf in scCont)
-        {
-          SolutionConfiguration cpConf
-            = solBuild.SolutionConfigurations.Add(solConf.Name + "|ChartPoints", solConf.Name, true);
-        }
+        EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
+        SaveProjChartPonts(proj.FullName);
+        Orchestrate(proj.FullName);
+        string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
+        serviceHost = new ServiceHost(typeof(IPCChartPoint));
+        NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
+        serviceHost.AddServiceEndpoint(typeof(IIPCChartPoint), binding, address);
+        serviceHost.Open();
       }
     }
-    public bool CreateSolutionConfigurations()
+
+    public void OnBuildProjConfigDone(string projName, string projConfig
+      , string platform, string solConfig, bool success)
+    {
+      if (solConfig.Contains(" [ChartPoints]"))
+      {
+        ;//serviceHost.Close();
+      }
+    }
+
+    //private void CheckAndAddSolConf(ref SolutionBuild2 solBuild
+    //  , ref /*IEnumerable<SolutionConfiguration>*/IDictionary<string, SolutionConfiguration> solConfs, string confType)
+    //{
+    //  //if (!solConfs.Any(sc => (sc.Name.Contains(confType))))
+    //  //{
+    //    IEnumerable<KeyValuePair<string, SolutionConfiguration>> scCont = solConfs.Where(sc => (sc.Key.Contains(confType)));
+    //    foreach (KeyValuePair<string, SolutionConfiguration> solConf in scCont)
+    //    {
+    //      SolutionConfiguration cpConf
+    //        = solBuild.SolutionConfigurations.Add(solConf.Key + "|ChartPoints", solConf.Key, true);
+    //    }
+    //  //}
+    //}
+    //public static IEnumerable<T> ToIEnumerable<T>(IEnumerator enumerator)
+    //{
+    //  while (enumerator.MoveNext())
+    //  {
+    //    yield return (T)enumerator.Current;
+    //  }
+    //}
+    private void CheckAndAddSolConf(ref SolutionBuild2 solBuild, string confType)
+    {
+      bool needAdd = true;
+      foreach (SolutionConfiguration solConf in solBuild.SolutionConfigurations)
+      {
+        if (solConf.Name == confType + " [ChartPoints]")
+          needAdd = false;
+      }
+      if (needAdd)
+      {
+        SolutionConfiguration cpConf = solBuild.SolutionConfigurations.Add(confType + " [ChartPoints]", confType, true);
+      }
+    }
+    public bool InitSolutionConfigurations()
     {
       SolutionBuild2 solBuild = (SolutionBuild2)Globals.dte.Solution.SolutionBuild;
-      IEnumerable<SolutionConfiguration> solConfs
-        = ((IEnumerable<SolutionConfiguration>)solBuild.SolutionConfigurations.GetEnumerator()).Where(
-          sc => (sc.Name.Contains("|ChartPoints")));
-      CheckAndAddSolConf(ref solBuild, ref solConfs, "Debug");
-      CheckAndAddSolConf(ref solBuild, ref solConfs, "Release");
+      CheckAndAddSolConf(ref solBuild, "Debug");
+      CheckAndAddSolConf(ref solBuild, "Release");
+      //IEnumerable<SolutionConfiguration> allSolConfs = ToIEnumerable<SolutionConfiguration>(solBuild.SolutionConfigurations.GetEnumerator());
+      //IEnumerable<SolutionConfiguration> solConfs = allSolConfs.Where(sc => (sc.Name.Contains("|ChartPoints")));
+      //IDictionary<string, SolutionConfiguration> allSolConfs = new Dictionary<string, SolutionConfiguration>();
+      //foreach (SolutionConfiguration solConf in solBuild.SolutionConfigurations)
+      //{
+      //  if (solConf.Name == "Debug" || solConf.Name == "Release")
+      //  {
+      //    SolutionConfiguration cpConf
+      //      = solBuild.SolutionConfigurations.Add(solConf.Name + " [ChartPoints]", solConf.Name, true);
+      //  }
+      //}
+      //allSolConfs.Add(solConf.Name, solConf);
+      //CheckAndAddSolConf(ref solBuild, ref allSolConfs, "Debug");
+      //CheckAndAddSolConf(ref solBuild, ref allSolConfs, "Release");
+      //foreach (SolutionConfiguration solConf in solBuild.SolutionConfigurations)
+      //{
+      //  if (solConf.Name.Contains("Debug") || solConf.Name.Contains("Release"))
+      //  {
+      //    SolutionConfiguration cpConf
+      //      = solBuild.SolutionConfigurations.Add(solConf.Name + "|ChartPoints", solConf.Name, true);
+      //  }
+      //}
       Globals.dte.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildProjConfigBegin;
+      Globals.dte.Events.BuildEvents.OnBuildProjConfigDone += OnBuildProjConfigDone;
 
       return true;
     }
@@ -103,8 +161,10 @@ namespace ChartPoints
           //xmlTxtWriter.WriteEndElement();
           cpsFileItem.AddMetadata("ChartPoints", strWriter.ToString());
         }
+        msbuildProj.ReevaluateIfNecessary();
       }
       msbuildProj.Save();
+      //EnvDTE.Project Save
 
       return true;
     }
@@ -140,10 +200,12 @@ namespace ChartPoints
               //IDictionary<int, IChartPoint> fileChartPoints = Globals.processor.GetOrCreateFileChartPoints(cpFileElem.Include);
               Action<int, ChartPointData> addCPDataAction
                 = (i, data) =>
-                { data.fileName = cpFileElem.Include;
-                data.lineNum = i;
-                Globals.processor.AddChartPoint(data);
-              };
+                {
+                  data.fileName = cpFileElem.Include;
+                  //################################################ !!!!!!!!!! data.fileFullName !!!!!!!!!! ################################################
+                  data.lineNum = i;
+                  Globals.processor.AddChartPoint(data);
+                };
               confLoader.LoadChartPoint("<" + me.Name + ">" + me.Value + "</" + me.Name + ">", addCPDataAction);
             }
           }
@@ -198,6 +260,7 @@ namespace ChartPoints
         msbuildProj.ReevaluateIfNecessary();
       }
       msbuildProj.Save();
+      //EnvDTE.Project Save
 
       return true;
     }
