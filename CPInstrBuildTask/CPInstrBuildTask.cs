@@ -15,6 +15,11 @@ using ChartPoints;
 namespace ChartPointsBuilder
 {
 
+  public class TaskLogger
+  {
+    public static TaskLoggingHelper Log { get; set; }
+  }
+
   public class FileChartPoints
   {
     public IDictionary<int, ChartPointData> chartPoints { get; set; }
@@ -38,13 +43,59 @@ namespace ChartPointsBuilder
     }
   }
 
-  internal class CPFileCodeInjector
+  internal interface ITextTransform
   {
-    private IDictionary<int, IDictionary<int, StringBuilder>> lineText = new SortedDictionary<int, IDictionary<int, StringBuilder>>();
+    void Transform(StreamWriter streamWriter, string curLine, int posStart, int posEnd);
+  }
 
-    internal void Inject(string fileName)
+  internal class TextTransformAdd : ITextTransform
+  {
+    private string strData = String.Empty;
+    internal TextTransformAdd(string text) { strData = text; }
+    public void Transform(StreamWriter streamWriter, string curLine, int posStart, int posEnd)
+    {
+      if (posEnd <= curLine.Length)
+      {
+        string beforeOrk = curLine.Substring(posStart, posEnd);
+        if (beforeOrk.Length > 0)
+          streamWriter.WriteLine(beforeOrk);
+        streamWriter.WriteLine(strData);
+        string afterOrk = curLine.Substring(posEnd, curLine.Length - posEnd);
+        if (afterOrk.Length > 0)
+          streamWriter.WriteLine(afterOrk);
+      }
+    }
+
+    internal void Append(string text)
+    {
+      strData += text;
+    }
+  }
+
+  internal class TextTransformReplace : ITextTransform
+  {
+    private string strOrigin = String.Empty;
+    private string strReplace = String.Empty;
+    internal TextTransformReplace(string textOrigin, string textReplace) { strOrigin = textOrigin; strReplace = textReplace; }
+    public void Transform(StreamWriter streamWriter, string curLine, int posStart, int posEnd)
+    {
+      if (posEnd <= curLine.Length)
+      {
+        //int pos = curLine.IndexOf(strOrigin);
+        curLine = curLine.Replace(strOrigin, strReplace);
+        streamWriter.WriteLine(curLine);
+      }
+    }
+  }
+
+  internal class CPFileCodeOrchestrator
+  {
+    private IDictionary<int, IDictionary<int, ITextTransform>> lineText = new SortedDictionary<int, IDictionary<int, ITextTransform>>();
+
+    internal void Orchestrate(string fileName)
     {
       string cpFileName = "__cp__." + fileName;
+      TaskLogger.Log.LogMessage(MessageImportance.High, "$$$$$$$$$$$$$$$$$$$$$$$$$$$" + Directory.GetCurrentDirectory());
       File.Copy(fileName, cpFileName, true);
       string[] txt = File.ReadAllLines(cpFileName);
       FileStream fileStream = new FileStream(cpFileName, FileMode.Open, FileAccess.Write, FileShare.None);
@@ -57,19 +108,21 @@ namespace ChartPointsBuilder
           for (int i = lineNum; i < lineTxt.Key; ++i)
             streamWriter.WriteLine(txt[i]);
           string curLine = txt[lineTxt.Key];
-          int linePos = 0;
+          int linePos = 0;//!!!TODO!!!
           foreach (var strData in lineTxt.Value)
           {
-            if (strData.Key <= curLine.Length)
-            {
-              string beforeInj = curLine.Substring(linePos, strData.Key);
-              if (beforeInj.Length > 0)
-                streamWriter.WriteLine(beforeInj);
-              streamWriter.WriteLine(strData.Value);//"std::cout << j << std::endl;");
-              string afterInj = curLine.Substring(strData.Key, curLine.Length - strData.Key);
-              if (afterInj.Length > 0)
-                streamWriter.WriteLine(afterInj);
-            }
+            strData.Value.Transform(streamWriter, curLine, linePos, strData.Key);
+            //if (strData.Key <= curLine.Length)
+            //{
+            //  string beforeOrk = curLine.Substring(linePos, strData.Key);
+            //  if (beforeOrk.Length > 0)
+            //    streamWriter.WriteLine(beforeOrk);
+            //  streamWriter.WriteLine(strData.Value);
+            //  string afterOrk = curLine.Substring(strData.Key, curLine.Length - strData.Key);
+            //  if (afterOrk.Length > 0)
+            //    streamWriter.WriteLine(afterOrk);
+              linePos = strData.Key;
+            //}
           }
           lineNum = lineTxt.Key + 1;
         }
@@ -79,29 +132,47 @@ namespace ChartPointsBuilder
       streamWriter.Close();
     }
 
-    internal void AddText(int lineNum, int linePos, string text)
+    internal void AddTransform(int lineNum, int linePos, string text)
     {
-      IDictionary<int, StringBuilder> strData = null;
+      IDictionary<int, ITextTransform> strData = null;
       if (!lineText.TryGetValue(lineNum, out strData))
       {
-        strData = new SortedDictionary<int, StringBuilder>();
+        strData = new SortedDictionary<int, ITextTransform>();
         lineText.Add(lineNum, strData);
       }
-      StringBuilder str = null;
+      ITextTransform str = null;
       if (!strData.TryGetValue(linePos, out str))
       {
-        str = new StringBuilder();
+        str = new TextTransformAdd(text);
         strData.Add(linePos, str);
       }
-      str.Append(text);
+      else
+        ((TextTransformAdd)str).Append(text);
+    }
+    internal void AddTransform(int lineNum, int linePos, ITextTransform trans)
+    {
+      IDictionary<int, ITextTransform> strData = null;
+      if (!lineText.TryGetValue(lineNum, out strData))
+      {
+        strData = new SortedDictionary<int, ITextTransform>();
+        lineText.Add(lineNum, strData);
+      }
+      ITextTransform str = null;
+      if (!strData.TryGetValue(linePos, out str))
+      {
+        strData.Add(linePos, trans);
+      }
+      else
+        ;//!!!((TextTransformAdd)str).Append(text);
     }
   }
 
-  internal class CPClassCodeInjector
+
+  internal class CPClassCodeOrchestrator
   {
     private CPClassLayout cpClassLayout;
     private IDictionary<int, ChartPointData> cps = new SortedDictionary<int, ChartPointData>();
-    internal CPClassCodeInjector(CPClassLayout _cpClassLayout)
+    internal CPClassCodeOrchestrator(CPClassLayout _cpClassLayout)
     {
       cpClassLayout = _cpClassLayout;
     }
@@ -111,31 +182,43 @@ namespace ChartPointsBuilder
       cps.Add(cpData.lineNum, cpData);
     }
 
-    internal void Inject(Func<string, CPFileCodeInjector> getFileInjFunc)
+    internal void Orchestrate(Func<string, CPFileCodeOrchestrator> getFileOrkFunc)
     {
       foreach (var cp in cps)
       {
-        CPFileCodeInjector fileCPInj = getFileInjFunc(cp.Value.fileName);
-        string traceVarName = "__cp_trace_" + cp.Value.varName;
-        fileCPInj.AddText(cp.Value.lineNum - 1, cp.Value.linePos - 1, "/*" + traceVarName + ".trace();*/");
-        CPFileCodeInjector fileCPVarInj = getFileInjFunc(cpClassLayout.traceVarPos.fileName);
-        fileCPVarInj.AddText(cpClassLayout.traceVarPos.lineNum, cpClassLayout.traceVarPos.linePos
-          , "/*trace_elem " + traceVarName + ";*/");
-        if (cpClassLayout.injConstructorPos != null)
+        CPTraceVar traceVar = null;
+        if (cpClassLayout.traceVars.TryGetValue(cp.Value.varName, out traceVar))
         {
-          CPFileCodeInjector fileConstrInj = getFileInjFunc(cpClassLayout.injConstructorPos.fileName);
-          fileConstrInj.AddText(cpClassLayout.injConstructorPos.lineNum, cpClassLayout.injConstructorPos.linePos
-            , "public:\n" + cp.Value.className + "(){\n/*" + cp.Value.varName + ".init();*/\n" + "}");
-        }
-        else
-        {
-          foreach (var varInitPos in cpClassLayout.traceVarInitPos)
+          CPFileCodeOrchestrator fileCPOrk = getFileOrkFunc(cp.Value.fileName);
+          string traceVarName = "__cp_trace_" + cp.Value.varName;
+          fileCPOrk.AddTransform(cp.Value.lineNum - 1, cp.Value.linePos - 1, traceVarName + ".trace();");
+          CPFileCodeOrchestrator fileCPVarOrk = getFileOrkFunc(traceVar.filePos.fileName);
+          fileCPVarOrk.AddTransform(0, 0, "#include \"..\\tracer\\tracer.h\"");
+          fileCPVarOrk.AddTransform(traceVar.filePos.pos.lineNum, traceVar.filePos.pos.linePos, "cptracer::tracer_elem_impl<" + traceVar.type + "> " + traceVarName + ";");
+          if (cpClassLayout.injConstructorPos != null)
           {
-            CPFileCodeInjector fileVarInitInj = getFileInjFunc(varInitPos.fileName);
-            fileVarInitInj.AddText(varInitPos.lineNum, varInitPos.linePos
-              , "/*" + cp.Value.varName + ".init();*/");
+            CPFileCodeOrchestrator fileConstrOrk = getFileOrkFunc(cpClassLayout.injConstructorPos.fileName);
+            fileConstrOrk.AddTransform(cpClassLayout.injConstructorPos.pos.lineNum, cpClassLayout.injConstructorPos.pos.linePos
+              , "public:\n" + cp.Value.className + "(){\n" + traceVarName + ".reg((uint64_t) &" + cp.Value.varName + ", \"" +
+              cp.Value.varName + "\", cptracer::type_id<" + traceVar.type + ">::id);\n" + "}");
+          }
+          else
+          {
+            foreach (var varInitPos in cpClassLayout.traceVarInitPos)
+            {
+              CPFileCodeOrchestrator fileVarInitOrk = getFileOrkFunc(varInitPos.fileName);
+              fileVarInitOrk.AddTransform(varInitPos.pos.lineNum, varInitPos.pos.linePos
+                , traceVarName + ".reg((uint64_t) &" + cp.Value.varName + ", \"" + cp.Value.varName + "\", cptracer::type_id<" + traceVar.type + ">::id);");
+            }
           }
         }
+        //else !!!!!!!!!!!!!!!!!
+      }
+      foreach (var inclFilePos in cpClassLayout.includesPos)
+      {
+        CPFileCodeOrchestrator fileCPOrk = getFileOrkFunc(inclFilePos.pos.fileName);
+        ITextTransform inclTrans = new TextTransformReplace(inclFilePos.inclOrig, inclFilePos.inclReplace);
+        fileCPOrk.AddTransform(inclFilePos.pos.pos.lineNum, inclFilePos.pos.pos.linePos, inclTrans);
       }
     }
   }
@@ -156,70 +239,29 @@ namespace ChartPointsBuilder
     public bool SrcFilesChanged { get; set; }
     [Output]
     public bool HeaderFilesChanged { get; set; }
-
+    public static TaskLoggingHelper TaskLog;
     private CPConfLoader confLoader;
     private IIPCChartPoint ipcChartPnt;
     private IDictionary<string, FileChartPoints> filesChartPoints { get; set; }
-    private IDictionary<string, CPClassCodeInjector> classesInjectors;
-    private IDictionary<string, CPFileCodeInjector> filesInjectors;
+    private IDictionary<string, CPClassCodeOrchestrator> classesOrchestrator;
+    private IDictionary<string, CPFileCodeOrchestrator> filesOrchestrator;
 
-    private bool CheckFiles(ref ITaskItem[] inTaskItems, ref ITaskItem[] outTaskItems)
+
+    internal CPFileCodeOrchestrator GetFileOrchestrator(string fileName)
     {
-      //IVsMSBuildTaskFileManager hostTaskFileManager = this.HostObject as IVsMSBuildTaskFileManager;
-      //if(hostTaskFileManager != null)
-      //  Log.LogMessage(MessageImportance.High, "OK");
-      //else
-      //  Log.LogMessage(MessageImportance.High, "FAIL");
-      bool changed = false;
-      ArrayList items = new ArrayList();
-      foreach (ITaskItem item in inTaskItems)
+      CPFileCodeOrchestrator cpfOrk = null;
+      if (!filesOrchestrator.TryGetValue(fileName, out cpfOrk))
       {
-        FileChartPoints fileChartPoints;
-        filesChartPoints.TryGetValue(item.ItemSpec, out fileChartPoints);
-        if (fileChartPoints != null)
-        {
-          //string cpFileName = "__cp__." + item.ItemSpec;
-          //File.Copy(item.ItemSpec, cpFileName, true);
-          //string[] txt = File.ReadAllLines(cpFileName);
-          //FileStream fileStream = new FileStream(cpFileName, FileMode.Open, FileAccess.Write, FileShare.None);
-          //StreamWriter streamWriter = new StreamWriter(fileStream);
-          //int pos = 0;
-          foreach (var cp in fileChartPoints.chartPoints)
-          {
-            //CPClassLayout cpInjPnts = ipcChartPnt.GetCPClassLayout(cp.Value);
-            string cpClassName = ipcChartPnt.GetClassName(cp.Value);
-            CPClassCodeInjector CPClassCodeInjector = null;
-            if (!classesInjectors.TryGetValue(cpClassName, out CPClassCodeInjector))
-            {
-              CPClassLayout cpClassLayout = ipcChartPnt.GetCPClassLayout(cp.Value);
-              CPClassCodeInjector = new CPClassCodeInjector(cpClassLayout);
-              classesInjectors.Add(cpClassName, CPClassCodeInjector);
-            }
-            CPClassCodeInjector.AddChartPointData(cp.Value);
-
-          }
-        }
-        else
-          items.Add(item);
-      }
-      outTaskItems = (ITaskItem[])items.ToArray(typeof(ITaskItem));
-
-      return changed;
-    }
-
-    internal CPFileCodeInjector GetFileInjector(string fileName)
-    {
-      CPFileCodeInjector cpfInj = null;
-      if (!filesInjectors.TryGetValue(fileName, out cpfInj))
-      {
-        cpfInj = new CPFileCodeInjector();
-        filesInjectors.Add(fileName, cpfInj);
+        cpfOrk = new CPFileCodeOrchestrator();
+        filesOrchestrator.Add(fileName, cpfOrk);
       }
 
-      return cpfInj;
+      return cpfOrk;
     }
+
     public override bool Execute()
     {
+      TaskLogger.Log = Log;
       confLoader = new CPConfLoader();
       filesChartPoints = new SortedDictionary<string, FileChartPoints>();
       IDictionary<string, FileChartPoints> retFilesChartPoints = filesChartPoints;
@@ -236,8 +278,8 @@ namespace ChartPointsBuilder
       });
       if(filesChartPoints.Any())
       {
-        classesInjectors = new SortedDictionary<string, CPClassCodeInjector>();
-        filesInjectors = new SortedDictionary<string, CPFileCodeInjector>();
+        classesOrchestrator = new SortedDictionary<string, CPClassCodeOrchestrator>();
+        filesOrchestrator = new SortedDictionary<string, CPFileCodeOrchestrator>();
         NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
         string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";//!!!!!!!!!! move to vcxproj !!!!!!!!!!!!
         EndpointAddress ep = new EndpointAddress(address);
@@ -248,25 +290,25 @@ namespace ChartPointsBuilder
           foreach (var cp in fileCPs.Value.chartPoints)
           {
             string cpClassName = ipcChartPnt.GetClassName(cp.Value);
-            CPClassCodeInjector cpClassCodeInjector = null;
-            if (!classesInjectors.TryGetValue(cpClassName, out cpClassCodeInjector))
+            CPClassCodeOrchestrator cpClassCodeOrchestrator = null;
+            if (!classesOrchestrator.TryGetValue(cpClassName, out cpClassCodeOrchestrator))
             {
               CPClassLayout cpClassLayout = ipcChartPnt.GetCPClassLayout(cp.Value);
-              cpClassCodeInjector = new CPClassCodeInjector(cpClassLayout);
-              classesInjectors.Add(cpClassName, cpClassCodeInjector);
+              cpClassCodeOrchestrator = new CPClassCodeOrchestrator(cpClassLayout);
+              classesOrchestrator.Add(cpClassName, cpClassCodeOrchestrator);
             }
-            cpClassCodeInjector.AddChartPointData(cp.Value);
+            cpClassCodeOrchestrator.AddChartPointData(cp.Value);
           }
         }
-        foreach (var cpInj in classesInjectors)
-          cpInj.Value.Inject(GetFileInjector);
-        foreach (var fileInj in filesInjectors)
-          fileInj.Value.Inject(fileInj.Key);
+        foreach (var cpOrk in classesOrchestrator)
+          cpOrk.Value.Orchestrate(GetFileOrchestrator);
+        foreach (var fileOrk in filesOrchestrator)
+          fileOrk.Value.Orchestrate(fileOrk.Key);
         ArrayList items = new ArrayList();
         foreach (ITaskItem item in InputSrcFiles)
         {
-          CPFileCodeInjector cpCodeInj = null;
-          if (filesInjectors.TryGetValue(item.ItemSpec, out cpCodeInj))
+          CPFileCodeOrchestrator cpCodeOrk = null;
+          if (filesOrchestrator.TryGetValue(item.ItemSpec, out cpCodeOrk))
           {
             ITaskItem replacedItem = new TaskItem("__cp__." + item.ItemSpec);
             items.Add(replacedItem);
@@ -274,6 +316,8 @@ namespace ChartPointsBuilder
           else
             items.Add(item);
         }
+        ITaskItem tracerItem = new TaskItem("..\\tracer\\tracer.cpp");
+        items.Add(tracerItem);
         if (items.Count > 0)
         {
           OutputSrcFiles = (ITaskItem[]) items.ToArray(typeof(ITaskItem));
@@ -282,8 +326,8 @@ namespace ChartPointsBuilder
         items.Clear();
         foreach (ITaskItem item in InputHeaderFiles)
         {
-          CPFileCodeInjector cpCodeInj = null;
-          if (filesInjectors.TryGetValue(item.ItemSpec, out cpCodeInj))
+          CPFileCodeOrchestrator cpCodeOrk = null;
+          if (filesOrchestrator.TryGetValue(item.ItemSpec, out cpCodeOrk))
           {
             ITaskItem replacedItem = new TaskItem("__cp__." + item.ItemSpec);
             items.Add(replacedItem);

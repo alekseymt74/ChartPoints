@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Globalization;
 using System.Windows.Forms;
@@ -131,6 +132,17 @@ namespace ChartPoints
     /// <param name="e">Event args.</param>
     private void MenuItemCallback(object sender, EventArgs e)
     {
+      List<Tuple<string, string>> availableVars = null;
+      chartPnt.GetAvailableVars(out availableVars);
+      if (availableVars.Count > 0)
+      {
+        SelectVarsDlg dlg = new SelectVarsDlg(ref availableVars);
+        dlg.ShowDialog();
+        List<string> selectedVars = dlg.GetSelectedVars();
+        //if (selectedVars.Count > 0)
+        //  codeObserver.InjectTracers(ref selectedVars, caretPnt);
+      }
+
       chartPnt.Toggle();
     }
   }

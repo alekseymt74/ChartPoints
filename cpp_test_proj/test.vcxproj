@@ -282,7 +282,26 @@
     <ClCompile Include="test.cpp" />
     <ClCompile Include="test_01.cpp" />
   </ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <UsingTask TaskName="ChartPointsBuilder.CPInstrBuildTask" AssemblyFile="e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll" />
+  <Target Name="GenerateToolOutput" BeforeTargets="ClCompile">
+    <CPInstrBuildTask InputSrcFiles="@(ClCompile)" InputHeaderFiles="@(ClInclude)" InputChartPoints="@(ChartPointFile)">
+      <Output TaskParameter="OutputSrcFiles" PropertyName="OutputSrcFiles" />
+      <Output TaskParameter="OutputHeaderFiles" PropertyName="OutputHeaderFiles" />
+      <Output TaskParameter="SrcFilesChanged" PropertyName="SrcFilesChanged" />
+      <Output TaskParameter="HeaderFilesChanged" PropertyName="HeaderFilesChanged" />
+    </CPInstrBuildTask>
+    <ItemGroup Condition="$(SrcFilesChanged) == True">
+      <ClCompile Remove="@(ClCompile)" />
+      <ClCompile Include="$(OutputSrcFiles)" />
+    </ItemGroup>
+    <ItemGroup Condition="$(HeaderFilesChanged) == True">
+      <ClInclude Remove="@(ClInclude)" />
+      <ClInclude Include="$(OutputHeaderFiles)" />
+    </ItemGroup>
+  </Target>
 </Project>

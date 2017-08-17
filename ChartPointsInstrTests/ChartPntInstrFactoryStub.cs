@@ -28,13 +28,41 @@ namespace ChartPointsInstrTests
     public override void CalcInjectionPoints(out CPClassLayout cpInjPoints)
     {
       cpInjPoints = new CPClassLayout();
-      cpInjPoints.traceVarPos = new TextPos();
-      cpInjPoints.traceVarPos.fileName = "temp_utest.h";
-      cpInjPoints.traceVarPos.lineNum = 5;
-      cpInjPoints.traceVarPos.linePos = 6;
+      CPTraceVar traceVar = new CPTraceVar();
+      traceVar.filePos.fileName = "temp_utest.h";
+      traceVar.filePos.pos.lineNum = 5;
+      traceVar.filePos.pos.linePos = 6;
+      traceVar.type = "int";
+      cpInjPoints.traceVars.Add("j", traceVar);
       //cpInjPoints.injConstructorPos = new TextPos();
-      cpInjPoints.traceVarInitPos.Add(new TextPos() { fileName = "temp_utest.h", lineNum = 7, linePos = 18 });
-      cpInjPoints.traceVarInitPos.Add(new TextPos() { fileName = "temp_utest.h", lineNum = 8, linePos = 25 });
+      cpInjPoints.traceVarInitPos.Add(new FilePosPnt() { fileName = "temp_utest.h", pos = { lineNum = 7, linePos = 18 }});
+      cpInjPoints.traceVarInitPos.Add(new FilePosPnt() { fileName = "temp_utest.h", pos = { lineNum = 8, linePos = 25 }});
+      FilePosText inclPos = new FilePosText()
+      {
+        fileName = "temp_utest.cpp",
+        pos = { lineNum = 0, linePos = 1 },
+        posEnd = { lineNum = 0, linePos = 24 }
+      };
+      CPInclude incl = new CPInclude()
+      {
+        inclOrig = "temp_utest.h",
+        inclReplace = "__cp__.temp_utest.h",
+        pos = inclPos
+      };
+      cpInjPoints.includesPos.Add(incl);
+      inclPos = new FilePosText()
+      {
+        fileName = "test.cpp",
+        pos = { lineNum = 5, linePos = 1 },
+        posEnd = { lineNum = 5, linePos = 24 }
+      };
+      incl = new CPInclude()
+      {
+        inclOrig = "temp_utest.h",
+        inclReplace = "__cp__.temp_utest.h",
+        pos = inclPos
+      };
+      cpInjPoints.includesPos.Add(incl);
     }
   }
 
@@ -62,6 +90,7 @@ namespace ChartPointsInstrTests
       return chartPnt;
     }
   }
+
   public class ChartPntInstrFactoryStub : ChartPntFactoryImpl
   {
     public ChartPntInstrFactoryStub()

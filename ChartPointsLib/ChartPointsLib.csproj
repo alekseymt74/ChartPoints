@@ -64,9 +64,11 @@
   <ItemGroup>
     <Compile Include="ChartPntFactory.cs" />
     <Compile Include="ChartPntFactoryImpl.cs" />
+    <Compile Include="ChartPoint.cs" />
     <Compile Include="ChartPointsProcessorImpl.cs" />
     <Compile Include="CPConfLoader.cs" />
     <Compile Include="CPOrchestrator.cs" />
+    <Compile Include="IChartPoint.cs" />
     <Compile Include="IChartPointsProcessor.cs" />
     <Compile Include="ICPOrchestrator.cs" />
     <Compile Include="IPCChartPoint.cs" />

@@ -12,26 +12,58 @@ namespace ChartPoints
   public class TextPos
   {
     [DataMember]
-    public string fileName { get; set; }
-    [DataMember]
     public int lineNum { get; set; }
     [DataMember]
     public int linePos { get; set; }
   }
 
   [DataContract]
+  public class FilePosPnt
+  {
+    [DataMember]
+    public string fileName { get; set; }
+    [DataMember]
+    public TextPos pos { get; set; } = new TextPos();
+  }
+
+  [DataContract]
+  public class FilePosText : FilePosPnt
+  {
+    [DataMember]
+    public TextPos posEnd { get; set; } = new TextPos();
+  }
+
+  [DataContract]
+  public class CPInclude
+  {
+    [DataMember]
+    public FilePosText pos { get; set; } = new FilePosText();
+    [DataMember]
+    public string inclOrig;
+    [DataMember]
+    public string inclReplace;
+  }
+
+  [DataContract]
+  public class CPTraceVar
+  {
+    [DataMember]
+    public FilePosPnt filePos { get; set; } = new FilePosPnt();
+    [DataMember]
+    public string type { get; set; }
+  }
+
+  [DataContract]
   public class CPClassLayout
   {
     [DataMember]
-    public TextPos traceVarPos { get; set; }
+    public IDictionary<string, CPTraceVar> traceVars { get; set; } = new SortedDictionary<string, CPTraceVar>();
     [DataMember]
-    public IList<TextPos> traceVarInitPos { get; set; }
+    public IList<FilePosPnt> traceVarInitPos { get; set; } = new List<FilePosPnt>();
     [DataMember]
-    public TextPos injConstructorPos { get; set; }
-    public CPClassLayout()
-    {
-      traceVarInitPos = new List<TextPos>();
-    }
+    public FilePosPnt injConstructorPos { get; set; }
+    [DataMember]
+    public IList<CPInclude> includesPos { get; set; } = new List<CPInclude>();
   }
 
   [ServiceContract(Namespace = "TestNamespace")]

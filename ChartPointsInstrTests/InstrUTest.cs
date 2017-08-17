@@ -7,6 +7,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ChartPoints;
 using Microsoft.Build.Evaluation;
+using Microsoft.Build.Logging;
 
 namespace ChartPointsInstrTests
 {
@@ -46,14 +47,17 @@ namespace ChartPointsInstrTests
       processor.AddChartPoint(chartPnt);
       CheckChartPointData(chartPntData.fileName, chartPntData.lineNum, chartPntData);
       cpOrchestrator = new CPOrchestrator();
-      cpOrchestrator.SaveProjChartPonts(testProjFName);
+      Microsoft.Build.Evaluation.Project msBuildProject = cpOrchestrator.SaveProjChartPonts(testProjFName);
+      msBuildProject.Save();
       processor.RemoveAllChartPoints();
       Assert.AreEqual(processor.GetFileChartPoints(chartPntData.fileName), null);
       cpOrchestrator.LoadProjChartPoints(testProjFName);
       Assert.AreEqual(processor.GetFileChartPoints(chartPntData.fileName).Count, 1);
       CheckChartPointData(chartPntData.fileName, chartPntData.lineNum, chartPntData);
-      cpOrchestrator.SaveProjChartPonts(testProjFName);
-      cpOrchestrator.Orchestrate(testProjFName);
+      msBuildProject = cpOrchestrator.SaveProjChartPonts(testProjFName);
+      msBuildProject.Save();
+      msBuildProject = cpOrchestrator.Orchestrate(testProjFName);
+      msBuildProject.Save();
     }
 
     [TestMethod]
@@ -66,7 +70,7 @@ namespace ChartPointsInstrTests
       serviceHost.Open();
 
       Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(testProjFName);
-      msbuildProj.Build();
+      msbuildProj.Build(new ConsoleLogger());
       Assert.AreEqual(File.Exists(@"e:\projects\tests\MSVS.ext\ChartPoints\cpp_test_proj\__cp__.temp_utest.cpp"), true);
     }
   }

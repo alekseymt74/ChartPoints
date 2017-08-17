@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -9,192 +10,6 @@ using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
 {
-  [DataContract]
-  public class ChartPointData : IChartPointData
-  {
-    [DataMember]
-    public string fileName { get; set; }
-    [DataMember]
-    public string fileFullName { get; set;  }
-    [DataMember]
-    public int lineNum { get; set; }
-    [DataMember]
-    public int linePos { get; set; }
-    [DataMember]
-    public bool enabled { get; set; }
-    [DataMember]
-    public string varName { get; set; }
-    public string className { get; set; }
-    public ChartPointData() { }
-    public ChartPointData(IChartPointData _data)
-    {
-      fileName = _data.fileName;
-      fileFullName = _data.fileFullName;
-      lineNum = _data.lineNum;
-      linePos = _data.linePos;
-      enabled = _data.enabled;
-      varName = _data.varName;
-      className = _data.className;
-    }
-  }
-  /// <summary>
-  /// Implementation of IChartPoint interface
-  /// </summary>
-  public class ChartPoint : IChartPoint
-  {
-    private TextPoint startFuncPnt;
-    private TextPoint endFuncPnt;
-    //private VCCodeElement targetClassElem;
-    private VCCodeModel vcCodeModel;
-
-    private Func<IChartPoint, bool> addFunc;
-    private Func<IChartPoint, bool> remFunc;
-    public ETargetPointStatus status { get; set; }
-    public VCCodeVariable var { get; }
-    protected ChartPointData theData { get; set; }
-
-    public IChartPointData data
-    {
-      get { return theData; }
-      set { theData = (ChartPointData)value; }
-    }
-    protected ChartPoint() { }
-    public ChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt
-      , VCCodeClass _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
-    {
-      theData = new ChartPointData
-      {
-        enabled = false,
-        lineNum = caretPnt.Line,
-        linePos = caretPnt.LineCharOffset,
-        fileName = caretPnt.Parent.Parent.Name,
-        fileFullName = caretPnt.Parent.Parent.FullName,
-        className = _targetClassElem.Name//DisplayName
-      };
-      /*???*/ startFuncPnt = _startFuncPnt;
-      /*???*/ endFuncPnt = _endFuncPnt;
-      //targetClassElem = _targetClassElem;
-      vcCodeModel = _targetClassElem.CodeModel;
-      status = ETargetPointStatus.Available;
-      addFunc = _addFunc;
-      remFunc = _remFunc;
-    }
-
-    public ChartPoint(IChartPointData _data, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
-    {
-      theData = new ChartPointData(_data);
-      //startFuncPnt = _startFuncPnt;
-      //endFuncPnt = _endFuncPnt;
-      //targetClassElem = _targetClassElem;
-      if (data.enabled)
-        status = ETargetPointStatus.SwitchedOn;
-      else
-        status = ETargetPointStatus.SwitchedOff;
-      addFunc = _addFunc;
-      remFunc = _remFunc;
-    }
-
-    public virtual void CalcInjectionPoints(out CPClassLayout cpInjPoints)
-    {
-      cpInjPoints = new CPClassLayout();
-      CodeElement theClass = null;
-      foreach (CodeElement _class in vcCodeModel.Classes)
-      {
-        if (_class.Name == data.className)
-        {
-          theClass = _class;
-          break;
-        }
-      }
-      if (theClass != null)
-      {
-        VCCodeClass vcClass = (VCCodeClass) theClass;
-        CodeElement theVar = null;
-        foreach (CodeElement _var in vcClass.Variables)
-        {
-          if (_var.Name == "j"/*data.varName*/)
-          {
-            theVar = _var;
-            break;
-          }
-        }
-        if (theVar != null)
-        {
-          cpInjPoints.traceVarPos = new TextPos();
-          cpInjPoints.traceVarPos.fileName = theVar.ProjectItem.Name;
-          cpInjPoints.traceVarPos.lineNum = theVar.EndPoint.Line - 1;
-          cpInjPoints.traceVarPos.linePos = theVar.EndPoint.LineCharOffset - 1;
-        }
-        CodeElement theFunc = null;
-        bool constructorFound = false;
-        foreach (CodeElement _func in vcClass.Functions)
-        {
-          if (_func.Name == data.className)
-          {
-            theFunc = _func;
-            constructorFound = true;
-            VCCodeFunction vcFunc = (VCCodeFunction)_func;
-            EditPoint pnt = _func.StartPoint.CreateEditPoint();
-            if (pnt.FindPattern("{"))
-            {
-              cpInjPoints.traceVarInitPos.Add(new TextPos() {fileName = _func.ProjectItem.Name, lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset});
-            }
-          }
-        }
-        if (!constructorFound)
-        {
-          EditPoint pnt = vcClass.StartPoint.CreateEditPoint();
-          cpInjPoints.injConstructorPos = new TextPos() { fileName = vcClass.ProjectItem.Name, lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset };
-          if (pnt.FindPattern("{"))
-            cpInjPoints.traceVarInitPos.Add(new TextPos() { fileName = vcClass.ProjectItem.Name, lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset });
-        }
-      }
-    }
-
-    /// <summary>
-    /// Try to toggle chartpoint
-    /// </summary>
-    /// <returns>new chartpoint status</returns>
-    public ETargetPointStatus Toggle()
-    {
-      switch (status)
-      {
-        case ETargetPointStatus.Available:
-          if (addFunc(this))
-            status = ETargetPointStatus.SwitchedOn;
-          return status;
-        case ETargetPointStatus.SwitchedOff:
-        case ETargetPointStatus.SwitchedOn:
-          if (remFunc(this))
-            status = ETargetPointStatus.Available;
-          return status;
-      }
-
-      return ETargetPointStatus.NotAvailable;
-    }
-
-    /// <summary>
-    /// Try to remove chartpoint
-    /// </summary>
-    /// <returns>new chartpoint status</returns>
-    public ETargetPointStatus Remove()
-    {
-      switch (status)
-      {
-        case ETargetPointStatus.Available:
-        case ETargetPointStatus.NotAvailable:
-          return status;
-        case ETargetPointStatus.SwitchedOff:
-        case ETargetPointStatus.SwitchedOn:
-          if (remFunc(this))
-            status = ETargetPointStatus.Available;
-          return status;
-      }
-
-      return ETargetPointStatus.NotAvailable;
-    }
-  }
-
   public class ChartPointsProcessorData : IChartPointsProcessorData
   {
     /// <summary>
@@ -373,7 +188,8 @@ namespace ChartPoints
     {
       IChartPoint cp = null;
       IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(cpData.fileName);
-      fileChartPoints.TryGetValue(cpData.lineNum, out cp);
+      if(fileChartPoints != null)
+        fileChartPoints.TryGetValue(cpData.lineNum, out cp);
 
       return cp;
     }

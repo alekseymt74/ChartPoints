@@ -25,8 +25,8 @@ namespace ChartPoints
       if (solConfig.Contains(" [ChartPoints]"))
       {
         EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
-        SaveProjChartPonts(proj.FullName);
-        Orchestrate(proj.FullName);
+        SaveProjChartPonts(proj);//.FullName);
+        Orchestrate(proj);//.FullName);
         string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
         serviceHost = new ServiceHost(typeof(IPCChartPoint));
         NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
@@ -40,7 +40,8 @@ namespace ChartPoints
     {
       if (solConfig.Contains(" [ChartPoints]"))
       {
-        ;//serviceHost.Close();
+        serviceHost.Close();
+        serviceHost = null;
       }
     }
 
@@ -121,14 +122,26 @@ namespace ChartPoints
       return true;
     }
 
-    public bool SaveProjChartPonts(string projConfFile)
+    public bool SaveProjChartPonts(EnvDTE.Project proj)
+    {
+      Microsoft.Build.Evaluation.Project msBuildProject = SaveProjChartPonts(proj.FullName);
+      if (msBuildProject != null)
+      {
+        SaveProject(proj, msBuildProject);
+        return true;
+      }
+
+      return false;
+    }
+
+    public Microsoft.Build.Evaluation.Project SaveProjChartPonts(string projConfFile)
     {
       Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
       if (msbuildProj == null)
-        return false;
+        return null;
       ProjectRootElement projRoot = msbuildProj.Xml;
       if (projRoot == null)
-        return false;
+        return null;
       // Remove all <ItemGroup><ChartPointFile>...</ChartPointFile></ItemGroup> if any
       IEnumerable<ProjectItemGroupElement> cpGroups
         = projRoot.ItemGroups.Where(ig => (ig.Items.Where(i => (i.ItemType == "ChartPointFile"))).Any());
@@ -163,27 +176,34 @@ namespace ChartPoints
         }
         msbuildProj.ReevaluateIfNecessary();
       }
-      msbuildProj.Save();
-      //EnvDTE.Project Save
+      //proj.Save();
+      //msbuildProj.Save();
+      //SaveProject(proj, msbuildProj);
 
-      return true;
+      return msbuildProj;
     }
 
     public bool SaveChartPonts()
     {
       foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-        SaveProjChartPonts(proj.FullName);
+        SaveProjChartPonts(proj);//.FullName);
       return true;
     }
 
-    public bool LoadProjChartPoints(string projConfFile)
+    public bool LoadProjChartPoints(EnvDTE.Project proj)
+    {
+      Microsoft.Build.Evaluation.Project msBuildProject = LoadProjChartPoints(proj.FullName);
+      return true;
+    }
+
+    public Microsoft.Build.Evaluation.Project LoadProjChartPoints(string projConfFile)
     {
       Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
       if (msbuildProj == null)
-        return false;
+        return null;
       ProjectRootElement projRoot = msbuildProj.Xml;
       if (projRoot == null)
-        return false;
+        return null;
       // Remove all <ItemGroup><ChartPointFile>...</ChartPointFile></ItemGroup> if any
       IEnumerable<ProjectItemGroupElement> cpGroups
         = projRoot.ItemGroups.Where(ig => (ig.Items.Where(i => (i.ItemType == "ChartPointFile"))).Any());
@@ -211,17 +231,30 @@ namespace ChartPoints
           }
         }
       }
-      return true;
+
+      return msbuildProj;
     }
 
-    public bool Orchestrate(string projConfFile)
+    public bool Orchestrate(EnvDTE.Project proj)
+    {
+      Microsoft.Build.Evaluation.Project msBuildProject = Orchestrate(proj.FullName);
+      if (msBuildProject != null)
+      {
+        SaveProject(proj, msBuildProject);
+        return true;
+      }
+
+      return false;
+    }
+
+    public Microsoft.Build.Evaluation.Project Orchestrate(string projConfFile)
     {
       Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
       if (msbuildProj == null)
-        return false;
+        return null;
       ProjectRootElement projRoot = msbuildProj.Xml;
       if (projRoot == null)
-        return false;
+        return null;
       ProjectUsingTaskElement usingTaskElem;
       IEnumerable<ProjectUsingTaskElement> usingTaskElemCont
         = projRoot.UsingTasks.Where(t => (t.TaskName == "ChartPointsBuilder.CPInstrBuildTask"
@@ -259,10 +292,11 @@ namespace ChartPoints
 
         msbuildProj.ReevaluateIfNecessary();
       }
-      msbuildProj.Save();
-      //EnvDTE.Project Save
+      //proj.Save();
+      //msbuildProj.Save();
+      //SaveProject(proj, msbuildProj);
 
-      return true;
+      return msbuildProj;
     }
     public bool Build()
     {
@@ -271,6 +305,14 @@ namespace ChartPoints
     public bool Run()
     {
       return false;
+    }
+
+    public bool SaveProject(EnvDTE.Project proj, Microsoft.Build.Evaluation.Project msbuildProj)
+    {
+      proj.Save();
+      msbuildProj.Save();
+
+      return true;
     }
   }
 }

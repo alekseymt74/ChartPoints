@@ -10,11 +10,15 @@ namespace ChartPoints
   {
     bool InitSolutionConfigurations();
     bool RemoveSolutionConfigurations();
-    bool Orchestrate(string projConfFile);
-    bool SaveProjChartPonts(string projConfFile);
-    bool LoadProjChartPoints(string projConfFile);
+    bool Orchestrate(EnvDTE.Project proj);
+    Microsoft.Build.Evaluation.Project Orchestrate(string projConfFile);
+    bool SaveProjChartPonts(EnvDTE.Project proj);
+    Microsoft.Build.Evaluation.Project SaveProjChartPonts(string projConfFile);
+    bool LoadProjChartPoints(EnvDTE.Project proj);
+    Microsoft.Build.Evaluation.Project LoadProjChartPoints(string projConfFile);
     bool SaveChartPonts();
     bool Build();
     bool Run();
+    bool SaveProject(EnvDTE.Project proj, Microsoft.Build.Evaluation.Project msbuildProj);
   }
 }

@@ -52,7 +52,7 @@ namespace ChartPoints
         typeof(ITextDocument), out textDoc);
       if (rc)
       {
-        fn = textDoc.FilePath;
+        fn = System.IO.Path.GetFullPath(textDoc.FilePath).ToLower();
         return true;
       }
       else
@@ -144,6 +144,7 @@ namespace ChartPoints
       if (view.TextBuffer != buffer)
         return null;
 
+      //!!! CHECK NON-PROJECT FILES !!!
       ChartPointsTagger tagger = new ChartPointsTagger(view, buffer);
       Globals.taggerUpdater.AddTagger(tagger);
       return tagger as ITagger<T>;
