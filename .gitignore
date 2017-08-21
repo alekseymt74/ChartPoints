@@ -243,3 +243,5 @@ ModelManifest.xml
 
 index.html
 */__cp__.*
+**/*.asm
+**/*.tlog/*

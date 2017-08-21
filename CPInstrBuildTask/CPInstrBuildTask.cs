@@ -22,21 +22,21 @@ namespace ChartPointsBuilder
 
   public class FileChartPoints
   {
-    public IDictionary<int, ChartPointData> chartPoints { get; set; }
+    public IDictionary<int, CPData> chartPoints { get; set; }
 
     internal FileChartPoints()
     {
-      chartPoints = new SortedDictionary<int, ChartPointData>();
+      chartPoints = new SortedDictionary<int, CPData>();
     }
   }
 
   public class CPConfLoader : ChartPoints.CPConfLoader
   {
-    public void LoadChartPoints(ITaskItem[] InputChartPoints, Func<string, Action<int, ChartPointData> > filesChartPoints)
+    public void LoadChartPoints(ITaskItem[] InputChartPoints, Func<string, Action<int, CPData> > filesChartPoints)
     {
       foreach (var item in InputChartPoints)
       {
-        Action<int, ChartPointData> addCPDataAction = filesChartPoints(item.ItemSpec);
+        Action<int, CPData> addCPDataAction = filesChartPoints(item.ItemSpec);
         string metadata = item.GetMetadata("ChartPoints");
         LoadChartPoint(metadata, addCPDataAction);
       }
@@ -171,13 +171,13 @@ namespace ChartPointsBuilder
   internal class CPClassCodeOrchestrator
   {
     private CPClassLayout cpClassLayout;
-    private IDictionary<int, ChartPointData> cps = new SortedDictionary<int, ChartPointData>();
+    private IDictionary<int, CPData> cps = new SortedDictionary<int, CPData>();
     internal CPClassCodeOrchestrator(CPClassLayout _cpClassLayout)
     {
       cpClassLayout = _cpClassLayout;
     }
 
-    internal void AddChartPointData(ChartPointData cpData)
+    internal void AddChartPointData(CPData cpData)
     {
       cps.Add(cpData.lineNum, cpData);
     }
@@ -231,6 +231,8 @@ namespace ChartPointsBuilder
     public ITaskItem[] InputHeaderFiles { get; set; }
     [Required]
     public ITaskItem[] InputChartPoints { get; set; }
+    [Required]
+    public string ProjectName { get; set; }
     [Output]
     public ITaskItem[] OutputSrcFiles { get; set; }
     [Output]
@@ -269,9 +271,10 @@ namespace ChartPointsBuilder
       {
         FileChartPoints fileChartPoints = new FileChartPoints();
         filesChartPoints.Add(fname, fileChartPoints);
-        Action<int, ChartPointData> act = (i, data) =>
+        Action<int, CPData> act = (i, data) =>
         {
           data.fileName = fname;
+          data.projName = ProjectName;
           fileChartPoints.chartPoints.Add(i, data);
         };
         return act;

@@ -9,6 +9,25 @@ using System.Threading.Tasks;
 namespace ChartPoints
 {
   [DataContract]
+  public class CPData
+  {
+    [DataMember]
+    public int lineNum = -1;
+    [DataMember]
+    public int linePos = -1;
+    [DataMember]
+    public string className = string.Empty;
+    [DataMember]
+    public string projName = string.Empty;
+    [DataMember]
+    public string fileName = string.Empty;
+    [DataMember]
+    public string varName = string.Empty;
+    [DataMember]
+    public bool enabled = false;
+  }
+
+  [DataContract]
   public class TextPos
   {
     [DataMember]
@@ -71,32 +90,51 @@ namespace ChartPoints
   public interface IIPCChartPoint
   {
     [OperationContract]
-    string GetClassName(ChartPointData cpData);
+    string GetClassName(CPData cpData);
     [OperationContract]
-    CPClassLayout GetCPClassLayout(ChartPointData cpData);
+    CPClassLayout GetCPClassLayout(CPData cpData);
   }
 
   [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
   public class IPCChartPoint : IIPCChartPoint
   {
     private IDictionary<string, CPClassLayout> injData = new SortedDictionary<string, CPClassLayout>();
-    public CPClassLayout GetCPClassLayout(ChartPointData cpData)
+
+    private IChartPoint GetChartPoint(CPData cpData)
     {
-      IChartPoint chartPnt = Globals.processor.GetChartPoint(cpData);
+      IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(cpData.projName);
+      if (pPnts == null)
+        return null;
+      IFileChartPoints fPnts = pPnts.GetFileChartPoints(cpData.fileName);
+      if (fPnts == null)
+        return null;
+      ILineChartPoints lPnts = fPnts.GetLineChartPoints(cpData.lineNum);
+      if (lPnts == null)
+        return null;
+      IChartPoint chartPnt = lPnts.GetChartPoint(cpData.varName);
+
+      return chartPnt;
+    }
+    public CPClassLayout GetCPClassLayout(CPData cpData)
+    {
+      IChartPoint chartPnt = GetChartPoint(cpData);
       if (chartPnt == null)
         return null;
       CPClassLayout cpInjPoints = null;
-      if (injData.TryGetValue(chartPnt.data.className, out cpInjPoints) && cpInjPoints != null)
-        return cpInjPoints;
-      chartPnt.CalcInjectionPoints(out cpInjPoints);
-      injData.Add(chartPnt.data.className, cpInjPoints);
+      if (!injData.TryGetValue(chartPnt.data.className, out cpInjPoints))// && cpInjPoints != null)
+      {
+        cpInjPoints = new CPClassLayout();
+        injData.Add(chartPnt.data.className, cpInjPoints);
+      }
+      chartPnt.CalcInjectionPoints(cpInjPoints);
 
       return cpInjPoints;
     }
 
-    public string GetClassName(ChartPointData cpData)
+    public string GetClassName(CPData cpData)
     {
-      IChartPoint chartPnt = Globals.processor.GetChartPoint(cpData);
+      //IChartPoint chartPnt = Globals.processor.GetChartPoint(cpData);
+      IChartPoint chartPnt = GetChartPoint(cpData);
       if (chartPnt == null)
         return "";
 

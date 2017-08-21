@@ -151,23 +151,39 @@ namespace ChartPoints
           projRoot.RemoveChild(cpg);
       }
       ProjectItemGroupElement cpItemGroup = projRoot.AddItemGroup();
-      if(Globals.processor.data.chartPoints.Any())
+      IEnumerable<ProjectProperty> projNameProp = msbuildProj.AllEvaluatedProperties.Where((b => (b.Name.Equals("MSBuildProjectName"))));
+      string projName = projNameProp.ElementAt(0).EvaluatedValue;
+
+      ////msbuildProj.GlobalProperties
+      ////+		[8]	"MSBuildProjectName"="test.instrTest" ["test.instrTest"]	Microsoft.Build.Evaluation.ProjectProperty {Microsoft.Build.Evaluation.ProjectProperty.ProjectPropertyNotXmlBacked}
+
+      //IEnumerable<ProjectPropertyGroupElement> globalsGroups = projRoot.PropertyGroups.Where(ig => (ig.Label == "Globals"));
+      //ProjectElement rootNS = globalsGroups.ElementAt(0).Children.Where(i => (i.Label == "RootNamespace")).FirstOrDefault();
+      //string projName = rootNS.Label;
+      IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(projName);//rootNS.Metadata.First().Value);
+      if (pPnts != null)
+      //if (Globals.processor.data.chartPoints.Any())
       {
-        foreach (var v in Globals.processor.data.chartPoints)
+        //foreach (var v in Globals.processor.data.chartPoints)
+        foreach (var fPnts in pPnts.filePoints)
         {
-          ProjectItemElement cpsFileItem = cpItemGroup.AddItem("ChartPointFile", v.Key);
+          ProjectItemElement cpsFileItem = cpItemGroup.AddItem("ChartPointFile", fPnts.fileName/*v.Key*/);
           StringWriter strWriter = new StringWriter();
           XmlTextWriter xmlTxtWriter = new XmlTextWriter(strWriter);
           //xmlTxtWriter.WriteStartElement("ChartPoints");
-          foreach (var v1 in v.Value)
+          //foreach (var v1 in v.Value)
+          foreach (var lPnts in fPnts.linePoints)
           {
-            IChartPoint chartPnt = v1.Value;
-            xmlTxtWriter.WriteStartElement("ChartPoint");
+            foreach (var chartPnt in lPnts.chartPoints)
             {
-              xmlTxtWriter.WriteElementString("Variable", chartPnt.data.varName);
-              xmlTxtWriter.WriteElementString("LineNum", Convert.ToString((Int32) chartPnt.data.lineNum));
-              xmlTxtWriter.WriteElementString("LinePos", Convert.ToString((Int32)chartPnt.data.linePos));
-              xmlTxtWriter.WriteElementString("Enabled", chartPnt.data.enabled ? "true" : "false");
+              //IChartPoint chartPnt = v1.Value;
+              xmlTxtWriter.WriteStartElement("ChartPoint");
+              {
+                xmlTxtWriter.WriteElementString("Variable", chartPnt.data.varName);
+                xmlTxtWriter.WriteElementString("LineNum", Convert.ToString((Int32) lPnts.lineNum));//chartPnt.data.lineNum));
+                xmlTxtWriter.WriteElementString("LinePos", Convert.ToString((Int32) lPnts.linePos));//chartPnt.data.linePos));
+                xmlTxtWriter.WriteElementString("Enabled", chartPnt.data.enabled ? "true" : "false");
+              }
             }
             xmlTxtWriter.WriteEndElement();
           }
@@ -204,9 +220,16 @@ namespace ChartPoints
       ProjectRootElement projRoot = msbuildProj.Xml;
       if (projRoot == null)
         return null;
-      // Remove all <ItemGroup><ChartPointFile>...</ChartPointFile></ItemGroup> if any
       IEnumerable<ProjectItemGroupElement> cpGroups
         = projRoot.ItemGroups.Where(ig => (ig.Items.Where(i => (i.ItemType == "ChartPointFile"))).Any());
+      IEnumerable<ProjectProperty> projNameProp = msbuildProj.AllEvaluatedProperties.Where((b => (b.Name.Equals("MSBuildProjectName"))));
+      string projName = projNameProp.ElementAt(0).EvaluatedValue;
+      //IEnumerable<ProjectItemGroupElement> globalsGroups = projRoot.ItemGroups.Where(ig => (ig.Label == "Globals"));
+      //ProjectItemElement rootNS = globalsGroups.ElementAt(0).Items.Where(i => (i.ItemType == "RootNamespace")).First();
+      //string projName = rootNS.Metadata.First().Value;
+      IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(projName);
+      if (pPnts == null)
+        Globals.processor.AddProjectChartPoints(projName, out pPnts);
       if (cpGroups.Any())
       {
         ICPConfLoader confLoader = new CPConfLoader();
@@ -217,14 +240,18 @@ namespace ChartPoints
           {
             foreach (ProjectMetadataElement me in cpFileElem.Metadata)
             {
-              //IDictionary<int, IChartPoint> fileChartPoints = Globals.processor.GetOrCreateFileChartPoints(cpFileElem.Include);
-              Action<int, ChartPointData> addCPDataAction
+              Action<int, CPData> addCPDataAction
                 = (i, data) =>
                 {
                   data.fileName = cpFileElem.Include;
                   //################################################ !!!!!!!!!! data.fileFullName !!!!!!!!!! ################################################
                   data.lineNum = i;
-                  Globals.processor.AddChartPoint(data);
+                  //Globals.processor.AddChartPoint(data);
+                  data.projName = projName;
+                  IFileChartPoints fPnts = pPnts.AddFileChartPoints(cpFileElem.Include, "!!!!!!!!!!!!");//Path.GetDirectoryName(projConfFile) + "\\" + cpFileElem.Include);
+                  ILineChartPoints lPnts = fPnts.AddLineChartPoints(data.lineNum, data.linePos);
+                  IChartPoint chartPnt = null;
+                  lPnts.AddChartPoint(data.varName, null/*"!!!!!!!"*/, out chartPnt);//!!!!!!!!!!!!!!!!
                 };
               confLoader.LoadChartPoint("<" + me.Name + ">" + me.Value + "</" + me.Name + ">", addCPDataAction);
             }
@@ -271,6 +298,7 @@ namespace ChartPoints
         task.SetParameter("InputSrcFiles", "@(ClCompile)");
         task.SetParameter("InputHeaderFiles", "@(ClInclude)");
         task.SetParameter("InputChartPoints", "@(ChartPointFile)");
+        task.SetParameter("ProjectName", "$(MSBuildProjectName)");
         task.AddOutputProperty("OutputSrcFiles", "OutputSrcFiles");
         task.AddOutputProperty("OutputHeaderFiles", "OutputHeaderFiles");
         task.AddOutputProperty("SrcFilesChanged", "SrcFilesChanged");

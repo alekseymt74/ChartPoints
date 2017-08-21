@@ -11,23 +11,27 @@ namespace ChartPointsInstrTests
 {
   public class ChartPoint : ChartPoints.ChartPoint
   {
-    public ChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt
-      , VCCodeClass _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
-      : base(caretPnt, _startFuncPnt, _endFuncPnt, _targetClassElem, _addFunc, _remFunc)
-    {
-    }
-    public ChartPoint(IChartPointData _data, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
-      : base(_data, _addFunc, _remFunc)
-    {
-    }
-    public ChartPoint(IChartPointData _data)
-      : base(_data, null, null)
-    {
-    }
+    //public ChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt
+    //  , VCCodeClass _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+    //  : base(caretPnt, _startFuncPnt, _endFuncPnt, _targetClassElem, _addFunc, _remFunc)
+    //{
+    //}
+    //public ChartPoint(IChartPointData _data, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+    //  : base(_data, _addFunc, _remFunc)
+    //{
+    //}
+    //public ChartPoint(IChartPointData _data)
+    //  : base(_data, null, null)
+    //{
+    //}
 
-    public override void CalcInjectionPoints(out CPClassLayout cpInjPoints)
+    public ChartPoint(string varName, VCCodeClass ownerClass, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+      : base(varName, ownerClass, _addFunc, _remFunc)
+    {}
+
+      public override void CalcInjectionPoints(/*out */CPClassLayout cpInjPoints)
     {
-      cpInjPoints = new CPClassLayout();
+      //cpInjPoints = new CPClassLayout();
       CPTraceVar traceVar = new CPTraceVar();
       traceVar.filePos.fileName = "temp_utest.h";
       traceVar.filePos.pos.lineNum = 5;
@@ -68,24 +72,37 @@ namespace ChartPointsInstrTests
 
   public class ChartPointsProcessor : ChartPoints.ChartPointsProcessor
   {
-    public new bool AddChartPoint(IChartPoint chartPnt)
-    {
-      StoreChartPnt(chartPnt);
-      return true;
-    }
+    //public new bool AddChartPoint(IChartPoint chartPnt)
+    //{
+    //  StoreChartPnt(chartPnt);
+    //  return true;
+    //}
 
     public void RemoveAllChartPoints()
     {
-      data.chartPoints.Clear();
+      //data.chartPoints.Clear();
+      data.projPoints.Clear();
     }
-    public override IChartPoint GetChartPoint(IChartPointData cpData)
+    //public override IChartPoint GetChartPoint(IChartPointData cpData)
+    //{
+    //  IChartPoint chartPnt = null;
+    //  if (cpData.varName == "j")
+    //  {
+    //    ((ChartPointData)cpData).className = "temp_utest";
+    //    chartPnt = new ChartPoint(cpData);
+    //  }
+
+    //  return chartPnt;
+    //}
+  }
+
+  public class LineChartPoints : ChartPoints.LineChartPoints
+  {
+    public override IChartPoint GetChartPoint(string varName)
     {
-      IChartPoint chartPnt = null;
-      if (cpData.varName == "j")
-      {
-        ((ChartPointData)cpData).className = "temp_utest";
-        chartPnt = new ChartPoint(cpData);
-      }
+      IChartPoint chartPnt = base.GetChartPoint(varName);
+      if (chartPnt != null && varName == "j")
+        ((ChartPoints.ChartPointData)chartPnt.data).className = "temp_utest";
 
       return chartPnt;
     }
@@ -105,15 +122,25 @@ namespace ChartPointsInstrTests
     {
       return new CPOrchestrator();
     }
-    public override IChartPoint CreateChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt
-      , VCCodeClass _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+    public override ILineChartPoints CreateLineChartPoint(int _lineNum, int _linePos, Func<ILineChartPoints, bool> _addFunc,
+      Func<ILineChartPoints, bool> _remFunc)
     {
-      return new ChartPoint(caretPnt, _startFuncPnt, _endFuncPnt, _targetClassElem, _addFunc, _remFunc);
+      return new LineChartPoints() { lineNum = _lineNum, linePos = _linePos, addFunc = _addFunc, remFunc = _remFunc };
     }
+    public override IChartPoint CreateChartPoint(string varName, VCCodeClass ownerClass, Func<IChartPoint, bool> _addFunc,
+      Func<IChartPoint, bool> _remFunc)
+    {
+      return new ChartPoint(varName, ownerClass, _addFunc, _remFunc);
+    }
+    //public override IChartPoint CreateChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt
+    //  , VCCodeClass _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+    //{
+    //  return new ChartPoint(caretPnt, _startFuncPnt, _endFuncPnt, _targetClassElem, _addFunc, _remFunc);
+    //}
 
-    public override IChartPoint CreateChartPoint(IChartPointData _data, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
-    {
-      return new ChartPoint(_data, _addFunc, _remFunc);
-    }
+    //public override IChartPoint CreateChartPoint(IChartPointData _data, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+    //{
+    //  return new ChartPoint(_data, _addFunc, _remFunc);
+    //}
   }
 }

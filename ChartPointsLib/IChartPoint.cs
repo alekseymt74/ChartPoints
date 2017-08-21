@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using EnvDTE;
 using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
@@ -20,10 +21,10 @@ namespace ChartPoints
 
   public interface IChartPointData
   {
-    string fileName { get; }
-    string fileFullName { get; }
-    int lineNum { get; }
-    int linePos { get; }
+    //string fileName { get; }
+    //string fileFullName { get; }
+    //int lineNum { get; }
+    //int linePos { get; }
     bool enabled { get; }
     string varName { get; }
     string className { get; }
@@ -46,13 +47,48 @@ namespace ChartPoints
     /// <returns>result of the operation (see ChartPoints::ETargetPointStatus)</returns>
     ETargetPointStatus Remove();
 
-    void CalcInjectionPoints(out CPClassLayout cpInjPoints);
-    void GetAvailableVars(out List<Tuple<string, string>> availableVars);
+    void CalcInjectionPoints(/*out */CPClassLayout cpInjPoints);
     /// <summary>
     /// Cpp class variable
     /// </summary>
-    VCCodeVariable var { get; }
+    //VCCodeVariable var { get; }
     IChartPointData data { get; }
+  }
+
+  public interface ILineChartPoints
+  {
+    int lineNum { get; }
+    int linePos { get; }
+    ISet<IChartPoint> chartPoints { get; }
+    IChartPoint GetChartPoint(string varName);
+    bool AddChartPoint(string varName, VCCodeClass ownerClass, out IChartPoint chartPnt);
+    bool SyncChartPoints(string fname, ISet<string> cpVarNames, VCCodeClass className);
+  }
+
+  public interface IFileChartPoints
+  {
+    string fileName { get; }
+    string fileFullName { get; }
+    ISet<ILineChartPoints> linePoints { get; }
+    ILineChartPoints GetLineChartPoints(int lineNum);
+    ILineChartPoints AddLineChartPoints(int lineNum, int linePos);
+    //bool AddLineChartPoints(ILineChartPoints linePnts);
+  }
+
+  public interface IProjectChartPoints
+  {
+    string projName { get; }
+    ISet<IFileChartPoints> filePoints { get; }
+    IFileChartPoints GetFileChartPoints(string fname);
+    ILineChartPoints GetFileLineChartPoints(string fname, int lineNum);
+    IFileChartPoints AddFileChartPoints(string fileName, string fileFullName);
+  }
+
+  public interface ICheckPoint
+  {
+    //bool AddChartPoint(string varName);
+    bool SyncChartPoints(ISet<string> cpVarNames);
+    void GetAvailableVars(out List<Tuple<string, string, bool>> _availableVars);
   }
 
 }

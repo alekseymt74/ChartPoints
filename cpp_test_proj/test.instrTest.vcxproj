@@ -147,15 +147,26 @@
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="temp_utest.h" />
+    <ClInclude Include="temp_utest.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="test_01.h" />
+    <ClInclude Include="__cp__.temp_utest.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\tracer\tracer.cpp" />
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="temp_utest.cpp" />
-    <ClCompile Include="test.cpp" />
+    <ClCompile Include="temp_utest.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="test.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="test_01.cpp" />
+    <ClCompile Include="__cp__.temp_utest.cpp" />
+    <ClCompile Include="__cp__.test.cpp" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ChartPointFile Include="temp_utest.cpp">
       <ChartPoints>
@@ -173,7 +184,7 @@
   </ImportGroup>
   <UsingTask TaskName="ChartPointsBuilder.CPInstrBuildTask" AssemblyFile="e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll" />
   <Target Name="GenerateToolOutput" BeforeTargets="ClCompile">
-    <CPInstrBuildTask InputSrcFiles="@(ClCompile)" InputHeaderFiles="@(ClInclude)" InputChartPoints="@(ChartPointFile)">
+    <CPInstrBuildTask InputSrcFiles="@(ClCompile)" InputHeaderFiles="@(ClInclude)" InputChartPoints="@(ChartPointFile)" ProjectName="$(MSBuildProjectName)">
       <Output TaskParameter="OutputSrcFiles" PropertyName="OutputSrcFiles" />
       <Output TaskParameter="OutputHeaderFiles" PropertyName="OutputHeaderFiles" />
       <Output TaskParameter="SrcFilesChanged" PropertyName="SrcFilesChanged" />

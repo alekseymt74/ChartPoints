@@ -9,7 +9,7 @@ namespace ChartPoints
 {
   public interface ICPConfLoader
   {
-    void LoadChartPoint(string metadata, Action<int, ChartPointData> addCPDataAction);
+    void LoadChartPoint(string metadata, Action<int, CPData> addCPDataAction);
   }
 
   public class CPConfLoader : ICPConfLoader
@@ -22,7 +22,7 @@ namespace ChartPoints
       , TagLinePos
       , TagEnable
     };
-    private bool ChartPointsFromXml(String xml, Action<int, ChartPointData> addCPDataAction)
+    private bool ChartPointsFromXml(String xml, Action<int, CPData> addCPDataAction)
     {
       bool ret = false;
       try
@@ -31,7 +31,7 @@ namespace ChartPoints
         {
           try
           {
-            ChartPointData cp = null;
+            CPData cp = null;
             ETag tag = ETag.Unknown;
             while (tr.Read())
             {
@@ -41,7 +41,7 @@ namespace ChartPoints
                   switch (tr.Name)
                   {
                     case "ChartPoint":
-                      cp = new ChartPointData();
+                      cp = new CPData();
                       cp.lineNum = -1;
                       cp.linePos = -1;
                       break;
@@ -115,7 +115,7 @@ namespace ChartPoints
       return ret;
     }
 
-    public void LoadChartPoint(string metadata, Action<int, ChartPointData> addCPDataAction)
+    public void LoadChartPoint(string metadata, Action<int, CPData> addCPDataAction)
     {
       metadata = metadata.Replace("xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\"", "");
       bool ret = ChartPointsFromXml(metadata, addCPDataAction);
