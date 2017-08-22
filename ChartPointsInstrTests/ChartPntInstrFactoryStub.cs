@@ -29,44 +29,70 @@ namespace ChartPointsInstrTests
       : base(varName, ownerClass, _addFunc, _remFunc)
     {}
 
-      public override void CalcInjectionPoints(/*out */CPClassLayout cpInjPoints)
+    public override void CalcInjectionPoints(/*out */CPClassLayout cpInjPoints, string _fname, int _lineNum, int _linePos)
     {
       //cpInjPoints = new CPClassLayout();
-      CPTraceVar traceVar = new CPTraceVar();
-      traceVar.filePos.fileName = "temp_utest.h";
-      traceVar.filePos.pos.lineNum = 5;
-      traceVar.filePos.pos.linePos = 6;
-      traceVar.type = "int";
-      cpInjPoints.traceVars.Add("j", traceVar);
-      //cpInjPoints.injConstructorPos = new TextPos();
-      cpInjPoints.traceVarInitPos.Add(new FilePosPnt() { fileName = "temp_utest.h", pos = { lineNum = 7, linePos = 18 }});
-      cpInjPoints.traceVarInitPos.Add(new FilePosPnt() { fileName = "temp_utest.h", pos = { lineNum = 8, linePos = 25 }});
-      FilePosText inclPos = new FilePosText()
+      CPTraceVar traceVar = null;//cpInjPoints.traceVarPos.FirstOrDefault((v) => (v.name == data.varName));
+      if (/*traceVar == null)*/!cpInjPoints.traceVarPos.TryGetValue(data.varName, out traceVar))
       {
-        fileName = "temp_utest.cpp",
-        pos = { lineNum = 0, linePos = 1 },
-        posEnd = { lineNum = 0, linePos = 24 }
-      };
-      CPInclude incl = new CPInclude()
+        traceVar = new CPTraceVar()
+        {
+          name = data.varName,
+          type = "int",
+          className = "temp_utest"/*,
+          fileName = _fname,
+          pos = {lineNum = _lineNum, linePos = _linePos}*/
+        };
+        cpInjPoints.traceVarPos.Add(data.varName, traceVar);
+        // define trace var definition placement
+        traceVar.defPos.fileName = "temp_utest.h";
+        traceVar.defPos.pos.lineNum = 5;
+        traceVar.defPos.pos.linePos = 6;
+        traceVar.traceVarInitPos.Add(new FilePosPnt() {fileName = "temp_utest.h", pos = {lineNum = 7, linePos = 18 + 9}});
+        traceVar.traceVarInitPos.Add(new FilePosPnt() {fileName = "temp_utest.h", pos = {lineNum = 8, linePos = 25 + 15}});
+      }
+      traceVar.traceVarTracePos.Add(new FilePosPnt()
       {
-        inclOrig = "temp_utest.h",
-        inclReplace = "__cp__.temp_utest.h",
-        pos = inclPos
-      };
-      cpInjPoints.includesPos.Add(incl);
-      inclPos = new FilePosText()
+        fileName = _fname,
+        pos = { lineNum = _lineNum, linePos = _linePos }
+      });
+      TextPos traceInclPos = null;
+      if (!cpInjPoints.traceInclPos.TryGetValue(traceVar.defPos.fileName, out traceInclPos))
+        cpInjPoints.traceInclPos.Add(traceVar.defPos.fileName, new TextPos() { lineNum = 0, linePos = 0 });
+      CPInclude incl = null;
+      if (!cpInjPoints.includesPos.TryGetValue(new Tuple<string, string>("temp_utest.h", "temp_utest.cpp"), out incl))
       {
-        fileName = "test.cpp",
-        pos = { lineNum = 5, linePos = 1 },
-        posEnd = { lineNum = 5, linePos = 24 }
-      };
-      incl = new CPInclude()
+        FilePosText inclPos = new FilePosText()
+        {
+          fileName = "temp_utest.cpp",
+          pos = {lineNum = 0, linePos = 1},
+          posEnd = {lineNum = 0, linePos = 24}
+        };
+        incl = new CPInclude()
+        {
+          inclOrig = "temp_utest.h",
+          inclReplace = "__cp__.temp_utest.h",
+          pos = inclPos
+        };
+        cpInjPoints.includesPos.Add(new Tuple<string, string>(incl.inclOrig, incl.pos.fileName), incl);
+      }
+      incl = null;
+      if (!cpInjPoints.includesPos.TryGetValue(new Tuple<string, string>("temp_utest.h", "test.cpp"), out incl))
       {
-        inclOrig = "temp_utest.h",
-        inclReplace = "__cp__.temp_utest.h",
-        pos = inclPos
-      };
-      cpInjPoints.includesPos.Add(incl);
+        FilePosText inclPos = new FilePosText()
+        {
+          fileName = "test.cpp",
+          pos = {lineNum = 5, linePos = 1},
+          posEnd = {lineNum = 5, linePos = 24}
+        };
+        incl = new CPInclude()
+        {
+          inclOrig = "temp_utest.h",
+          inclReplace = "__cp__.temp_utest.h",
+          pos = inclPos
+        };
+        cpInjPoints.includesPos.Add(new Tuple<string, string>(incl.inclOrig, incl.pos.fileName), incl);
+      }
     }
   }
 

@@ -67,22 +67,31 @@ namespace ChartPoints
   public class CPTraceVar
   {
     [DataMember]
-    public FilePosPnt filePos { get; set; } = new FilePosPnt();
+    public FilePosPnt defPos { get; set; } = new FilePosPnt();
+    [DataMember]
+    public IList<FilePosPnt> traceVarInitPos { get; set; } = new List<FilePosPnt>();
+    [DataMember]
+    public IList<FilePosPnt> traceVarTracePos { get; set; } = new List<FilePosPnt>();
+
+    [DataMember]
+    public FilePosPnt injConstructorPos { get; set; } = null;
+    [DataMember]
+    public string name { get; set; }
     [DataMember]
     public string type { get; set; }
+    [DataMember]
+    public string className { get; set; }
   }
 
   [DataContract]
   public class CPClassLayout
   {
     [DataMember]
-    public IDictionary<string, CPTraceVar> traceVars { get; set; } = new SortedDictionary<string, CPTraceVar>();
+    public IDictionary<string, CPTraceVar> traceVarPos { get; set; } = new SortedDictionary<string, CPTraceVar>();
     [DataMember]
-    public IList<FilePosPnt> traceVarInitPos { get; set; } = new List<FilePosPnt>();
+    public IDictionary<string, TextPos> traceInclPos { get; set; } = new SortedDictionary<string, TextPos>();
     [DataMember]
-    public FilePosPnt injConstructorPos { get; set; }
-    [DataMember]
-    public IList<CPInclude> includesPos { get; set; } = new List<CPInclude>();
+    public IDictionary<Tuple<string, string>, CPInclude> includesPos { get; set; } = new SortedDictionary<Tuple<string, string>, CPInclude>();
   }
 
   [ServiceContract(Namespace = "TestNamespace")]
@@ -90,9 +99,7 @@ namespace ChartPoints
   public interface IIPCChartPoint
   {
     [OperationContract]
-    string GetClassName(CPData cpData);
-    [OperationContract]
-    CPClassLayout GetCPClassLayout(CPData cpData);
+    CPClassLayout GetInjectionData(string projName);
   }
 
   [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
@@ -100,45 +107,25 @@ namespace ChartPoints
   {
     private IDictionary<string, CPClassLayout> injData = new SortedDictionary<string, CPClassLayout>();
 
-    private IChartPoint GetChartPoint(CPData cpData)
+    public CPClassLayout GetInjectionData(string projName)
     {
-      IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(cpData.projName);
+      IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(projName);
       if (pPnts == null)
         return null;
-      IFileChartPoints fPnts = pPnts.GetFileChartPoints(cpData.fileName);
-      if (fPnts == null)
-        return null;
-      ILineChartPoints lPnts = fPnts.GetLineChartPoints(cpData.lineNum);
-      if (lPnts == null)
-        return null;
-      IChartPoint chartPnt = lPnts.GetChartPoint(cpData.varName);
-
-      return chartPnt;
-    }
-    public CPClassLayout GetCPClassLayout(CPData cpData)
-    {
-      IChartPoint chartPnt = GetChartPoint(cpData);
-      if (chartPnt == null)
-        return null;
-      CPClassLayout cpInjPoints = null;
-      if (!injData.TryGetValue(chartPnt.data.className, out cpInjPoints))// && cpInjPoints != null)
+      CPClassLayout cpClassLayout = new CPClassLayout();
+      foreach (var fPnts in pPnts.filePoints)
       {
-        cpInjPoints = new CPClassLayout();
-        injData.Add(chartPnt.data.className, cpInjPoints);
+        string _fname = fPnts.fileName;
+        foreach (var lPnts in fPnts.linePoints)
+        {
+          int _lineNum = lPnts.lineNum;
+          int _linePos = lPnts.linePos;
+          foreach (var chartPnt in lPnts.chartPoints)
+            chartPnt.CalcInjectionPoints(cpClassLayout, _fname, _lineNum, _linePos);
+        }
       }
-      chartPnt.CalcInjectionPoints(cpInjPoints);
 
-      return cpInjPoints;
-    }
-
-    public string GetClassName(CPData cpData)
-    {
-      //IChartPoint chartPnt = Globals.processor.GetChartPoint(cpData);
-      IChartPoint chartPnt = GetChartPoint(cpData);
-      if (chartPnt == null)
-        return "";
-
-      return chartPnt.data.className;
+      return cpClassLayout;
     }
   }
 }

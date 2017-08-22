@@ -42,43 +42,37 @@ namespace ChartPointsInstrTests
     [TestMethod]
     public void CheckSaveLoadChartpoints()
     {
-      CPData cpData = new CPData { fileName = "temp_utest.cpp", projName = "test.instrTest", lineNum = 4, linePos = 2, varName = "j", enabled = true};
+      CPData cpData_01 = new CPData { fileName = "temp_utest.cpp", projName = "test.instrTest", lineNum = 4, linePos = 2, varName = "j", enabled = true};
+      CPData cpData_02 = new CPData { fileName = "temp_utest.cpp", projName = "test.instrTest", lineNum = 5, linePos = 1, varName = "j", enabled = true };
+      CPData cpData_03 = new CPData { fileName = "temp_utest.cpp", projName = "test.instrTest", lineNum = 6, linePos = 1, varName = "j", enabled = true };
+      IList<CPData> cpDataCont = new List<CPData>() {cpData_01, cpData_02, cpData_03};
 
-      IProjectChartPoints pPnts = null;
-      Globals.processor.AddProjectChartPoints(cpData.projName, out pPnts);
-      IFileChartPoints fPnts = pPnts.AddFileChartPoints(cpData.fileName, "!!!!!!!!!!!!");//Path.GetDirectoryName(projConfFile) + "\\" + cpFileElem.Include);
-      ILineChartPoints lPnts = fPnts.AddLineChartPoints(cpData.lineNum, cpData.linePos);
-      IChartPoint chartPnt = null;
-      lPnts.AddChartPoint(cpData.varName, null/*"!!!!!!!"*/, out chartPnt);//!!!!!!!!!!!!!!!!
-      CheckChartPointData(cpData.fileName, cpData.lineNum, cpData);
-      cpOrchestrator = new CPOrchestrator();
-      Microsoft.Build.Evaluation.Project msBuildProject = cpOrchestrator.SaveProjChartPonts(testProjFName);
-      msBuildProject.Save();
-      processor.RemoveAllChartPoints();
-      pPnts = processor.GetProjectChartPoints(cpData.projName);
-      Assert.AreEqual(pPnts, null);
-      cpOrchestrator.LoadProjChartPoints(testProjFName);
-      CheckChartPointData(cpData.fileName, cpData.lineNum, cpData);
-      msBuildProject = cpOrchestrator.SaveProjChartPonts(testProjFName);
+      Microsoft.Build.Evaluation.Project msBuildProject = null;
+      foreach (var cpData in cpDataCont)
+      {
+        IProjectChartPoints pPnts = null;
+        Globals.processor.AddProjectChartPoints(cpData.projName, out pPnts);
+        IFileChartPoints fPnts = pPnts.AddFileChartPoints(cpData.fileName, "!!!!!!!!!!!!");
+          //Path.GetDirectoryName(projConfFile) + "\\" + cpFileElem.Include);
+        ILineChartPoints lPnts = fPnts.AddLineChartPoints(cpData.lineNum, cpData.linePos);
+        IChartPoint chartPnt = null;
+        lPnts.AddChartPoint(cpData.varName, null /*"!!!!!!!"*/, out chartPnt); //!!!!!!!!!!!!!!!!
+        CheckChartPointData(cpData.fileName, cpData.lineNum, cpData);
+        cpOrchestrator = new CPOrchestrator();
+        msBuildProject = cpOrchestrator.SaveProjChartPonts(testProjFName);
+        Assert.AreNotEqual(msBuildProject, null);
+        msBuildProject.Save();
+        processor.RemoveAllChartPoints();
+        pPnts = processor.GetProjectChartPoints(cpData.projName);
+        Assert.AreEqual(pPnts, null);
+        cpOrchestrator.LoadProjChartPoints(testProjFName);
+        CheckChartPointData(cpData.fileName, cpData.lineNum, cpData);
+        msBuildProject = cpOrchestrator.SaveProjChartPonts(testProjFName);
+      }
+      Assert.AreNotEqual(msBuildProject, null);
       msBuildProject.Save();
       msBuildProject = cpOrchestrator.Orchestrate(testProjFName);
       msBuildProject.Save();
-
-      //IChartPoint chartPnt = new ChartPoint(cpData);
-      //processor.AddChartPoint(chartPnt);
-      //CheckChartPointData(cpData.fileName, cpData.lineNum, cpData);
-      //cpOrchestrator = new CPOrchestrator();
-      //Microsoft.Build.Evaluation.Project msBuildProject = cpOrchestrator.SaveProjChartPonts(testProjFName);
-      //msBuildProject.Save();
-      //processor.RemoveAllChartPoints();
-      //Assert.AreEqual(processor.GetFileChartPoints(cpData.fileName), null);
-      //cpOrchestrator.LoadProjChartPoints(testProjFName);
-      //Assert.AreEqual(processor.GetFileChartPoints(cpData.fileName).Count, 1);
-      //CheckChartPointData(cpData.fileName, cpData.lineNum, cpData);
-      //msBuildProject = cpOrchestrator.SaveProjChartPonts(testProjFName);
-      //msBuildProject.Save();
-      //msBuildProject = cpOrchestrator.Orchestrate(testProjFName);
-      //msBuildProject.Save();
     }
 
     [TestMethod]

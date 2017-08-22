@@ -293,15 +293,13 @@
           <LinePos>2</LinePos>
           <Enabled>true</Enabled>
         </ChartPoint>
+      </ChartPoints>
+    </ChartPointFile>
+    <ChartPointFile Include="temp_utest.h">
+      <ChartPoints>
         <ChartPoint xmlns="">
-          <Variable>j</Variable>
-          <LineNum>5</LineNum>
-          <LinePos>1</LinePos>
-          <Enabled>true</Enabled>
-        </ChartPoint>
-        <ChartPoint xmlns="">
-          <Variable>j</Variable>
-          <LineNum>6</LineNum>
+          <Variable>k</Variable>
+          <LineNum>13</LineNum>
           <LinePos>1</LinePos>
           <Enabled>true</Enabled>
         </ChartPoint>

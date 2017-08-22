@@ -245,3 +245,4 @@ index.html
 */__cp__.*
 **/*.asm
 **/*.tlog/*
+**/*.exe

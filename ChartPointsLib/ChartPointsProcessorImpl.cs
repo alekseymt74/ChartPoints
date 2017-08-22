@@ -96,19 +96,6 @@ namespace ChartPoints
           break;
         }
         VCCodeClass ownerClass = (VCCodeClass)targetClassElem;
-        ILineChartPoints lPnts = GetProjectChartPoints(projName)?.GetFileChartPoints(activeDoc.Name)?.GetLineChartPoints(caretPnt.Line);
-        if (lPnts != null)
-        {
-          checkPnt = new CheckPoint()
-          {
-            doc = activeDoc,
-            lineNum = lPnts.lineNum,
-            linePos = lPnts.linePos,
-            ownerClass = (VCCodeClass) targetClassElem,
-            projName = projName
-          };
-          return checkPnt;
-        }
         // check that we are inside method body (between '{' & '}'
         TextPoint startFuncPnt = targetFunc.StartPoint;
         TextPoint endFuncPnt = targetFunc.EndPoint;
@@ -144,6 +131,19 @@ namespace ChartPoints
         //string fileFullName = System.IO.Path.GetFullPath(activeDoc.FullName).ToLower();
         //checkPnt = ChartPntFactory.Instance.CreateLineChartPoint(caretPnt.Line, linePos
         //  , (lp) => AddLineChartPoints(lp, projName, activeDoc.Name, fileFullName), null/*(lp) => RemoveLineChartPoints(lp, projName, activeDoc.Name, fileFullName)*/);
+        ILineChartPoints lPnts = GetProjectChartPoints(projName)?.GetFileChartPoints(activeDoc.Name)?.GetLineChartPoints(linePos);
+        if (lPnts != null)
+        {
+          checkPnt = new CheckPoint()
+          {
+            doc = activeDoc,
+            lineNum = lPnts.lineNum,
+            linePos = lPnts.linePos,
+            ownerClass = (VCCodeClass)targetClassElem,
+            projName = projName
+          };
+          return checkPnt;
+        }
         checkPnt = new CheckPoint()
         {
           doc = activeDoc,

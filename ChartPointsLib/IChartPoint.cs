@@ -47,7 +47,7 @@ namespace ChartPoints
     /// <returns>result of the operation (see ChartPoints::ETargetPointStatus)</returns>
     ETargetPointStatus Remove();
 
-    void CalcInjectionPoints(/*out */CPClassLayout cpInjPoints);
+    void CalcInjectionPoints(/*out */CPClassLayout cpInjPoints, string fname, int _lineNum, int _linePos);
     /// <summary>
     /// Cpp class variable
     /// </summary>
