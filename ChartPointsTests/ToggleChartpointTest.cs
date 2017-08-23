@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Linq;
 using ChartPoints;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -16,19 +17,33 @@ namespace ChartPointsTests
     private TestProjectItem src;
     private int pos_f2_body;
     private int pos_f1_body;
+    private int pos_f1_body_end;
     private int posHeaderEnd;
+    private int pos_constr1_body;
+    private int pos_constr2_body;
 
     public ToggleChartpointTest()
     {
+      src = InitializationUTest.testProj.projSrcItem;
+      src.Open(true);
+      string utestSrcText = "#include \"temp_utest.h\"\n#include <iostream>\nvoid temp_utest::f3()\n{\n++j;\n}";
+      src.SetContent(utestSrcText);
+
       header = InitializationUTest.testProj.projHeaderItem;
       header.Open(true);
 
       string utestHeaderText = "#ifndef _TEMP_UTEST_H\n#define _TEMP_UTEST_H\n\n"
-                  + "class temp_utest\n{\npublic:\nvoid f1(int i);\nvoid f2() { ";
-      pos_f2_body = utestHeaderText.Length;
-      utestHeaderText += "}\n};\nvoid temp_utest::f1(int i){";
+                               + "class temp_utest\n{\nint j;int k;\npublic:\ntemp_utest():j(0), k(1000){";
+      pos_constr1_body = utestHeaderText.Length + 1;
+      utestHeaderText += "}\ntemp_utest(int _j, int _k):j(_j), k(_k){";
+      pos_constr2_body = utestHeaderText.Length + 1;
+      utestHeaderText += "}\nvoid f2() { ";
+      pos_f2_body = utestHeaderText.Length + 1 - 1;
+      utestHeaderText += "}\nvoid f3();\nvoid f1(int i){";
       pos_f1_body = utestHeaderText.Length + 1;
-      utestHeaderText += "}\n\n#endif // _TEMP_UTEST_H";
+      utestHeaderText += "\n--k;\n";
+      pos_f1_body_end = utestHeaderText.Length + 1;
+      utestHeaderText += "}\n};\n\n#endif // _TEMP_UTEST_H";
       posHeaderEnd = utestHeaderText.Length;
       header.SetContent(utestHeaderText);
     }
@@ -73,14 +88,41 @@ namespace ChartPointsTests
     //
     #endregion
 
-    private void CheckRange(TestProjectItem projItem, int from, int to, Action<IChartPoint> checks )
+    private void CheckRange(TestProjectItem projItem, int from, int to, Action<ICheckPoint, int> checks )
     {
       for (int i = from; i < to; ++i)
       {
         projItem.SetPos(i);
-        IChartPoint chartPnt = ChartPoints.Globals.processor.Check(projItem.ActivePoint);
-        checks(chartPnt);
+        ICheckPoint chartPnt = ChartPoints.Globals.processor.Check("test", projItem.ActivePoint);
+        checks(chartPnt, projItem.ActivePoint.Line);
       }
+    }
+
+    private void CheckToggledChartPoint(ICheckPoint cp, int line)
+    {
+      Assert.AreNotEqual(cp, null);
+      List<Tuple<string, string, bool>> _availableVars = null;
+      cp.GetAvailableVars(out _availableVars);
+      Assert.AreEqual(_availableVars.Count, 2);
+      Tuple<string, string, bool> checkPntData = _availableVars.ElementAt(0);
+      Assert.AreEqual(checkPntData.Item1, "j");
+      Assert.AreEqual(checkPntData.Item2, "int");
+      Tuple<string, string, bool> checkPntData1 = _availableVars.ElementAt(1);
+      Assert.AreEqual(checkPntData1.Item1, "k");
+      Assert.AreEqual(checkPntData1.Item2, "int");
+      ////Assert.AreEqual(checkPntData.Item3, false);
+      ISet<string> selVars = new SortedSet<string>() { checkPntData.Item1 };
+      cp.SyncChartPoints(selVars);
+      IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints("test");
+      Assert.AreNotEqual(pPnts, null);
+      IFileChartPoints fPnts = pPnts.GetFileChartPoints("temp_utest.h");
+      Assert.AreNotEqual(fPnts, null);
+      //Assert.AreEqual(fPnts.linePoints.Count, line);
+      ILineChartPoints lPnts = fPnts.GetLineChartPoints(line);//linePoints.ElementAt(line);
+      Assert.AreEqual(lPnts.chartPoints.Count, 1);
+      IChartPoint chartPnt = lPnts.GetChartPoint("j");
+      Assert.AreNotEqual(chartPnt, null);
+      Assert.AreEqual(chartPnt.status, ETargetPointStatus.SwitchedOn);
     }
 
     [TestMethod]
@@ -88,60 +130,68 @@ namespace ChartPointsTests
     [TestProperty("VsHiveName", "14.0Exp")]
     public void TestChartpointAvailability()
     {
-      CheckRange(header, 1, pos_f2_body, cp => { Assert.AreEqual(cp, null); });
-      CheckRange(header, pos_f2_body, pos_f2_body + 2, cp =>
+      CheckRange(header, 1, pos_constr1_body, (cp, l) => { Assert.AreEqual(cp, null); });
+      CheckRange(header, pos_constr1_body, pos_constr1_body + 1, (cp, l) =>
       {
-        Assert.AreNotEqual(cp, null);
-        Assert.AreEqual(cp.status, ETargetPointStatus.Available);
+        CheckToggledChartPoint(cp, l);
       });
-      CheckRange(header, pos_f2_body + 2, pos_f1_body, cp => { Assert.AreEqual(cp, null); });
-      CheckRange(header, pos_f1_body, pos_f1_body + 1, cp =>
+      CheckRange(header, pos_constr1_body + 1, pos_constr2_body, (cp, l) => { Assert.AreEqual(cp, null); });
+      CheckRange(header, pos_constr2_body, pos_constr2_body + 1, (cp, l) =>
       {
-        Assert.AreNotEqual(cp, null);
-        Assert.AreEqual(cp.status, ETargetPointStatus.Available);
+        CheckToggledChartPoint(cp, l);
       });
-      CheckRange(header, pos_f1_body + 1, posHeaderEnd + 1, cp => { Assert.AreEqual(cp, null); });
+      CheckRange(header, pos_constr2_body + 1, pos_f2_body, (cp, l) => { Assert.AreEqual(cp, null); });
+      CheckRange(header, pos_f2_body, pos_f2_body + 2, (cp, l) =>
+      {
+        CheckToggledChartPoint(cp, l);
+      });
+      CheckRange(header, pos_f2_body + 2, pos_f1_body, (cp, l) => { Assert.AreEqual(cp, null); });
+      CheckRange(header, pos_f1_body, pos_f1_body_end + 1, (cp, l) =>
+      {
+        CheckToggledChartPoint(cp, l);
+      });
+      CheckRange(header, pos_f1_body_end + 1, posHeaderEnd + 1, (cp, l) => { Assert.AreEqual(cp, null); });
     }
 
-    [TestMethod]
-    [HostType("VS IDE")]
-    [TestProperty("VsHiveName", "14.0Exp")]
-    public void TestToggleChartpoint()
-    {
-      IChartPoint chartPnt = null;
-      header.SetPos(pos_f2_body);
-      chartPnt = ChartPoints.Globals.processor.Check(header.ActivePoint);
-      Assert.AreNotEqual(chartPnt, null);
-      Assert.AreEqual(chartPnt.status, ETargetPointStatus.Available);
-      chartPnt.Toggle();
-      Assert.AreEqual(chartPnt.status, ETargetPointStatus.SwitchedOn);
-      chartPnt.Toggle();
-      Assert.AreEqual(chartPnt.status, ETargetPointStatus.Available);
-    }
+    //[TestMethod]
+    //[HostType("VS IDE")]
+    //[TestProperty("VsHiveName", "14.0Exp")]
+    //public void TestToggleChartpoint()
+    //{
+    //  ICheckPoint chartPnt = null;
+    //  header.SetPos(pos_f2_body);
+    //  chartPnt = ChartPoints.Globals.processor.Check("test", header.ActivePoint);
+    //  Assert.AreNotEqual(chartPnt, null);
+    //  Assert.AreEqual(chartPnt.status, ETargetPointStatus.Available);
+    //  chartPnt.Toggle();
+    //  Assert.AreEqual(chartPnt.status, ETargetPointStatus.SwitchedOn);
+    //  chartPnt.Toggle();
+    //  Assert.AreEqual(chartPnt.status, ETargetPointStatus.Available);
+    //}
 
-    [TestMethod]
-    [HostType("VS IDE")]
-    [TestProperty("VsHiveName", "14.0Exp")]
-    public void TestExistingChartpoint()
-    {
-      header.SetPos(pos_f2_body);
-      IChartPoint chartPnt1 = ChartPoints.Globals.processor.Check(header.ActivePoint);
-      Assert.AreNotEqual(chartPnt1, null);
-      chartPnt1.Toggle();
-      header.SetPos(pos_f2_body + 1);
-      IChartPoint chartPnt2 = ChartPoints.Globals.processor.Check(header.ActivePoint);
-      Assert.AreEqual(chartPnt1, chartPnt2);
-    }
+    //[TestMethod]
+    //[HostType("VS IDE")]
+    //[TestProperty("VsHiveName", "14.0Exp")]
+    //public void TestExistingChartpoint()
+    //{
+    //  header.SetPos(pos_f2_body);
+    //  ICheckPoint chartPnt1 = ChartPoints.Globals.processor.Check("test", header.ActivePoint);
+    //  Assert.AreNotEqual(chartPnt1, null);
+    //  chartPnt1.Toggle();
+    //  header.SetPos(pos_f2_body + 1);
+    //  ICheckPoint chartPnt2 = ChartPoints.Globals.processor.Check("test", header.ActivePoint);
+    //  Assert.AreEqual(chartPnt1, chartPnt2);
+    //}
 
-    [TestMethod]
-    [HostType("VS IDE")]
-    [TestProperty("VsHiveName", "14.0Exp")]
-    public void TestUnavailableCPOnToggledLine()
-    {
-      header.SetPos(pos_f2_body + 2);
-      IChartPoint chartPnt = ChartPoints.Globals.processor.Check(header.ActivePoint);
-      Assert.AreEqual(chartPnt, null);
-    }
+    //[TestMethod]
+    //[HostType("VS IDE")]
+    //[TestProperty("VsHiveName", "14.0Exp")]
+    //public void TestUnavailableCPOnToggledLine()
+    //{
+    //  header.SetPos(pos_f2_body + 2);
+    //  ICheckPoint chartPnt = ChartPoints.Globals.processor.Check("test", header.ActivePoint);
+    //  Assert.AreEqual(chartPnt, null);
+    //}
 
   }
 }

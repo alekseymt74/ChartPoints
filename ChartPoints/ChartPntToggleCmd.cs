@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Globalization;
 using System.Windows.Forms;
@@ -22,7 +23,7 @@ namespace ChartPoints
     /// <summary>
     /// ChartPoint object
     /// </summary>
-    private IChartPoint chartPnt;
+    private ICheckPoint checkPnt;
     /// <summary>
     /// Command ID.
     /// </summary>
@@ -76,19 +77,19 @@ namespace ChartPoints
         menuCommand.Visible = false;
         menuCommand.Enabled = false;
         TextSelection sel = (TextSelection)Globals.dte.ActiveDocument.Selection;
-        chartPnt = Globals.processor.Check((TextPoint)sel.ActivePoint);
-        if (chartPnt != null)
+        checkPnt = Globals.processor.Check(Globals.dte.ActiveDocument.ProjectItem.ContainingProject.Name, (TextPoint)sel.ActivePoint);
+        if (checkPnt != null)
         {
-          switch (chartPnt.status)
-          {
-            case ETargetPointStatus.Available:
-              menuCommand.Text = "Insert ChartPoint";
-              break;
-            case ETargetPointStatus.SwitchedOn:
-            case ETargetPointStatus.SwitchedOff:
-              menuCommand.Text = "Remove ChartPoint";
-              break;
-          }
+          //switch (linePnts.status)
+          //{
+          //  case ETargetPointStatus.Available:
+          //    menuCommand.Text = "Insert ChartPoint";
+          //    break;
+          //  case ETargetPointStatus.SwitchedOn:
+          //  case ETargetPointStatus.SwitchedOff:
+          //    menuCommand.Text = "Remove ChartPoint";
+          //    break;
+          //}
           menuCommand.Visible = true;
           menuCommand.Enabled = true;
         }
@@ -131,7 +132,22 @@ namespace ChartPoints
     /// <param name="e">Event args.</param>
     private void MenuItemCallback(object sender, EventArgs e)
     {
-      chartPnt.Toggle();
+      List<Tuple<string, string, bool>> availableVars = null;
+      checkPnt.GetAvailableVars(out availableVars);
+      if (availableVars.Count > 0)
+      {
+        SelectVarsDlg dlg = new SelectVarsDlg(ref availableVars);
+        dlg.ShowDialog();
+        ISet<string> selectedVars = dlg.GetSelectedVars();
+        if(selectedVars != null)
+          checkPnt.SyncChartPoints(selectedVars);
+        //foreach (var varName in selectedVars)
+        //  checkPnt.AddChartPoint(varName);
+        //if (selectedVars.Count > 0)
+        //  codeObserver.InjectTracers(ref selectedVars, caretPnt);
+      }
+
+      //////linePnts.Toggle();
     }
   }
 }

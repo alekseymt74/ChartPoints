@@ -70,6 +70,8 @@ namespace ChartPoints
       Globals.dte = (DTE)GetService(typeof(DTE));
       factory = new ChartPntFactoryImpl();
       Globals.processor = factory.CreateProcessor();
+      Globals.orchestrator = factory.CreateOrchestrator();
+      Globals.orchestrator.InitSolutionConfigurations();
       ChartPntToggleCmd.Initialize(this);
     }
 

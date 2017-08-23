@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using EnvDTE;
@@ -17,7 +18,7 @@ namespace ChartPoints
   {
 
   }
-  public class ChartPointsTagger : ITagger<ChartPointTag>
+  public class ChartPointsTagger : ITagger<ChartPointTag>, IChartPointsTagger
   {
     private ITextView _view;
     public ITextBuffer _buffer;
@@ -33,39 +34,78 @@ namespace ChartPoints
       //_buffer = ((ITextView)sender).TextBuffer;
     }
 
-    internal void RaiseTagsChangedEvent(IChartPoint chartPnt)
+    public void RaiseTagsChangedEvent(IFileChartPoints filePoints)
     {
       var tempEvent = TagsChanged;
       if (tempEvent != null)
       {
         //_view.TextViewLines Span.FromBounds
-        ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(chartPnt.lineNum - 1);
-        tempEvent(this, new SnapshotSpanEventArgs(new SnapshotSpan(line.Start, 1)));
+        foreach (var linePnt in filePoints.linePoints)
+        {
+          ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(linePnt.lineNum - 1);
+          tempEvent(this, new SnapshotSpanEventArgs(new SnapshotSpan(line.Start, 1)));
+        }
       }
     }
 
+    public void RaiseTagsChangedEvent(ILineChartPoints lPnts)
+    {
+      var tempEvent = TagsChanged;
+      if (tempEvent != null)
+      {
+        //_view.TextViewLines Span.FromBounds
+        ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(lPnts.lineNum - 1);
+        tempEvent(this, new SnapshotSpanEventArgs(new SnapshotSpan(line.Start, 1)));
+      }
+    }
+    public bool GetFileName(out string fn)
+    {
+      ITextDocument textDoc;
+      var rc = _buffer.Properties.TryGetProperty<ITextDocument>(
+        typeof(ITextDocument), out textDoc);
+      if (rc)
+      {
+        fn = System.IO.Path.GetFullPath(textDoc.FilePath).ToLower();
+        return true;
+      }
+      else
+        fn = null;
+
+      return rc;
+    }
+
+
     IEnumerable<ITagSpan<ChartPointTag>> ITagger<ChartPointTag>.GetTags(NormalizedSnapshotSpanCollection spans)
     {
-      IDictionary<int, IChartPoint> fileChartPoints;
+      //IDictionary<int, IChartPoint> fileChartPoints;
       ITextDocument thisTextDoc;
-      var rc = this._buffer.Properties.TryGetProperty<ITextDocument>(
-        typeof(ITextDocument), out thisTextDoc);
-      Globals.processor.chartPoints.TryGetValue(thisTextDoc.FilePath/*Globals.dte.ActiveDocument.FullName*/, out fileChartPoints);
-      if (fileChartPoints != null)
+      var rc = this._buffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out thisTextDoc);
+      string fileName = Path.GetFileName(thisTextDoc.FilePath);
+      EnvDTE.Document dteDoc = Globals.dte.Documents.Item(fileName);
+      IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(dteDoc.ProjectItem.ContainingProject.Name);
+      if (pPnts != null)
       {
-        foreach (SnapshotSpan span in spans)
+        IFileChartPoints fPnts = pPnts.GetFileChartPoints(fileName);
+        //Globals.processor.data.chartPoints.TryGetValue(fileName/*Globals.dte.ActiveDocument.FullName*/, out fileChartPoints);
+        if (fPnts/*fileChartPoints*/ != null)
         {
-          ITextSnapshotLine line = span.Start.GetContainingLine();
-          int firstLineNum = line.LineNumber;
-          int lastLineNum = span.End.GetContainingLine().LineNumber;
-          for (int i = firstLineNum; i <= lastLineNum; ++i)
+          foreach (SnapshotSpan span in spans)
           {
-            foreach (KeyValuePair<int, IChartPoint> pair in fileChartPoints)
+            ITextSnapshotLine line = span.Start.GetContainingLine();
+            int firstLineNum = line.LineNumber;
+            int lastLineNum = span.End.GetContainingLine().LineNumber;
+            for (int i = firstLineNum; i <= lastLineNum; ++i)
             {
-              // TextPoint::Line is 1-based 
-              // Text Snapshots - 0-based
-              if (pair.Key - 1 == firstLineNum)
-                yield return new TagSpan<ChartPointTag>(new SnapshotSpan(line.Start, 0), new ChartPointTag());
+              //foreach (KeyValuePair<int, IChartPoint> pair in fileChartPoints)
+              foreach (var linePnt in fPnts.linePoints)
+              {
+                //pair.Value.f();
+                // TextPoint::Line is 1-based 
+                // Text Snapshots - 0-based
+                //if (pair.Key - 1 == firstLineNum)
+                if (linePnt.lineNum - 1 == firstLineNum)
+                  yield return new TagSpan<ChartPointTag>(new SnapshotSpan(line.Start, 0), new ChartPointTag());
+              }
             }
           }
         }
@@ -77,19 +117,17 @@ namespace ChartPoints
 
   public class ChartPointTagUpdater : IChartPointTagUpdater
   {
-    private SortedDictionary<string, ChartPointsTagger> taggers;
+    private SortedDictionary<string, IChartPointsTagger> taggers;
 
-    public void AddTagger(ChartPointsTagger tagger)
+    public void AddTagger(IChartPointsTagger tagger)
     {
-      ITextDocument textDoc;
-      var rc = tagger._buffer.Properties.TryGetProperty<ITextDocument>(
-        typeof(ITextDocument), out textDoc);
-      if (rc == true)
-        taggers[textDoc.FilePath] = tagger;
+      string fn;
+      if (tagger.GetFileName(out fn))
+        taggers[fn] = tagger;
     }
     public ChartPointTagUpdater()
     {
-      taggers = new SortedDictionary<string, ChartPointsTagger>();
+      taggers = new SortedDictionary<string, IChartPointsTagger>();
       //var componentModel = (IComponentModel)GetService(typeof(SComponentModel));
       //var textManager = (IVsTextManager)Package.GetGlobalService(typeof(SVsTextManager));
       //IVsTextView activeView = null;
@@ -97,11 +135,18 @@ namespace ChartPoints
       //var editorAdapter = componentModel.GetService<IVsEditorAdaptersFactoryService>();
       //IWpfTextView wpfTextView = editorAdapetr.GetWpfTextView(activeView);
     }
-    public void RaiseChangeTagEvent(IChartPoint chartPnt)
+    public void RaiseChangeTagEvent(IFileChartPoints fPnts)
     {
-      ChartPointsTagger tagger;
-      taggers.TryGetValue(chartPnt.fileName, out tagger);
-      tagger.RaiseTagsChangedEvent(chartPnt);
+      IChartPointsTagger tagger;
+      if(taggers.TryGetValue(fPnts.fileFullName, out tagger))
+        tagger?.RaiseTagsChangedEvent(fPnts);
+    }
+
+    public void RaiseChangeTagEvent(string fname, ILineChartPoints lPnts)
+    {
+      IChartPointsTagger tagger;
+      if (taggers.TryGetValue(fname, out tagger))
+        tagger?.RaiseTagsChangedEvent(lPnts);
     }
   }
 
@@ -127,9 +172,20 @@ namespace ChartPoints
       if (view.TextBuffer != buffer)
         return null;
 
-      ChartPointsTagger tagger = new ChartPointsTagger(view, buffer);
-      Globals.taggerUpdater.AddTagger(tagger);
-      return tagger as ITagger<T>;
+      //!!! IGNORE NON-PROJECT FILES !!!
+      ITextDocument thisTextDoc;
+      var rc = view.TextBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out thisTextDoc);
+      string fileName = Path.GetFileName(thisTextDoc.FilePath);
+      EnvDTE.Document dteDoc = Globals.dte.Documents.Item(fileName);
+      if (dteDoc != null && dteDoc.ProjectItem != null && dteDoc.ProjectItem.ContainingProject != null
+        && dteDoc.ProjectItem.ContainingProject.Name != "Miscellaneous Files" && dteDoc.ProjectItem.ContainingProject.UniqueName != "<MiscFiles>")
+      {
+        ChartPointsTagger tagger = new ChartPointsTagger(view, buffer);
+        Globals.taggerUpdater.AddTagger(tagger);
+        return tagger as ITagger<T>;
+      }
+
+      return null;
     }
 
   }
