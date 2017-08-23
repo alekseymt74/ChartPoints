@@ -30,7 +30,6 @@ namespace cptracer
   tracer::tracer()
     : trace_elem_cons( nullptr )
   {
-    tracer::instance();
     HRESULT hr = CoInitialize( NULL );
     hr = trace_cons.CoCreateInstance( CLSID_CPTracerFactory, NULL, CLSCTX_LOCAL_SERVER );
     if( hr == S_OK )
@@ -39,8 +38,10 @@ namespace cptracer
 
   tracer::~tracer()
   {
-    trace_elem_cons->Release();
-    trace_cons.Release();
+    if( trace_elem_cons )
+      trace_elem_cons->Release();
+    if( trace_cons )
+      trace_cons.Release();
   }
     
   tracer::tracer_ptr tracer::instance()
@@ -53,7 +54,8 @@ namespace cptracer
   void tracer::reg_elem( const tracer_elem *te, uint32_t _type_id ) const
   {
     //std::cout << "[reg_elem]; name: " << te->get_name() << "\tid: " << te->get_id() << "\ttype_id: " << _type_id << std::endl;
-    trace_elem_cons->RegElem( SysAllocStringByteLen( te->get_name().c_str(), te->get_name().size() ), te->get_id(), _type_id );
+    if( trace_elem_cons )
+      trace_elem_cons->RegElem( SysAllocString( L"i" ), te->get_id(), _type_id );
   }
 
   void tracer::trace( uint64_t id, double val ) const
@@ -63,7 +65,7 @@ namespace cptracer
       trace_elem_cons->Trace( id, val );
   }
 
-  tracer::tracer_ptr tracer::_this;
+  tracer::tracer_ptr tracer::_this = tracer::instance();
 
   tracer_elem::tracer_elem() {}
 
