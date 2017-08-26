@@ -113,7 +113,7 @@ namespace ChartPoints
 
     private void DebuggerEventsOnOnEnterRunMode(dbgEventReason reason)
     {
-      LoadChartPoints();
+      //LoadChartPoints();
       if (traceHandler == null)
         traceHandler = new CPTraceHandler();
     }
