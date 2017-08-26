@@ -4,9 +4,8 @@
 
 class temp_utest
 {
-int j;
+int j;int k;
 cptracer::tracer_elem_impl<int> __cp_trace_j;
-int k;
 public:
 temp_utest():j(0), k(1000){
 __cp_trace_j.reg((uint64_t) &j, "j", cptracer::type_id<int>::id);

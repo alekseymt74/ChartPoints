@@ -27,14 +27,16 @@ class ATL_NO_VTABLE CCPTracerFactory :
   public CProxy_ICPTracerFactoryEvents<CCPTracerFactory>,
 	public IDispatchImpl<ICPTracerFactory, &IID_ICPTracerFactory, &LIBID_CPTracerLib, /*wMajor =*/ 1, /*wMinor =*/ 0>
 {
-  typedef std::map<ULONGLONG, CComPtr<ICPProcTracer> > tracers_cont;
+  //typedef std::map<ULONGLONG, CComPtr<ICPProcTracer> > tracers_cont;
+  typedef std::map<ULONGLONG, ICPProcTracer * > tracers_cont;
   typedef tracers_cont::iterator it_tracer;
   tracers_cont tracers;
-  //CComPtr<IUnknown> unk;
 public:
 	CCPTracerFactory()
 	{
 	}
+
+  virtual ~CCPTracerFactory();
 
   DECLARE_CLASSFACTORY_SINGLETON( CCPTracerFactory )
   DECLARE_REGISTRY_RESOURCEID( IDR_CPTRACERFACTORY )
@@ -58,7 +60,7 @@ END_CONNECTION_POINT_MAP()
 		return S_OK;
 	}
 
-	void FinalRelease()
+  void FinalRelease()
 	{
 	}
 

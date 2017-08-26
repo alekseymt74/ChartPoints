@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.MetadataServices;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using EnvDTE;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
-using Project = Microsoft.Build.Evaluation.Project;
 using EnvDTE80;
 
 namespace ChartPoints
@@ -19,13 +14,16 @@ namespace ChartPoints
   public class CPOrchestrator : ICPOrchestrator
   {
     private ServiceHost serviceHost;
+    private EnvDTE.DebuggerEvents debugEvents;
+    private CPTraceHandler traceHandler;
+
     public void OnBuildProjConfigBegin(string projName, string projConfig
       , string platform, string solConfig)
     {
       if (solConfig.Contains(" [ChartPoints]"))
       {
         EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
-        SaveProjChartPonts(proj);//.FullName);
+        SaveProjChartPoints(proj);//.FullName);
         Orchestrate(proj);//.FullName);
         string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
         serviceHost = new ServiceHost(typeof(IPCChartPoint));
@@ -45,26 +43,6 @@ namespace ChartPoints
       }
     }
 
-    //private void CheckAndAddSolConf(ref SolutionBuild2 solBuild
-    //  , ref /*IEnumerable<SolutionConfiguration>*/IDictionary<string, SolutionConfiguration> solConfs, string confType)
-    //{
-    //  //if (!solConfs.Any(sc => (sc.Name.Contains(confType))))
-    //  //{
-    //    IEnumerable<KeyValuePair<string, SolutionConfiguration>> scCont = solConfs.Where(sc => (sc.Key.Contains(confType)));
-    //    foreach (KeyValuePair<string, SolutionConfiguration> solConf in scCont)
-    //    {
-    //      SolutionConfiguration cpConf
-    //        = solBuild.SolutionConfigurations.Add(solConf.Key + "|ChartPoints", solConf.Key, true);
-    //    }
-    //  //}
-    //}
-    //public static IEnumerable<T> ToIEnumerable<T>(IEnumerator enumerator)
-    //{
-    //  while (enumerator.MoveNext())
-    //  {
-    //    yield return (T)enumerator.Current;
-    //  }
-    //}
     private void CheckAndAddSolConf(ref SolutionBuild2 solBuild, string confType)
     {
       bool needAdd = true;
@@ -107,9 +85,39 @@ namespace ChartPoints
       //}
       Globals.dte.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildProjConfigBegin;
       Globals.dte.Events.BuildEvents.OnBuildProjConfigDone += OnBuildProjConfigDone;
+      debugEvents = Globals.dte.Events.DebuggerEvents;
+      debugEvents.OnEnterRunMode += new _dispDebuggerEvents_OnEnterRunModeEventHandler(DebuggerEventsOnOnEnterRunMode);//DebuggerEventsOnOnEnterRunMode;
+      debugEvents.OnEnterDesignMode += new _dispDebuggerEvents_OnEnterDesignModeEventHandler(DebugEventsOnOnEnterDesignMode);//DebugEventsOnOnEnterDesignMode
+      debugEvents.OnContextChanged += new _dispDebuggerEvents_OnContextChangedEventHandler(DebuggerEventsOnOnContextChanged);//DebuggerEventsOnOnContextChanged;
+      //LoadChartPoints();
 
       return true;
     }
+
+    private void DebugEventsOnOnEnterDesignMode(dbgEventReason reason)
+    {
+      if (traceHandler != null)
+      {
+        traceHandler.Dispose();
+        //int gen = GC.GetGeneration(traceHandler);
+        traceHandler = null;
+        //GC.Collect(gen, GCCollectionMode.Forced);
+      }
+    }
+
+    private void DebuggerEventsOnOnContextChanged(Process newProcess, Program newProgram, Thread newThread, StackFrame newStackFrame)
+    {
+      //System.Windows.Forms.MessageBox.Show("Debugger context changed.");
+      //throw new NotImplementedException();
+    }
+
+    private void DebuggerEventsOnOnEnterRunMode(dbgEventReason reason)
+    {
+      //LoadChartPoints();
+      if (traceHandler == null)
+        traceHandler = new CPTraceHandler();
+    }
+
     public bool RemoveSolutionConfigurations()
     {
       SolutionBuild2 solBuild = (SolutionBuild2)Globals.dte.Solution.SolutionBuild;
@@ -122,9 +130,9 @@ namespace ChartPoints
       return true;
     }
 
-    public bool SaveProjChartPonts(EnvDTE.Project proj)
+    public bool SaveProjChartPoints(EnvDTE.Project proj)
     {
-      Microsoft.Build.Evaluation.Project msBuildProject = SaveProjChartPonts(proj.FullName);
+      Microsoft.Build.Evaluation.Project msBuildProject = SaveProjChartPoints(proj.FullName);
       if (msBuildProject != null)
       {
         SaveProject(proj, msBuildProject);
@@ -134,7 +142,7 @@ namespace ChartPoints
       return false;
     }
 
-    public Microsoft.Build.Evaluation.Project SaveProjChartPonts(string projConfFile)
+    public Microsoft.Build.Evaluation.Project SaveProjChartPoints(string projConfFile)
     {
       Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
       if (msbuildProj == null)
@@ -202,7 +210,17 @@ namespace ChartPoints
     public bool SaveChartPonts()
     {
       foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-        SaveProjChartPonts(proj);//.FullName);
+        SaveProjChartPoints(proj);//.FullName);
+      return true;
+    }
+
+    public bool LoadChartPoints()
+    {
+      foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+      {
+        if(proj.Name  != "Miscellaneous Files")
+          LoadProjChartPoints(proj); //.FullName);
+      }
       return true;
     }
 
@@ -214,6 +232,8 @@ namespace ChartPoints
 
     public Microsoft.Build.Evaluation.Project LoadProjChartPoints(string projConfFile)
     {
+      if (projConfFile == "")
+        return null;
       Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
       if (msbuildProj == null)
         return null;
