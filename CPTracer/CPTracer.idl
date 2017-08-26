@@ -1,0 +1,77 @@
+// CPTracer.idl : IDL source for CPTracer
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (CPTracer.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+  object,
+  uuid( B62BBF46-21AD-4CB3-B900-B956180F2FB9 ),
+  dual,
+  nonextensible,
+  pointer_default( unique )
+]
+interface ICPProcTracer : IDispatch
+{
+  [id( 1 )] HRESULT RegElem( BSTR name, ULONGLONG id, USHORT typeID );
+  [id( 2 )] HRESULT Trace( ULONGLONG id, DOUBLE val );
+};
+
+[
+	object,
+	uuid(3ECCDC0A-1A8D-4144-96F3-4A486670A845),
+	dual,
+	nonextensible,
+	pointer_default(unique)
+]
+interface ICPTracerFactory : IDispatch{
+  [id( 1 )] HRESULT CreateProcTracer( [ out ] ICPProcTracer** procTracer, ULONGLONG id );
+  [id( 2 )] HRESULT GetProcTracer( [ out ] ICPProcTracer** procTracer, ULONGLONG id );
+};
+
+[
+	uuid(516C7C02-B58A-498D-887D-EE1223E73B9D),
+	version(1.0),
+]
+library CPTracerLib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(53570639-51A2-465F-B329-27F33EC3F813)		
+	]
+	dispinterface _ICPTracerFactoryEvents
+	{
+		properties:
+		methods:
+	};
+	[
+		uuid(EA343A3A-CF94-4210-89F5-9BDF56112CA2)		
+	]
+	coclass CPTracerFactory
+	{
+		[default] interface ICPTracerFactory;
+		[default, source] dispinterface _ICPTracerFactoryEvents;
+	};
+	[
+		uuid(DBFFA508-4C4B-4147-8555-D2248143B386)		
+	]
+	dispinterface _ICPProcTracerEvents
+	{
+		properties:
+		methods:
+      [id( 1 )] HRESULT OnRegElem( BSTR name, ULONGLONG id, USHORT typeID );
+      [id( 2 )] HRESULT OnTrace( ULONGLONG id, DOUBLE val );
+  };
+	[
+		uuid(A7014060-CB4B-493B-8CD3-D5F6BAE09225)		
+	]
+	coclass CPProcTracer
+	{
+		[default] interface ICPProcTracer;
+		[default, source] dispinterface _ICPProcTracerEvents;
+	};
+};
+

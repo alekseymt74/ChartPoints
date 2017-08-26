@@ -23,31 +23,9 @@ namespace cptracer
     tracer_elem();
     tracer_elem( uint64_t _addr, const char *_name, uint32_t _type_id );
     virtual void reg( uint64_t _addr, const char *_name, uint32_t _type_id );
-    const std::string &get_name() { return name; }
-    uint64_t get_id() { return addr; }
-    void trace();
-  };
-
-  class tracer
-  {
-  public:
-    typedef std::shared_ptr<tracer> tracer_ptr;
-    static tracer_ptr _this;
-  public:
-    static tracer_ptr instance()
-    {
-      if( !_this )
-        _this = std::make_shared<tracer>();
-      return _this;
-    }
-    void reg_elem( tracer_elem *te, uint32_t _type_id )
-    {
-      std::cout << "[reg_elem]; name: " << te->get_name() << "\tid: " << te->get_id() << "\ttype_id: " << _type_id << std::endl;
-    }
-    void trace( tracer_elem *te )
-    {
-      ;// std::cout << te->get_id() << ;
-    }
+    const std::string &get_name() const { return name; }
+    uint64_t get_id() const { return addr; }
+    void trace( double val ) const;
   };
 
   template< typename T >
@@ -57,13 +35,11 @@ namespace cptracer
   public:
     tracer_elem_impl(){}
     tracer_elem_impl( T &_elem, const char *_name ) : tracer_elem( (uint64_t) &_elem, _name, type_id<T>::id ), elem( &_elem )
+    {}
+    void trace() const
     {
-      ;
-    }
-    void trace()
-    {
-      tracer_elem::trace();
-      std::cout << get_name() << ": " << *elem << std::endl;
+      tracer_elem::trace( ( double ) *elem );
+      //std::cout << get_name() << ": " << *elem << std::endl;
     }
     void reg( uint64_t _addr, const char *_name, uint32_t _type_id )
     {

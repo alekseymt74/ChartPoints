@@ -1,0 +1,17 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {A7014060-CB4B-493B-8CD3-D5F6BAE09225} = s 'CPProcTracer Class'
+		{
+			ForceRemove Programmable
+			LocalServer32 = s '%MODULE%'
+			{
+				val ServerExecutable = s '%MODULE_RAW%'
+			}
+      val AppID = s '%APPID%'
+			TypeLib = s '{516C7C02-B58A-498D-887D-EE1223E73B9D}'
+			Version = s '1.0'
+		}
+	}
+}

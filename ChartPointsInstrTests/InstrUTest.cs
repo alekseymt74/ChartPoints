@@ -59,7 +59,7 @@ namespace ChartPointsInstrTests
         lPnts.AddChartPoint(cpData.varName, null /*"!!!!!!!"*/, out chartPnt); //!!!!!!!!!!!!!!!!
         CheckChartPointData(cpData.fileName, cpData.lineNum, cpData);
         cpOrchestrator = new CPOrchestrator();
-        msBuildProject = cpOrchestrator.SaveProjChartPonts(testProjFName);
+        msBuildProject = cpOrchestrator.SaveProjChartPoints(testProjFName);
         Assert.AreNotEqual(msBuildProject, null);
         msBuildProject.Save();
         processor.RemoveAllChartPoints();
@@ -67,7 +67,7 @@ namespace ChartPointsInstrTests
         Assert.AreEqual(pPnts, null);
         cpOrchestrator.LoadProjChartPoints(testProjFName);
         CheckChartPointData(cpData.fileName, cpData.lineNum, cpData);
-        msBuildProject = cpOrchestrator.SaveProjChartPonts(testProjFName);
+        msBuildProject = cpOrchestrator.SaveProjChartPoints(testProjFName);
       }
       Assert.AreNotEqual(msBuildProject, null);
       msBuildProject.Save();

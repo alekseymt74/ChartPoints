@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChartPoints;
 using EnvDTE;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
@@ -19,6 +21,7 @@ namespace ChartPoints
     public static ICPOrchestrator orchestrator { get; set; }
 
     public static IChartPointTagUpdater taggerUpdater { get; set; }
+    public static IVsOutputWindow outputWindow { get; set; }
   }
 
   /// <summary>

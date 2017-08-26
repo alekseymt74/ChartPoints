@@ -72,7 +72,15 @@ namespace ChartPoints
       Globals.processor = factory.CreateProcessor();
       Globals.orchestrator = factory.CreateOrchestrator();
       Globals.orchestrator.InitSolutionConfigurations();
+      Globals.outputWindow = GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+      //EnvDTE.DebuggerEvents debugEvents = _applicationObject.Events.DebuggerEvents;
+
       ChartPntToggleCmd.Initialize(this);
+    }
+
+    public static void StartEvents(DTE dte)
+    {
+      System.Windows.Forms.MessageBox.Show("Events are attached.");
     }
 
     #endregion
