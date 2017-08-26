@@ -284,6 +284,9 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
   <ItemGroup>
     <ChartPointFile Include="temp_utest.cpp">
       <ChartPoints>
@@ -291,16 +294,6 @@
           <Variable>j</Variable>
           <LineNum>4</LineNum>
           <LinePos>2</LinePos>
-          <Enabled>true</Enabled>
-        </ChartPoint>
-      </ChartPoints>
-    </ChartPointFile>
-    <ChartPointFile Include="temp_utest.h">
-      <ChartPoints>
-        <ChartPoint xmlns="">
-          <Variable>k</Variable>
-          <LineNum>13</LineNum>
-          <LinePos>1</LinePos>
           <Enabled>true</Enabled>
         </ChartPoint>
       </ChartPoints>

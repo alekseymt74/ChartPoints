@@ -1,3 +1,15 @@
 HKCR
 {
+  NoRemove AppID
+  {
+    '%APPID%' = s 'CPTracer'
+    {
+      ForceRemove val RunAs = s 'Interactive User'
+      val AuthenticationLevel = d '1'
+    }
+    'CPTracer.exe'
+    {
+      val AppID = s '%APPID%'
+    }
+  }
 }

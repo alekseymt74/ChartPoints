@@ -16,7 +16,7 @@ namespace cptracer
   class tracer
   {
     CComPtr< ICPTracerFactory > trace_cons;
-    ICPProcTracer *trace_elem_cons;
+    CComPtr< ICPProcTracer > trace_elem_cons;
   public:
     typedef std::shared_ptr<tracer> tracer_ptr;
     static tracer_ptr _this;
@@ -38,10 +38,11 @@ namespace cptracer
 
   tracer::~tracer()
   {
-    if( trace_elem_cons )
-      trace_elem_cons->Release();
-    if( trace_cons )
-      trace_cons.Release();
+    CoUninitialize();
+    //if( trace_elem_cons )
+    //  trace_elem_cons->Release();
+    //if( trace_cons )
+    //  trace_cons.Release();
   }
     
   tracer::tracer_ptr tracer::instance()
@@ -65,7 +66,7 @@ namespace cptracer
       trace_elem_cons->Trace( id, val );
   }
 
-  tracer::tracer_ptr tracer::_this = tracer::instance();
+  tracer::tracer_ptr tracer::_this;// = tracer::instance();
 
   tracer_elem::tracer_elem() {}
 
