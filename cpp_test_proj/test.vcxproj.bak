@@ -284,14 +284,39 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
   <ItemGroup>
     <ChartPointFile Include="temp_utest.cpp">
       <ChartPoints>
         <ChartPoint xmlns="">
-          <Variable />
-          <LineNum>6</LineNum>
+          <Variable>j</Variable>
+          <LineNum>4</LineNum>
+          <LinePos>2</LinePos>
+          <Enabled>true</Enabled>
+        </ChartPoint>
+      </ChartPoints>
+    </ChartPointFile>
+    <ChartPointFile Include="temp_utest.h">
+      <ChartPoints>
+        <ChartPoint xmlns="">
+          <Variable>k</Variable>
+          <LineNum>13</LineNum>
           <LinePos>1</LinePos>
-          <Enabled>false</Enabled>
+          <Enabled>true</Enabled>
+        </ChartPoint>
+      </ChartPoints>
+    </ChartPointFile>
+    <ChartPointFile Include="test_01.cpp">
+      <ChartPoints>
+        <ChartPoint xmlns="">
+          <Variable>d_01</Variable>
+          <LineNum>14</LineNum>
+          <LinePos>1</LinePos>
+          <Enabled>true</Enabled>
         </ChartPoint>
       </ChartPoints>
     </ChartPointFile>
@@ -299,9 +324,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <UsingTask TaskName="ChartPointsBuilder.CPInstrBuildTask" AssemblyFile="e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll" />
-  <Target Name="GenerateToolOutput" BeforeTargets="ClCompile">
-    <CPInstrBuildTask InputSrcFiles="@(ClCompile)" InputHeaderFiles="@(ClInclude)" InputChartPoints="@(ChartPointFile)">
+  <UsingTask TaskName="ChartPointsBuilder.CPInstrBuildTask" AssemblyFile="e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll" Condition="$(Configuration.Contains('[ChartPoints]'))" />
+  <Target Name="GenerateToolOutput" BeforeTargets="ClCompile" Condition="$(Configuration.Contains('[ChartPoints]'))">
+    <CPInstrBuildTask InputSrcFiles="@(ClCompile)" InputHeaderFiles="@(ClInclude)" InputChartPoints="@(ChartPointFile)" ProjectName="$(MSBuildProjectName)">
       <Output TaskParameter="OutputSrcFiles" PropertyName="OutputSrcFiles" />
       <Output TaskParameter="OutputHeaderFiles" PropertyName="OutputHeaderFiles" />
       <Output TaskParameter="SrcFilesChanged" PropertyName="SrcFilesChanged" />

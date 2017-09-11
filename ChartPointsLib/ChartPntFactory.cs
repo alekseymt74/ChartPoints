@@ -22,6 +22,7 @@ namespace ChartPoints
 
     public static IChartPointTagUpdater taggerUpdater { get; set; }
     public static IVsOutputWindow outputWindow { get; set; }
+    public static ICPTracer cpTracer { get; set; }
   }
 
   /// <summary>

@@ -32,6 +32,8 @@ namespace ChartPoints
     /// <returns></returns>
     ICheckPoint Check(string projName, TextPoint pnt);
 
+    bool RemoveChartPoints(string projName);
+
     //bool AddProjectChartPoints(IProjectChartPoints projPnts);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////

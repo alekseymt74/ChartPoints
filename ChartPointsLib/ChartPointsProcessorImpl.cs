@@ -158,6 +158,15 @@ namespace ChartPoints
       return checkPnt;
     }
 
+    public bool RemoveChartPoints(string projName)
+    {
+      IProjectChartPoints pcp = GetProjectChartPoints(projName);
+      if(pcp != null)
+        data.projPoints.Remove(pcp);
+      return true;
+    }
+
+
     //public IDictionary<int, IChartPoint> GetOrCreateFileChartPoints(string fname)
     //{
     //  IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(fname);
