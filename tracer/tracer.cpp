@@ -12,6 +12,7 @@ namespace cptracer
   int32_t type_id<int8_t>::id = 0;
   int32_t type_id<int16_t>::id = 1;
   int32_t type_id<int32_t>::id = 2;
+  int32_t type_id<double>::id = 3;
 
   class tracer
   {
@@ -30,7 +31,7 @@ namespace cptracer
   tracer::tracer()
     : trace_elem_cons( nullptr )
   {
-    HRESULT hr = CoInitialize( NULL );
+    HRESULT hr = CoInitializeEx( NULL, COINIT_MULTITHREADED );
     hr = trace_cons.CoCreateInstance( CLSID_CPTracerFactory, NULL, CLSCTX_LOCAL_SERVER );
     if( hr == S_OK )
       hr = trace_cons->GetProcTracer( &trace_elem_cons, 1 );
@@ -54,9 +55,10 @@ namespace cptracer
 
   void tracer::reg_elem( const tracer_elem *te, uint32_t _type_id ) const
   {
+	USES_CONVERSION;
     //std::cout << "[reg_elem]; name: " << te->get_name() << "\tid: " << te->get_id() << "\ttype_id: " << _type_id << std::endl;
     if( trace_elem_cons )
-      trace_elem_cons->RegElem( SysAllocString( L"i" ), te->get_id(), _type_id );
+      trace_elem_cons->RegElem( CComBSTR(A2W(te->get_name().c_str())).Detach()/*SysAllocStringByteLen( te->get_name().c_str(), te->get_name().size() )*/, te->get_id(), _type_id );
   }
 
   void tracer::trace( uint64_t id, double val ) const
@@ -77,6 +79,8 @@ namespace cptracer
 
   void tracer_elem::reg( uint64_t _addr, const char *_name, uint32_t _type_id )
   {
+    addr = _addr;
+	name = _name;
     tracer::instance()->reg_elem( this, _type_id );
   }
 

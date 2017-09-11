@@ -63,6 +63,12 @@
     <Compile Include="ChartPointsEditorClassifierProvider.cs" />
     <Compile Include="ChartPointsPackage.cs" />
     <Compile Include="ChartPointsTagger.cs" />
+    <Compile Include="ChartPointsViewTW.cs" />
+    <Compile Include="ChartPointsViewTWCommand.cs" />
+    <Compile Include="ChartPointsViewTWControl.xaml.cs">
+      <DependentUpon>ChartPointsViewTWControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CPTraceConsumer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SelectVarsDlg.cs">
       <SubType>Form</SubType>
@@ -93,6 +99,7 @@
     <Reference Include="EnvDTE90, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.Build, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -208,11 +215,14 @@
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\ChartPointsViewTWCommand.png" />
     <VSCTCompile Include="ChartPointsPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
@@ -234,6 +244,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="ChartGlyph.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChartPointsViewTWControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -39,6 +39,16 @@ interface ICPTracerFactory : IDispatch{
 library CPTracerLib
 {
 	importlib("stdole2.tlb");
+
+  [
+    uuid(26E0450F-7D1D-4189-8735-C0E87B3A5ECD)
+  ]
+  struct TraceEnt
+  {
+    [helpstring( "id" )] ULONGLONG id;
+    [helpstring( "val" )] double val;
+  };
+
 	[
 		uuid(53570639-51A2-465F-B329-27F33EC3F813)		
 	]
@@ -63,7 +73,9 @@ library CPTracerLib
 		properties:
 		methods:
       [id( 1 )] HRESULT OnRegElem( BSTR name, ULONGLONG id, USHORT typeID );
-      [id( 2 )] HRESULT OnTrace( ULONGLONG id, DOUBLE val );
+      [id( 2 )] HRESULT OnTrace(SAFEARRAY(ULONGLONG) id, SAFEARRAY(DOUBLE) val );
+      //[id( 2 )] HRESULT OnTrace([in] SAFEARRAY(struct TraceEnt) ents);//ULONGLONG id, SAFEARRAY(DOUBLE) val );
+      //[id( 2 )] HRESULT OnTrace( VARIANT ents);//ULONGLONG id, SAFEARRAY(DOUBLE) val );
   };
 	[
 		uuid(A7014060-CB4B-493B-8CD3-D5F6BAE09225)		

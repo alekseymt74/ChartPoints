@@ -75,6 +75,7 @@
     <Compile Include="IChartPoint.cs" />
     <Compile Include="IChartPointsProcessor.cs" />
     <Compile Include="ICPOrchestrator.cs" />
+    <Compile Include="ICPTraceConsumer.cs" />
     <Compile Include="IPCChartPoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

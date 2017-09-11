@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -19,6 +20,191 @@ using Microsoft.Win32;
 
 namespace ChartPoints
 {
+
+  internal class VsSolutionEvents : IVsSolutionEvents
+  {
+
+    //rest of the code
+    public int OnAfterCloseSolution(object pUnkReserved)
+    {
+      //throw new NotImplementedException();
+      return VSConstants.S_OK;
+    }
+
+    public int OnAfterLoadProject(IVsHierarchy pStubHierarchy, IVsHierarchy pRealHierarchy)
+    {
+      //throw new NotImplementedException();
+      //foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+      //{
+      //  bool ret = false;
+      //  if (proj.Name != "Miscellaneous Files")
+      //    ret = Globals.orchestrator.LoadProjChartPoints(proj);
+      //}
+      return VSConstants.S_OK;
+    }
+
+    public int OnAfterOpenProject(IVsHierarchy pHierarchy, int fAdded)
+    {
+      object propItemObj = null;
+      pHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int) __VSHPROPID.VSHPROPID_Name, out propItemObj);
+      if (propItemObj != null)
+      {
+        string projName = (string)propItemObj;
+        if (projName != "Miscellaneous Files")
+        {
+          EnvDTE.Project theProj = null;
+          foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+          {
+            if (proj.Name == projName)
+              theProj = proj;
+          }
+          if (theProj != null)
+          {
+            Globals.orchestrator.LoadProjChartPoints(theProj);
+            if (savedProjects.Contains(projName))
+              savedProjects.Remove(projName);
+          }
+        }
+      }
+      //if (fAdded == 1)
+      //{
+      //  foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+      //  {
+      //    bool ret = false;
+      //    if (proj.Name != "Miscellaneous Files")
+      //      ret = Globals.orchestrator.LoadProjChartPoints(proj);
+      //  }
+      //}
+
+      return VSConstants.S_OK;
+    }
+
+    public int OnAfterOpenSolution(object pUnkReserved, int fNewSolution)
+    {
+      Globals.orchestrator.InitSolutionConfigurations();
+      string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
+      if (activeConfig.Contains(" [ChartPoints]"))
+        ChartPointsViewTWCommand.Instance.Enable(true);
+      return VSConstants.S_OK;
+    }
+
+    public int OnBeforeCloseProject(IVsHierarchy pHierarchy, int fRemoved)
+    {
+      //object propItemObj = null;
+      //pHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
+      //if (propItemObj != null)
+      //{
+      //  string projName = (string)propItemObj;
+      //  if (projName != "Miscellaneous Files")
+      //  {
+      //    EnvDTE.Project theProj = null;
+      //    foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+      //    {
+      //      if (proj.Name == projName)
+      //        theProj = proj;
+      //    }
+      //    if (theProj != null)
+      //    {
+      //      Globals.orchestrator.SaveProjChartPoints(theProj);
+      //      Globals.orchestrator.UnloadProject(theProj);
+      //    }
+      //  }
+      //}
+      return VSConstants.S_OK;
+    }
+
+    public int OnBeforeCloseSolution(object pUnkReserved)
+    {
+      //throw new NotImplementedException();
+      return VSConstants.S_OK;
+    }
+
+    public int OnBeforeUnloadProject(IVsHierarchy pRealHierarchy, IVsHierarchy pStubHierarchy)
+    {
+      //throw new NotImplementedException();
+      return VSConstants.S_OK;
+    }
+
+    private ISet<string> savedProjects = new SortedSet<string>();
+    public int OnQueryCloseProject(IVsHierarchy pHierarchy, int fRemoving, ref int pfCancel)
+    {
+      object propItemObj = null;
+      pHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
+      if (propItemObj != null)
+      {
+        string projName = (string)propItemObj;
+        if (projName != "Miscellaneous Files")
+        {
+          EnvDTE.Project theProj = null;
+          foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+          {
+            if (proj.Name == projName)
+              theProj = proj;
+          }
+          if (theProj != null && !savedProjects.Contains(projName))
+          {
+            Globals.orchestrator.SaveProjChartPoints(theProj);
+            Globals.orchestrator.UnloadProject(theProj);
+            savedProjects.Add(projName);
+          }
+          pfCancel = 0;
+        }
+      }
+      //foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+      //{
+      //  if (proj.Name != "Miscellaneous Files")
+      //  {
+      //    if (!savedProjects.Contains(proj.Name))
+      //    {
+      //      Globals.orchestrator.SaveProjChartPoints(proj);
+      //      savedProjects.Add(proj.Name);//!!!!!!! update savedProjects where needed !!!!!!!
+      //      Globals.orchestrator.UnloadProject(proj);
+      //      pfCancel = 0;
+      //    }
+      //  }
+      //}
+
+      return VSConstants.S_OK;
+    }
+
+    public int OnQueryCloseSolution(object pUnkReserved, ref int pfCancel)
+    {
+      //throw new NotImplementedException();
+      return VSConstants.S_OK;
+    }
+
+    public int OnQueryUnloadProject(IVsHierarchy pRealHierarchy, ref int pfCancel)
+    {
+      //throw new NotImplementedException();
+      return VSConstants.S_OK;
+    }
+  }
+
+  internal class VSUpdateSolEvents : IVsUpdateSolutionEvents3
+  {
+    public int OnAfterActiveSolutionCfgChange(IVsCfg pOldActiveSlnCfg, IVsCfg pNewActiveSlnCfg)
+    {
+      string newConfName;
+      pNewActiveSlnCfg.get_DisplayName(out newConfName);
+      if (newConfName.Contains(" [ChartPoints]"))
+        ChartPointsViewTWCommand.Instance.Enable(true);
+      else
+      {
+        string prevConfName;
+        pOldActiveSlnCfg.get_DisplayName(out prevConfName);
+        if (prevConfName.Contains(" [ChartPoints]"))
+          ChartPointsViewTWCommand.Instance.Enable(false);
+      }
+
+      return VSConstants.S_OK;
+    }
+
+    public int OnBeforeActiveSolutionCfgChange(IVsCfg pOldActiveSlnCfg, IVsCfg pNewActiveSlnCfg)
+    {
+      return VSConstants.S_OK;
+    }
+  }
+
   /// <summary>
   /// This is the class that implements the package exposed by this assembly.
   /// </summary>
@@ -42,9 +228,13 @@ namespace ChartPoints
   //[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
   [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
   [ProvideMenuResource("Menus.ctmenu", 1)]
+  [ProvideToolWindow(typeof(ChartPointsViewTW))]
+  [ProvideToolWindowVisibility(typeof(ChartPointsViewTW), VSConstants.UICONTEXT.SolutionExists_string)]
   public sealed class ChartPointsPackage : Package
   {
     private ChartPntFactory factory;
+
+    private IVsSolutionBuildManager3 buildManager3;
 
     /// <summary>
     /// ChartPointsPackage GUID string.
@@ -71,11 +261,21 @@ namespace ChartPoints
       factory = new ChartPntFactoryImpl();
       Globals.processor = factory.CreateProcessor();
       Globals.orchestrator = factory.CreateOrchestrator();
-      Globals.orchestrator.InitSolutionConfigurations();
+      //Globals.orchestrator.InitSolutionConfigurations();
       Globals.outputWindow = GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+      IVsSolution vsSolution = GetService(typeof(SVsSolution)) as IVsSolution;
+      VsSolutionEvents solEvents = new VsSolutionEvents();
+      uint solEvsCookie;
+      vsSolution.AdviseSolutionEvents(solEvents, out solEvsCookie);
+      buildManager3 = GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager3;
+      VSUpdateSolEvents solUpdateEvents = new VSUpdateSolEvents();
+      uint solUpdateEvsCookie;
+      buildManager3.AdviseUpdateSolutionEvents3(solUpdateEvents, out solUpdateEvsCookie);
       //EnvDTE.DebuggerEvents debugEvents = _applicationObject.Events.DebuggerEvents;
 
       ChartPntToggleCmd.Initialize(this);
+      ChartPointsViewTWCommand.Initialize(this);
+      Globals.cpTracer = ChartPointsViewTWCommand.Instance;
     }
 
     public static void StartEvents(DTE dte)

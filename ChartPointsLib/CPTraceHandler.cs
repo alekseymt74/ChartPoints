@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CPTracerLib;
 using EnvDTE;
@@ -12,9 +13,14 @@ namespace ChartPoints
     private ICPTracerFactory test_srv;
     private CPProcTracer procTracer;
     private IVsOutputWindowPane outputWindowPane;
+    //private ICPTracer tracer;
+    private IDictionary<UInt64, ICPTracerDelegate> traceConsumers;
 
     [DllImport("ole32.dll",EntryPoint = "CoInitialize",CallingConvention = CallingConvention.StdCall)]
     public static extern UInt32 CoInitialize(int reserved);
+
+    [DllImport("Ole32.dll", /*ExactSpelling = true, */EntryPoint = "CoInitializeEx", CallingConvention = CallingConvention.StdCall)]//, SetLastError = false, PreserveSig = false)]
+    static extern UInt32 CoInitializeEx(int reserved, uint dwCoInit);
 
     [DllImport("ole32.dll", EntryPoint = "CoCreateInstance", CallingConvention = CallingConvention.StdCall)]
     static extern UInt32 CoCreateInstance([In, MarshalAs(UnmanagedType.LPStruct)] Guid rclsid,
@@ -24,19 +30,42 @@ namespace ChartPoints
     private void RegElem(string name, UInt64 id, UInt16 typeID)
     {
       outputWindowPane.OutputString("[RegElem]; name: " + name + "\tid: " + id + "\ttypeID: " + typeID + "\n");
+      ICPTracerDelegate cpDelegate = Globals.cpTracer.CreateTracer(name);
+      traceConsumers.Add(id, cpDelegate);
     }
 
-    private void Trace(UInt64 id, double val)
+    //private void Trace(/*UInt64 id, */[MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_RECORD)]System.Array/*object*/ vals)
+    private void Trace(System.Array ids, System.Array vals)
     {
-      outputWindowPane.OutputString("[Trace]; id: " + id + "\t: " + val + "\n");
+      for (int i = 0; i < vals.Length; ++i)
+      {
+        //outputWindowPane.OutputString("[Trace]; id: " + ids.GetValue(i) + "\t: " + vals.GetValue(i) + "\n");
+        //foreach(var v in vals)
+        //  outputWindowPane.OutputString("[Trace]; id: " + ((TraceEnt)v).id + "\t: " + ((TraceEnt)v).val + "\n");
+        ICPTracerDelegate cpDelegate = null;
+        if (traceConsumers.TryGetValue(Convert.ToUInt64(ids.GetValue(i)), out cpDelegate))
+        {
+          //foreach (var v in vals)
+            cpDelegate.Trace(Convert.ToDouble(vals.GetValue(i)));
+        }
+      }
+      foreach (KeyValuePair<ulong, ICPTracerDelegate> cpDelegate in traceConsumers)
+      {
+        cpDelegate.Value.UpdateView();
+      }
+      //Globals.cpTracer.UpdateView();
     }
 
     public CPTraceHandler()
     {
+      //tracer = _tracer;
+      Globals.cpTracer.Activate();
+      traceConsumers = new SortedDictionary<ulong, ICPTracerDelegate>();
+
       Globals.outputWindow.GetPane(Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.DebugPane_guid, out outputWindowPane);
       if (outputWindowPane != null)
         outputWindowPane.Activate();
-      //UInt32 ret = CoInitialize(0);
+      //UInt32 ret = CoInitializeEx(0, 0/*COINIT_MULTITHREADED*/);
       Guid test_srv_CLSID = new Guid("EA343A3A-CF94-4210-89F5-9BDF56112CA2");
       Type test_srv_type = Type.GetTypeFromCLSID(test_srv_CLSID, true);
       Object obj = null;

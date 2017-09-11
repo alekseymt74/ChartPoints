@@ -4,15 +4,51 @@
 #include "stdafx.h"
 
 #include "temp_utest.h"
+#include "test_01.h"
+#include <iostream>
+#include <chrono>
+#include <thread>
+#include <conio.h>
 
 int main()
 {
+
 	temp_utest tst;
-	for(int i = 0; i < 1000; ++i)
+    test_01 tst_01;
+std::chrono::system_clock::time_point tm_start = std::chrono::system_clock::now();
+	std::thread thr1([&]()
 	{
-		tst.f3();
-		tst.f1(i);
+		for(int i = 0; i < 3000; ++i)
+		{
+			tst.f3();
+			//tst.f1(i);
+			//tst_01.func_01();
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+	});
+	std::thread thr2([&]()
+	{
+		for(int i = 0; i < 3000; ++i)
+		{
+			//tst.f3();
+			tst.f1(i);
+			//tst_01.func_01();
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+	});
+	for(int i = 0; i < 3000; ++i)
+	{
+		//tst.f3();
+		//tst.f1(i);
+        tst_01.func_01();
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
+	thr1.join();
+	thr2.join();
+	std::chrono::system_clock::rep tm_ellapsed = std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::system_clock::now() - tm_start ).count();
+	std::cout << tm_ellapsed << std::endl;
+	_getch();
+
     return 0;
 }
 

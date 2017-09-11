@@ -246,3 +246,6 @@ index.html
 **/*.asm
 **/*.tlog/*
 **/*.exe
+**/*.idb
+**/*.iobj
+**/*.ipdb

@@ -20,5 +20,6 @@ namespace ChartPoints
     bool Build();
     bool Run();
     bool SaveProject(EnvDTE.Project proj, Microsoft.Build.Evaluation.Project msbuildProj);
+    bool UnloadProject(EnvDTE.Project proj);
   }
 }
