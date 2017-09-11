@@ -304,7 +304,7 @@
       <ChartPoints>
         <ChartPoint xmlns="">
           <Variable>k</Variable>
-          <LineNum>13</LineNum>
+          <LineNum>36</LineNum>
           <LinePos>1</LinePos>
           <Enabled>true</Enabled>
         </ChartPoint>

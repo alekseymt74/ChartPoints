@@ -2,8 +2,31 @@
 #ifndef _TEMP_UTEST_H
 #define _TEMP_UTEST_H
 
+class c1
+{};
+typedef c1 TC1;
+//
+//struct s1
+//{};
+
 class temp_utest
 {
+TC1 _c1;
+//c1 _c1;
+//c1 *pc1;
+//s1 _s1;
+//s1 *ps1;
+unsigned int ui;
+unsigned long ul;
+unsigned short us;
+int8_t i8;
+int16_t i16;
+int32_t i32;
+int64_t i64;
+uint8_t ui8;
+uint16_t ui16;
+uint32_t ui32;
+uint64_t ui64;
 int j;int k;
 cptracer::tracer_elem_impl<int> __cp_trace_j;cptracer::tracer_elem_impl<int> __cp_trace_k;
 public:
