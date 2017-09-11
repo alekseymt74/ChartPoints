@@ -504,7 +504,14 @@ namespace ChartPoints
         {
           if (el.Kind == vsCMElement.vsCMElementVariable)
           {
+            //CodeVariable cv = (CodeVariable) el;
+            //CodeType _ct = cv.Type.CodeType;
             VCCodeVariable varElem = (VCCodeVariable)el;
+            //CodeType ct = varElem.Type.CodeType;
+            //if (ct != null)
+            //{
+            //  CodeElements ce = varElem.Type.CodeType.Bases;
+            //}
             if (varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefBool
                 || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefByte
                 || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefChar
