@@ -53,6 +53,8 @@ namespace ChartPoints
     /// </summary>
     //VCCodeVariable var { get; }
     IChartPointData data { get; }
+
+    bool ValidatePosition(int lineNum, int linePos);
   }
 
   public interface ILineChartPoints
@@ -63,6 +65,7 @@ namespace ChartPoints
     IChartPoint GetChartPoint(string varName);
     bool AddChartPoint(string varName, VCCodeClass ownerClass, out IChartPoint chartPnt);
     bool SyncChartPoints(string fname, ISet<string> cpVarNames, VCCodeClass className);
+    bool ValidatePosition(int linesAdd);
   }
 
   public interface IFileChartPoints
@@ -72,6 +75,7 @@ namespace ChartPoints
     ISet<ILineChartPoints> linePoints { get; }
     ILineChartPoints GetLineChartPoints(int lineNum);
     ILineChartPoints AddLineChartPoints(int lineNum, int linePos);
+    bool ValidatePosition(int lineNum, int linesAdd);
     //bool AddLineChartPoints(ILineChartPoints linePnts);
   }
 

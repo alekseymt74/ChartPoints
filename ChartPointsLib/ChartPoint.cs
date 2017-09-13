@@ -259,6 +259,67 @@ namespace ChartPoints
 
       return ETargetPointStatus.NotAvailable;
     }
+
+    public bool ValidatePosition(int lineNum, int linePos)
+    {
+      vcCodeModel.Synchronize();
+      CodeElement theClass = null;
+      // find class, containing specified memeber
+      foreach (CodeElement _class in vcCodeModel.Classes)
+      {
+        if (_class.Name == data.className)
+        {
+          theClass = _class;
+          break;
+        }
+      }
+      if (theClass != null)
+      {
+        try
+        {
+          VCCodeClass vcClass = (VCCodeClass) theClass;
+          CodeElement theFunc = null;
+          foreach (CodeElement _func in vcClass.Functions)
+          {
+            VCCodeFunction vcFunc = (VCCodeFunction) _func;
+            //TextPoint startFuncBody = vcFunc.StartPoint;// GetStartPoint(vsCMPart.vsCMPartBodyWithDelimiter);//vcFunc.StartPointOf[vsCMPart.vsCMPartBodyWithDelimiter, vsCMWhere.vsCMWhereDefinition];
+            //TextPoint endFuncBody = vcFunc.EndPoint;// GetEndPoint(vsCMPart.vsCMPartBodyWithDelimiter);//vcFunc.EndPointOf[vsCMPart.vsCMPartBodyWithDelimiter, vsCMWhere.vsCMWhereDefinition];
+            TextPoint startFuncBody = vcFunc.StartPointOf[vsCMPart.vsCMPartBody, vsCMWhere.vsCMWhereDefinition];
+            TextPoint endFuncBody = vcFunc.EndPointOf[vsCMPart.vsCMPartBody, vsCMWhere.vsCMWhereDefinition];
+            EditPoint startPnt = startFuncBody.CreateEditPoint();
+            EditPoint endPnt = endFuncBody.CreateEditPoint();
+            startPnt.FindPattern("{", (int) vsFindOptions.vsFindOptionsBackwards);
+            endPnt.FindPattern("}");
+            //if (lineNum >= startPnt.Line && linePos >= startPnt.LineCharOffset && lineNum <= endPnt.Line && linePos <= endPnt.LineCharOffset)
+            if ((lineNum > startPnt.Line && lineNum < endPnt.Line) ||
+                (lineNum == startPnt.Line && linePos >= startPnt.LineCharOffset) ||
+                (lineNum == endPnt.Line && linePos <= endPnt.LineCharOffset))
+            {
+              // Oh, oh you're in the body, now.. (c)
+              return true;
+            }
+          }
+          //// find VCCodeVariable
+          //CodeElement theVar = null;
+          //foreach (CodeElement _var in vcClass.Variables)
+          //{
+          //  if (_var.Name == /*"j"*/ data.varName)
+          //  {
+          //    theVar = _var;
+          //    break;
+          //  }
+          //}
+          //if (theVar != null)
+          //{
+          //}
+        }
+        catch (Exception e)
+        {
+          Console.WriteLine(e);
+        }
+      }
+      return false;
+    }
   }
 
   public class AddRemover<T>
@@ -343,6 +404,19 @@ namespace ChartPoints
 
       return changed;
     }
+
+    public bool ValidatePosition(int linesAdd)
+    {
+      bool changed = false;
+      foreach (IChartPoint cp in chartPoints)
+      {
+        bool cpValidated = cp.ValidatePosition(lineNum + linesAdd, linePos);
+        changed = changed || cpValidated;
+      }
+
+      return changed;
+    }
+
   }
 
   public class FileChartPoints : AddRemover<FileChartPoints>, IFileChartPoints
@@ -389,6 +463,46 @@ namespace ChartPoints
 
       return lPnts;
     }
+
+    public bool ValidatePosition(int lineNum, int linesAdd)
+    {
+      bool changed = false;
+      List< KeyValuePair<bool, ILineChartPoints> > changedLines = new List<KeyValuePair<bool, ILineChartPoints>>();
+      foreach (ILineChartPoints lPnts in linePoints)
+      {
+        if (lPnts.lineNum >= lineNum)
+        {
+          bool lineChanged = lPnts.ValidatePosition(linesAdd);
+          if (lineChanged && linesAdd != 0)
+            changedLines.Add(new KeyValuePair<bool, ILineChartPoints>(true, lPnts));
+          else
+            changedLines.Add(new KeyValuePair<bool, ILineChartPoints>(false, lPnts));
+          changed = changed || lineChanged;
+        }
+      }
+      if (changedLines.Count > 0)
+      {
+        foreach (KeyValuePair<bool, ILineChartPoints> lPnts in changedLines)
+        {
+          linePoints.Remove(lPnts.Value);
+          //if (RemoveLineChartPoints(lPnts.Value))
+          Globals.taggerUpdater.RaiseChangeTagEvent(fileFullName, lPnts.Value);
+        }
+        foreach (KeyValuePair<bool, ILineChartPoints> lPnts in changedLines)
+        {
+          if (lPnts.Key == true)
+          {
+            ((LineChartPoints) lPnts.Value).lineNum += linesAdd;
+            linePoints.Add(lPnts.Value);
+          }
+        }
+        if(linePoints.Count == 0)
+          remFunc(this);
+      }
+
+      return changed;
+    }
+
   }
 
   public class ProjectChartPoints : AddRemover<ProjectChartPoints>, IProjectChartPoints

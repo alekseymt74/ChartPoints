@@ -10,6 +10,12 @@ using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
 {
+
+  public interface ITextChangedListener
+  {
+    //void TrackCurPoint();
+  }
+
   /// <summary>
   /// Global elements. Initialized by ChartPointsPackage
   /// </summary>
@@ -23,6 +29,7 @@ namespace ChartPoints
     public static IChartPointTagUpdater taggerUpdater { get; set; }
     public static IVsOutputWindow outputWindow { get; set; }
     public static ICPTracer cpTracer { get; set; }
+    public static ITextChangedListener textChangedListener { get; set; }
   }
 
   /// <summary>

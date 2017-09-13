@@ -6,17 +6,27 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using EnvDTE;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudio.Utilities;
 using Microsoft.Win32;
+using Microsoft.VisualStudio.Text.Projection;
 
 namespace ChartPoints
 {
@@ -205,6 +215,132 @@ namespace ChartPoints
     }
   }
 
+  public class FileChangeTracker
+  {
+    private IWpfTextView curTextView;
+    public string fileFullName;
+    private IFileChartPoints fPnts;
+
+    public FileChangeTracker(IWpfTextView textView, string _fileFullName)
+    {
+      fileFullName = _fileFullName;
+      Advise(textView);
+    }
+
+    public void Advise(IWpfTextView textView)
+    {
+      // !!! CHECK EQUAL - need readvise !!!
+      if(curTextView != null)
+        curTextView.TextBuffer.Changed -= TextBufferOnChanged;
+      curTextView = textView;
+      curTextView.TextBuffer.Changed += TextBufferOnChanged;
+    }
+    private void TextBufferOnChanged(object sender, TextContentChangedEventArgs e)
+    {
+      //ITextDocument textDoc;
+      //IFileChartPoints fPnts1;
+      //string fileName = null;
+      //var rc = curTextView.TextBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDoc);
+      //if (rc)
+      //{
+      //  fileName = Path.GetFileName(textDoc.FilePath);
+      //  EnvDTE.Document dteDoc = Globals.dte.Documents.Item(fileName);
+      //  IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(dteDoc.ProjectItem.ContainingProject.Name);
+      //  if (pPnts != null)
+      //    fPnts1 = pPnts.GetFileChartPoints(fileName);
+      //}
+      string fileName = Path.GetFileName(fileFullName);
+      EnvDTE.Document dteDoc = Globals.dte.Documents.Item(fileName);
+      IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(dteDoc.ProjectItem.ContainingProject.Name);
+      if (pPnts != null)
+      {
+        fPnts = pPnts.GetFileChartPoints(fileName);
+        if (fPnts != null)
+        {
+          ITextSnapshot snapshot = e.After;
+          foreach (ITextChange change in e.Changes)
+          {
+            int lineNum = snapshot.GetLineFromPosition(change.NewPosition).LineNumber;
+            fPnts.ValidatePosition(lineNum + 1, change.LineCountDelta);
+          }
+        }
+      }
+    }
+
+  }
+
+  [ContentType("C/C++")]
+  [Export(typeof(IWpfTextViewCreationListener))]
+  [TextViewRole(PredefinedTextViewRoles.Editable)]
+  public sealed class TextChangedListener : IWpfTextViewCreationListener, ITextChangedListener
+  {
+    //private IWpfTextView curTextView;
+    ////private IProjectionBufferFactoryService projectionFactory;
+    ////private IProjectionBuffer projBuffer;
+    //private IFileChartPoints fPnts;
+
+    private ISet<FileChangeTracker> fileTrackers
+      = new SortedSet<FileChangeTracker>(Comparer<FileChangeTracker>.Create((lh, rh) => (String.Compare(lh.fileFullName, rh.fileFullName, StringComparison.Ordinal))));
+
+    public void TextViewCreated(IWpfTextView textView)
+    {
+      //curTextView = textView;
+      ITextDocument textDoc;
+      string fileName = null;
+      var rc = textView.TextBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDoc);
+      if (rc)
+      {
+        fileName = Path.GetFileName(textDoc.FilePath);
+        FileChangeTracker fTracker = fileTrackers.FirstOrDefault((ft) => (ft.fileFullName == textDoc.FilePath));
+        if (fTracker == null)
+        {
+          fTracker = new FileChangeTracker(textView, textDoc.FilePath);
+          fileTrackers.Add(fTracker);
+        }
+        else
+          fTracker.Advise(textView);
+      }
+    }
+
+    public TextChangedListener()
+    {
+      //projectionFactory = ChartPointsPackage.componentModel.GetService<IProjectionBufferFactoryService>();
+      Globals.textChangedListener = this;
+    }
+
+    //public void TrackCurPoint()
+    //{
+    //  projBuffer = projectionFactory.CreateProjectionBuffer( null, new object[0], ProjectionBufferOptions.None);
+    //  SnapshotPoint sp = curTextView.Caret.Position.BufferPosition;
+    //  ITrackingSpan ts = sp.Snapshot.CreateTrackingSpan(curTextView.Caret.Position.BufferPosition.Position, 1, SpanTrackingMode.EdgeNegative);
+    //  projBuffer.InsertSpan(0, ts);
+    //  //projBuffer.PostChanged += ProjBuffer_PostChanged;
+    //  projBuffer.Changed += ProjBufferOnChanged;
+    //  //projBuffer.ContentTypeChanged += ProjBufferOnContentTypeChanged;
+    //  //projBuffer.Changing += ProjBufferOnChanging;
+    //}
+
+    //private void ProjBufferOnChanging(object sender, TextContentChangingEventArgs textContentChangingEventArgs)
+    //{
+    //  System.Windows.Forms.MessageBox.Show("ProjBufferOnChanging");
+    //}
+
+    //private void ProjBufferOnContentTypeChanged(object sender, ContentTypeChangedEventArgs contentTypeChangedEventArgs)
+    //{
+    //  System.Windows.Forms.MessageBox.Show("ProjBufferOnContentTypeChanged");
+    //}
+
+    //private void ProjBufferOnChanged(object sender, TextContentChangedEventArgs textContentChangedEventArgs)
+    //{
+    //  System.Windows.Forms.MessageBox.Show("ProjBufferOnChanged");
+    //}
+
+    //private void ProjBuffer_PostChanged(object sender, EventArgs e)
+    //{
+    //  System.Windows.Forms.MessageBox.Show("ProjBuffer_PostChanged");
+    //}
+  }
+
   /// <summary>
   /// This is the class that implements the package exposed by this assembly.
   /// </summary>
@@ -235,6 +371,8 @@ namespace ChartPoints
     private ChartPntFactory factory;
 
     private IVsSolutionBuildManager3 buildManager3;
+
+    //public static IComponentModel componentModel;
 
     /// <summary>
     /// ChartPointsPackage GUID string.
@@ -276,7 +414,19 @@ namespace ChartPoints
       ChartPntToggleCmd.Initialize(this);
       ChartPointsViewTWCommand.Initialize(this);
       Globals.cpTracer = ChartPointsViewTWCommand.Instance;
+      //componentModel = (IComponentModel)this.GetService(typeof(SComponentModel));
+      //Globals.dte.Events.WindowEvents.WindowActivated += OnWindowActivated;
     }
+
+    //private void OnWindowActivated(Window GotFocus, Window LostFocus)
+    //{
+    //  var textManager = (IVsTextManager)this.GetService(typeof(SVsTextManager));
+    //  var componentModel = (IComponentModel)this.GetService(typeof(SComponentModel));
+    //  var editor = componentModel.GetService<IVsEditorAdaptersFactoryService>();
+    //  IVsTextView textViewCurrent = null;
+    //  textManager.GetActiveView(1, null, out textViewCurrent);
+    //  IWpfTextView vpfTextView = editor.GetWpfTextView(textViewCurrent);
+    //}
 
     public static void StartEvents(DTE dte)
     {

@@ -12,6 +12,7 @@ using System.Windows.Forms;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
 
 namespace ChartPoints
 {
@@ -139,8 +140,13 @@ namespace ChartPoints
         SelectVarsDlg dlg = new SelectVarsDlg(ref availableVars);
         dlg.ShowDialog();
         ISet<string> selectedVars = dlg.GetSelectedVars();
-        if(selectedVars != null)
-          checkPnt.SyncChartPoints(selectedVars);
+        if (selectedVars != null)
+        {
+          if (checkPnt.SyncChartPoints(selectedVars))
+          {
+            //Globals.textChangedListener.TrackCurPoint();
+          }
+        }
         //foreach (var varName in selectedVars)
         //  checkPnt.AddChartPoint(varName);
         //if (selectedVars.Count > 0)

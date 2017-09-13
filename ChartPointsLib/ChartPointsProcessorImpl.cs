@@ -51,6 +51,7 @@ namespace ChartPoints
 
       return false;
     }
+
     public ICheckPoint Check(string projName, TextPoint caretPnt)
     {
       CheckPoint checkPnt = null;
@@ -74,6 +75,8 @@ namespace ChartPoints
           break;
         if (fcModel.Language != CodeModelLanguageConstants.vsCMLanguageVC)
           break;
+        VCCodeModel vcCodeModel = (VCCodeModel)projItem.ContainingProject.CodeModel;
+        vcCodeModel.Synchronize();
         // chartpoint allowed only in class methods
         CodeElement elem = fcModel.CodeElementFromPoint(caretPnt, vsCMElement.vsCMElementFunction);
         if (elem == null)

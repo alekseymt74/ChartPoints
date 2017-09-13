@@ -61,8 +61,7 @@ namespace ChartPoints
     public bool GetFileName(out string fn)
     {
       ITextDocument textDoc;
-      var rc = _buffer.Properties.TryGetProperty<ITextDocument>(
-        typeof(ITextDocument), out textDoc);
+      var rc = _buffer.Properties.TryGetProperty<ITextDocument>( typeof(ITextDocument), out textDoc);
       if (rc)
       {
         fn = System.IO.Path.GetFullPath(textDoc.FilePath).ToLower();
