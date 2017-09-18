@@ -230,7 +230,7 @@
       <SubType>Designer</SubType>
     </VSCTCompile>
     <Content Include="ChartPntGlyph.png" />
-    <Content Include="Resources\ChartPntGlyph.png" />
+    <EmbeddedResource Include="Resources\ChartPntGlyph.png" />
     <Content Include="Resources\ChartPntToggleCmd.png" />
     <Content Include="Resources\ChartPointsPackage.ico" />
   </ItemGroup>

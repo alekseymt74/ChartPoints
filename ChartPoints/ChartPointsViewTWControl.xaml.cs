@@ -4,6 +4,7 @@
 // </copyright>
 //------------------------------------------------------------------------------
 
+using System;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 
@@ -40,29 +41,63 @@ namespace ChartPoints
 
     public void Clear()
     {
-      chart.Invoke((MethodInvoker) (() =>
+      if (chart.InvokeRequired)
       {
+        if (chart.IsHandleCreated)
+        {
+          chart.Invoke((MethodInvoker) (() =>
+          {
+            chart.Series.Clear();
+          }));
+        }
+        else
+          Console.WriteLine("");
+      }
+      else
         chart.Series.Clear();
-      }));
     }
 
     public void UpdateView()
     {
-      chart.Invoke((MethodInvoker)(() =>
+      if (chart.InvokeRequired)
       {
+        if (chart.IsHandleCreated)
+        {
+          chart.BeginInvoke((MethodInvoker)(() =>
+          {
+            chart.DataBind();
+          }));
+        }
+        else
+          Console.WriteLine("");
+      }
+      else
         chart.DataBind();
-      }));
     }
 
     public ICPTracerDelegate CreateTracer(string varName)
     {
       Series ser = null;
-      chart.Invoke((MethodInvoker)(() =>
+      if (chart.InvokeRequired)
+      {
+        if (chart.IsHandleCreated)
+        {
+          chart.Invoke((MethodInvoker) (() =>
+          {
+            ser = chart.Series.Add(varName);
+            ser.ChartType = SeriesChartType.Line; //StepLine;
+            ser.LegendText = varName;
+          }));
+        }
+        else
+          Console.WriteLine("");
+      }
+      else
       {
         ser = chart.Series.Add(varName);
-        ser.ChartType = SeriesChartType.Line;//StepLine;
+        ser.ChartType = SeriesChartType.Line; //StepLine;
         ser.LegendText = varName;
-      }));
+      }
       ICPTraceConsumer cons = new CPTraceConsumer(chart, ser/*chart.Series[0]*/);//, varName);
       ICPTracerDelegate cpDelegate = new CPTracerDelegate(cons);
 

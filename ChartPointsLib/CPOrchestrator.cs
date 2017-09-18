@@ -185,7 +185,7 @@ namespace ChartPoints
         //foreach (var v in Globals.processor.data.chartPoints)
         foreach (var fPnts in pPnts.filePoints)
         {
-          ProjectItemElement cpsFileItem = cpItemGroup.AddItem("ChartPointFile", fPnts.fileName/*v.Key*/);
+          ProjectItemElement cpsFileItem = cpItemGroup.AddItem("ChartPointFile", fPnts.data.fileName/*v.Key*/);
           StringWriter strWriter = new StringWriter();
           XmlTextWriter xmlTxtWriter = new XmlTextWriter(strWriter);
           //xmlTxtWriter.WriteStartElement("ChartPoints");
@@ -198,8 +198,8 @@ namespace ChartPoints
               xmlTxtWriter.WriteStartElement("ChartPoint");
               {
                 xmlTxtWriter.WriteElementString("Variable", chartPnt.data.varName);
-                xmlTxtWriter.WriteElementString("LineNum", Convert.ToString((Int32) lPnts.lineNum));//chartPnt.data.lineNum));
-                xmlTxtWriter.WriteElementString("LinePos", Convert.ToString((Int32) lPnts.linePos));//chartPnt.data.linePos));
+                xmlTxtWriter.WriteElementString("LineNum", Convert.ToString((Int32) lPnts.data.pos.lineNum));//chartPnt.data.lineNum));
+                xmlTxtWriter.WriteElementString("LinePos", Convert.ToString((Int32) lPnts.data.pos.linePos));//chartPnt.data.linePos));
                 xmlTxtWriter.WriteElementString("Enabled", chartPnt.data.enabled ? "true" : "false");
               }
             }
@@ -236,7 +236,17 @@ namespace ChartPoints
 
     public bool LoadProjChartPoints(EnvDTE.Project proj)
     {
-      Microsoft.Build.Evaluation.Project msBuildProject = LoadProjChartPoints(proj.FullName);
+      Microsoft.Build.Evaluation.Project msBuildProject = null;
+      try
+      {
+        msBuildProject = LoadProjChartPoints(proj.FullName);
+      }
+      catch (Exception e)
+      {
+        Console.WriteLine(e);
+
+        return false;
+      }
       return (msBuildProject != null);
     }
 
@@ -281,10 +291,13 @@ namespace ChartPoints
     {
       if (codeElem.Kind == vsCMElement.vsCMElementFunction)
       {
-        if (codeElem.StartPoint.Line <= lineNum
-            && codeElem.EndPoint.Line >= lineNum
-            && codeElem.StartPoint.LineCharOffset <= linePos
-            && codeElem.EndPoint.LineCharOffset >= linePos)
+        //if (codeElem.StartPoint.Line <= lineNum
+        //    && codeElem.EndPoint.Line >= lineNum
+        //    && codeElem.StartPoint.LineCharOffset <= linePos
+        //    && codeElem.EndPoint.LineCharOffset >= linePos)
+        if ((lineNum > codeElem.StartPoint.Line && lineNum < codeElem.EndPoint.Line) ||
+            (lineNum == codeElem.StartPoint.Line && linePos >= codeElem.StartPoint.LineCharOffset) ||
+            (lineNum == codeElem.EndPoint.Line && linePos <= codeElem.EndPoint.LineCharOffset))
         {
           VCCodeFunction targetFunc = (VCCodeFunction)codeElem;
           if (targetFunc != null)
@@ -334,6 +347,7 @@ namespace ChartPoints
         = projRoot.ItemGroups.Where(ig => (ig.Items.Where(i => (i.ItemType == "ChartPointFile"))).Any());
       IEnumerable<ProjectProperty> projNameProp = msbuildProj.AllEvaluatedProperties.Where((b => (b.Name.Equals("MSBuildProjectName"))));
       string projName = projNameProp.ElementAt(0).EvaluatedValue;
+      Globals.processor.RemoveChartPoints(projName);
       //IEnumerable<ProjectItemGroupElement> globalsGroups = projRoot.ItemGroups.Where(ig => (ig.Label == "Globals"));
       //ProjectItemElement rootNS = globalsGroups.ElementAt(0).Items.Where(i => (i.ItemType == "RootNamespace")).First();
       //string projName = rootNS.Metadata.First().Value;
@@ -369,7 +383,6 @@ namespace ChartPoints
                     {
                       data.fileName = cpFileElem.Include;
                       data.lineNum = i;
-                      //Globals.processor.AddChartPoint(data);
                       data.projName = projName;
                       VCCodeClass ownerClass = GetTraceVarClassElem(fcm, data.lineNum, data.linePos);
                       if (ownerClass != null)

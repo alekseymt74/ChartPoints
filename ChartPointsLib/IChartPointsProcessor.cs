@@ -33,21 +33,6 @@ namespace ChartPoints
     ICheckPoint Check(string projName, TextPoint pnt);
 
     bool RemoveChartPoints(string projName);
-
-    //bool AddProjectChartPoints(IProjectChartPoints projPnts);
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /// <summary>
-    /// Returns all chartpoints in specified file
-    /// </summary>
-    /// <param name="fileName">Name of the cpp file</param>
-    /// <returns>chartpoints sorted by line numbers in specified file</returns>
-    //IDictionary<int, IChartPoint> GetFileChartPoints(string fileName);
-    ////bool AddChartPoint(IChartPoint chartPnt);
-    //bool AddChartPoint(IChartPointData chartPntData);
-    //IChartPoint GetChartPoint(IChartPointData cpData);
-    //IDictionary<int, IChartPoint> GetOrCreateFileChartPoints(string fname);
   }
 
   public interface IChartPointsTagger

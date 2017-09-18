@@ -176,18 +176,6 @@
           <LinePos>2</LinePos>
           <Enabled>true</Enabled>
         </ChartPoint>
-        <ChartPoint xmlns="">
-          <Variable>j</Variable>
-          <LineNum>5</LineNum>
-          <LinePos>1</LinePos>
-          <Enabled>true</Enabled>
-        </ChartPoint>
-        <ChartPoint xmlns="">
-          <Variable>j</Variable>
-          <LineNum>6</LineNum>
-          <LinePos>1</LinePos>
-          <Enabled>true</Enabled>
-        </ChartPoint>
       </ChartPoints>
     </ChartPointFile>
   </ItemGroup>

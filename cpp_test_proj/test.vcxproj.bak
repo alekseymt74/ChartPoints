@@ -282,13 +282,6 @@
     <ClCompile Include="test.cpp" />
     <ClCompile Include="test_01.cpp" />
   </ItemGroup>
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
   <ItemGroup>
     <ChartPointFile Include="temp_utest.cpp">
       <ChartPoints>
@@ -305,7 +298,7 @@
         <ChartPoint xmlns="">
           <Variable>k</Variable>
           <LineNum>36</LineNum>
-          <LinePos>1</LinePos>
+          <LinePos>16</LinePos>
           <Enabled>true</Enabled>
         </ChartPoint>
       </ChartPoints>

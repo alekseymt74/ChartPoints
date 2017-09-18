@@ -115,11 +115,11 @@ namespace ChartPoints
       CPClassLayout cpClassLayout = new CPClassLayout();
       foreach (var fPnts in pPnts.filePoints)
       {
-        string _fname = fPnts.fileName;
+        string _fname = fPnts.data.fileName;
         foreach (var lPnts in fPnts.linePoints)
         {
-          int _lineNum = lPnts.lineNum;
-          int _linePos = lPnts.linePos;
+          int _lineNum = lPnts.data.pos.lineNum;
+          int _linePos = lPnts.data.pos.linePos;
           foreach (var chartPnt in lPnts.chartPoints)
             chartPnt.CalcInjectionPoints(cpClassLayout, _fname, _lineNum, _linePos);
         }

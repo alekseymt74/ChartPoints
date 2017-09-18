@@ -43,6 +43,9 @@ namespace ChartPoints
 
     public int OnAfterLoadProject(IVsHierarchy pStubHierarchy, IVsHierarchy pRealHierarchy)
     {
+      object propItemObj = null;
+      pStubHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
+      pRealHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
       //throw new NotImplementedException();
       //foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
       //{
@@ -53,6 +56,7 @@ namespace ChartPoints
       return VSConstants.S_OK;
     }
 
+    // Somethimes it's not called...
     public int OnAfterOpenProject(IVsHierarchy pHierarchy, int fAdded)
     {
       object propItemObj = null;
@@ -95,6 +99,12 @@ namespace ChartPoints
       string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
       if (activeConfig.Contains(" [ChartPoints]"))
         ChartPointsViewTWCommand.Instance.Enable(true);
+      foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+      {
+        if (proj.Name != "Miscellaneous Files")
+          Globals.orchestrator.LoadProjChartPoints(proj);
+      }
+
       return VSConstants.S_OK;
     }
 
@@ -235,19 +245,21 @@ namespace ChartPoints
       curTextView = textView;
       curTextView.TextBuffer.Changed += TextBufferOnChanged;
     }
+
+    //private TextContentChangedEventArgs evArgs;
+    //async private void ValidateChartPoints(TextContentChangedEventArgs e)
+    //{
+    //  TextContentChangedEventArgs curEvArgs = null;
+    //  lock (evArgs)
+    //  {
+    //    curEvArgs = evArgs;
+    //  }
+    //}
     private void TextBufferOnChanged(object sender, TextContentChangedEventArgs e)
     {
-      //ITextDocument textDoc;
-      //IFileChartPoints fPnts1;
-      //string fileName = null;
-      //var rc = curTextView.TextBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDoc);
-      //if (rc)
+      //lock (evArgs)
       //{
-      //  fileName = Path.GetFileName(textDoc.FilePath);
-      //  EnvDTE.Document dteDoc = Globals.dte.Documents.Item(fileName);
-      //  IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(dteDoc.ProjectItem.ContainingProject.Name);
-      //  if (pPnts != null)
-      //    fPnts1 = pPnts.GetFileChartPoints(fileName);
+      //  evArgs = e;
       //}
       string fileName = Path.GetFileName(fileFullName);
       EnvDTE.Document dteDoc = Globals.dte.Documents.Item(fileName);
@@ -274,17 +286,11 @@ namespace ChartPoints
   [TextViewRole(PredefinedTextViewRoles.Editable)]
   public sealed class TextChangedListener : IWpfTextViewCreationListener, ITextChangedListener
   {
-    //private IWpfTextView curTextView;
-    ////private IProjectionBufferFactoryService projectionFactory;
-    ////private IProjectionBuffer projBuffer;
-    //private IFileChartPoints fPnts;
-
     private ISet<FileChangeTracker> fileTrackers
       = new SortedSet<FileChangeTracker>(Comparer<FileChangeTracker>.Create((lh, rh) => (String.Compare(lh.fileFullName, rh.fileFullName, StringComparison.Ordinal))));
 
     public void TextViewCreated(IWpfTextView textView)
     {
-      //curTextView = textView;
       ITextDocument textDoc;
       string fileName = null;
       var rc = textView.TextBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDoc);
@@ -304,41 +310,9 @@ namespace ChartPoints
 
     public TextChangedListener()
     {
-      //projectionFactory = ChartPointsPackage.componentModel.GetService<IProjectionBufferFactoryService>();
       Globals.textChangedListener = this;
     }
 
-    //public void TrackCurPoint()
-    //{
-    //  projBuffer = projectionFactory.CreateProjectionBuffer( null, new object[0], ProjectionBufferOptions.None);
-    //  SnapshotPoint sp = curTextView.Caret.Position.BufferPosition;
-    //  ITrackingSpan ts = sp.Snapshot.CreateTrackingSpan(curTextView.Caret.Position.BufferPosition.Position, 1, SpanTrackingMode.EdgeNegative);
-    //  projBuffer.InsertSpan(0, ts);
-    //  //projBuffer.PostChanged += ProjBuffer_PostChanged;
-    //  projBuffer.Changed += ProjBufferOnChanged;
-    //  //projBuffer.ContentTypeChanged += ProjBufferOnContentTypeChanged;
-    //  //projBuffer.Changing += ProjBufferOnChanging;
-    //}
-
-    //private void ProjBufferOnChanging(object sender, TextContentChangingEventArgs textContentChangingEventArgs)
-    //{
-    //  System.Windows.Forms.MessageBox.Show("ProjBufferOnChanging");
-    //}
-
-    //private void ProjBufferOnContentTypeChanged(object sender, ContentTypeChangedEventArgs contentTypeChangedEventArgs)
-    //{
-    //  System.Windows.Forms.MessageBox.Show("ProjBufferOnContentTypeChanged");
-    //}
-
-    //private void ProjBufferOnChanged(object sender, TextContentChangedEventArgs textContentChangedEventArgs)
-    //{
-    //  System.Windows.Forms.MessageBox.Show("ProjBufferOnChanged");
-    //}
-
-    //private void ProjBuffer_PostChanged(object sender, EventArgs e)
-    //{
-    //  System.Windows.Forms.MessageBox.Show("ProjBuffer_PostChanged");
-    //}
   }
 
   /// <summary>

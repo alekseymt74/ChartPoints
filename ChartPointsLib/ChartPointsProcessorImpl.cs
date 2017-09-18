@@ -16,7 +16,7 @@ namespace ChartPoints
     /// Container of all chartpoints set in current cpp project
     /// </summary>
     public ISet<IProjectChartPoints> projPoints { get; set; }
-      = new SortedSet<IProjectChartPoints>(Comparer<IProjectChartPoints>.Create((lh, rh) => (lh.projName.CompareTo(rh.projName))));
+      = new SortedSet<IProjectChartPoints>(Comparer<IProjectChartPoints>.Create((lh, rh) => (lh.data.projName.CompareTo(rh.data.projName))));
 
   }
   /// <summary>
@@ -33,7 +33,7 @@ namespace ChartPoints
 
     public IProjectChartPoints GetProjectChartPoints(string projName)
     {
-      IProjectChartPoints pPnts = data.projPoints.FirstOrDefault((pp) => (pp.projName == projName));
+      IProjectChartPoints pPnts = data.projPoints.FirstOrDefault((pp) => (pp.data.projName == projName));
 
       return pPnts;
     }
@@ -43,7 +43,9 @@ namespace ChartPoints
       pPnts = GetProjectChartPoints(projName);
       if (pPnts == null)
       {
-        pPnts = ChartPntFactory.Instance.CreateProjectChartPoint(projName, AddProjectChartPoints, RemoveProjectChartPoints);
+        pPnts = ChartPntFactory.Instance.CreateProjectChartPoint(projName);//, AddProjectChartPoints, RemoveProjectChartPoints);
+        pPnts.addCPFileEvent.On += AddProjectChartPoints;
+        pPnts.remCPFileEvent.On += RemoveProjectChartPoints;
         data.projPoints.Add(pPnts);
 
         return true;
@@ -140,8 +142,8 @@ namespace ChartPoints
           checkPnt = new CheckPoint()
           {
             doc = activeDoc,
-            lineNum = lPnts.lineNum,
-            linePos = lPnts.linePos,
+            lineNum = lPnts.data.pos.lineNum,
+            linePos = lPnts.data.pos.linePos,
             ownerClass = (VCCodeClass)targetClassElem,
             projName = projName
           };
@@ -169,111 +171,25 @@ namespace ChartPoints
       return true;
     }
 
-
-    //public IDictionary<int, IChartPoint> GetOrCreateFileChartPoints(string fname)
-    //{
-    //  IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(fname);
-    //  if (fileChartPoints == null)
-    //  {
-    //    fileChartPoints = new SortedDictionary<int, IChartPoint>();
-    //    data.chartPoints.Add(fname, fileChartPoints);
-    //  }
-
-    //  return fileChartPoints;
-    //}
-    //protected void StoreLineChartPoints(ILineChartPoints chartPnt, string projName, string fileName)
-    //{
-    //  IDictionary<int, IChartPoint> fileChartPoints = GetOrCreateFileChartPoints(chartPnt.data.fileName);
-    //  fileChartPoints.Add(chartPnt.data.lineNum, chartPnt);
-    //}
-
-    protected bool AddProjectChartPoints(IProjectChartPoints projPnts)
+    protected /*bool */void AddProjectChartPoints(CPProjEvArgs args)// IProjectChartPoints projPnts)
     {
-      IProjectChartPoints pPnts = GetProjectChartPoints(projPnts.projName);
+      IProjectChartPoints pPnts = GetProjectChartPoints(/*projPnts*/args.projCPs.data.projName);
       if (pPnts == null)
       {
-        data.projPoints.Add(projPnts);
+        data.projPoints.Add(/*projPnts*/args.projCPs);
 
-        return true;
+        //return true;
       }
 
-      return false;
+      //return false;
     }
-    protected bool RemoveProjectChartPoints(IProjectChartPoints projPnts)
+    protected /*bool */void RemoveProjectChartPoints(CPProjEvArgs args)//IProjectChartPoints projPnts)
     {
-      return data.projPoints.Remove(projPnts);
+      if (args.projCPs.Count == 0)
+        data.projPoints.Remove(args.projCPs);
+      //return data.projPoints.Remove(projPnts);
     }
 
-    //protected bool AddLineChartPoints(ILineChartPoints linePnts, string projName, string fileName, string fileFullName)
-    //{
-    //  IProjectChartPoints pPnts = GetProjectChartPoints(projName);
-    //  if (pPnts == null)
-    //  {
-    //    pPnts = ChartPntFactory.Instance.CreateProjectChartPoint(projName, AddProjectChartPoints, RemoveProjectChartPoints);
-    //    IFileChartPoints fPnts = pPnts.AddFileChartPoints(fileName, fileFullName);
-    //    fPnts.AddLineChartPoints(linePnts);
-    //  }
-    //  else
-    //  {
-    //    IFileChartPoints fPnts = pPnts.GetFileChartPoints(fileName);
-    //    if (fPnts == null)
-    //    {
-    //      fPnts = pPnts.AddFileChartPoints(fileName, fileFullName);
-    //      fPnts.AddLineChartPoints(linePnts);
-    //    }
-    //    else
-    //      fPnts.AddLineChartPoints(linePnts);
-    //  }
-    //  //if (chartPnt == null || chartPnt.status != ETargetPointStatus.Available)
-    //  //  return false;
-    //  //StoreChartPnt(chartPnt);
-    //  //Globals.taggerUpdater.RaiseChangeTagEvent(chartPnt);
-
-    //  return true;
-    //}
-
-    //protected bool RemoveLineChartPoints(ILineChartPoints chartPnt, string projName, string fileName, string fileFullName)
-    //{
-    //  //if (chartPnt == null || (chartPnt.status != ETargetPointStatus.SwitchedOn && chartPnt.status != ETargetPointStatus.SwitchedOff))
-    //  //  return false;
-    //  //IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(chartPnt.data.fileName);
-    //  //if (fileChartPoints == null)
-    //  //  return false;
-    //  //bool removed = fileChartPoints.Remove(chartPnt.data.lineNum);
-    //  //if (removed && fileChartPoints.Count == 0)
-    //  //  data.chartPoints.Remove(chartPnt.data.fileName);
-    //  //Globals.taggerUpdater.RaiseChangeTagEvent(chartPnt/*.pnt*/);
-
-    //  //return removed;
-
-    //  return false;
-    //}
-
-    //public IDictionary<int, IChartPoint> GetFileChartPoints(string fileName)
-    //{
-    //  IDictionary<int, IChartPoint> fileChartPoints;
-    //  data.chartPoints.TryGetValue(fileName, out fileChartPoints);
-
-    //  return fileChartPoints;
-    //}
-
-    //public virtual IChartPoint GetChartPoint(IChartPointData cpData)
-    //{
-    //  IChartPoint cp = null;
-    //  IDictionary<int, IChartPoint> fileChartPoints = GetFileChartPoints(cpData.fileName);
-    //  if(fileChartPoints != null)
-    //    fileChartPoints.TryGetValue(cpData.lineNum, out cp);
-
-    //  return cp;
-    //}
-
-    //public bool AddChartPoint(IChartPointData chartPntData)
-    //{
-    //  IDictionary<int, IChartPoint> fileChartPoints = Globals.processor.GetOrCreateFileChartPoints(chartPntData.fileName);
-    //  fileChartPoints.Add(chartPntData.lineNum, ChartPntFactory.Instance.CreateChartPoint(chartPntData, AddChartPoint, RemoveChartPoint));
-
-    //  return true;
-    //}
   }
 
 }

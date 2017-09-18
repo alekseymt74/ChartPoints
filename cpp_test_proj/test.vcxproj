@@ -298,7 +298,7 @@
         <ChartPoint xmlns="">
           <Variable>k</Variable>
           <LineNum>36</LineNum>
-          <LinePos>1</LinePos>
+          <LinePos>16</LinePos>
           <Enabled>true</Enabled>
         </ChartPoint>
       </ChartPoints>

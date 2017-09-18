@@ -42,7 +42,7 @@ namespace ChartPoints
         //_view.TextViewLines Span.FromBounds
         foreach (var linePnt in filePoints.linePoints)
         {
-          ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(linePnt.lineNum - 1);
+          ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(linePnt.data.pos.lineNum - 1);
           tempEvent(this, new SnapshotSpanEventArgs(new SnapshotSpan(line.Start, 1)));
         }
       }
@@ -54,7 +54,7 @@ namespace ChartPoints
       if (tempEvent != null)
       {
         //_view.TextViewLines Span.FromBounds
-        ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(lPnts.lineNum - 1);
+        ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(lPnts.data.pos.lineNum - 1);
         tempEvent(this, new SnapshotSpanEventArgs(new SnapshotSpan(line.Start, 1)));
       }
     }
@@ -102,7 +102,7 @@ namespace ChartPoints
                 // TextPoint::Line is 1-based 
                 // Text Snapshots - 0-based
                 //if (pair.Key - 1 == firstLineNum)
-                if (linePnt.lineNum - 1 == firstLineNum)
+                if (linePnt.data.pos.lineNum - 1 == firstLineNum)
                   yield return new TagSpan<ChartPointTag>(new SnapshotSpan(line.Start, 0), new ChartPointTag());
               }
             }
@@ -137,7 +137,7 @@ namespace ChartPoints
     public void RaiseChangeTagEvent(IFileChartPoints fPnts)
     {
       IChartPointsTagger tagger;
-      if(taggers.TryGetValue(fPnts.fileFullName, out tagger))
+      if(taggers.TryGetValue(fPnts.data.fileFullName, out tagger))
         tagger?.RaiseTagsChangedEvent(fPnts);
     }
 

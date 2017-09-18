@@ -147,13 +147,7 @@ namespace ChartPoints
             //Globals.textChangedListener.TrackCurPoint();
           }
         }
-        //foreach (var varName in selectedVars)
-        //  checkPnt.AddChartPoint(varName);
-        //if (selectedVars.Count > 0)
-        //  codeObserver.InjectTracers(ref selectedVars, caretPnt);
       }
-
-      //////linePnts.Toggle();
     }
   }
 }

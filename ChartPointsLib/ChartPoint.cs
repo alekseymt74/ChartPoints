@@ -14,104 +14,53 @@ namespace ChartPoints
   [DataContract]
   public class ChartPointData : IChartPointData
   {
-    //[DataMember]
-    //public string fileName { get; set; }
-    //[DataMember]
-    //public string fileFullName { get; set; }
-    //[DataMember]
-    //public int lineNum { get; set; }
-    //[DataMember]
-    //public int linePos { get; set; }
     [DataMember]
     public bool enabled { get; set; }
     [DataMember]
     public string varName { get; set; }
+    public ETargetPointStatus status { get; set; }
     public string className { get; set; }
+    public ICPLineData lineData { get; set; }
     public ChartPointData() { }
     public ChartPointData(IChartPointData _data)
     {
-      //fileName = _data.fileName;
-      //fileFullName = _data.fileFullName;
-      //lineNum = _data.lineNum;
-      //linePos = _data.linePos;
       enabled = _data.enabled;
       varName = _data.varName;
       className = _data.className;
     }
   }
+
+  public class Data<T, TData, TDataImpl> : IData<TData>
+    where TData : class
+    where TDataImpl : TData
+  {
+    public TDataImpl theData { get; set; }
+
+    public TData data
+    {
+      get { return theData; }
+      set { theData = (TDataImpl)value; }
+    }
+  }
   /// <summary>
   /// Implementation of IChartPoint interface
   /// </summary>
-  public class ChartPoint : IChartPoint
+  public class ChartPoint : Data<ChartPoint, IChartPointData, ChartPointData>, IChartPoint
   {
-    //private TextPoint startFuncPnt;
-    //private TextPoint endFuncPnt;
     private VCCodeModel vcCodeModel;
-
-    private Func<IChartPoint, bool> addFunc;
-    private Func<IChartPoint, bool> remFunc;
-    public ETargetPointStatus status { get; set; }
-    //public VCCodeVariable var { get; }
-    protected ChartPointData theData { get; set; }
-    //protected VCCodeClass targetClassElem;
-
-    public IChartPointData data
-    {
-      get { return theData; }
-      set { theData = (ChartPointData)value; }
-    }
     protected ChartPoint() { }
-    //public ChartPoint(/*TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt
-    //  , */VCCodeClass _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
-    //{
-    //  //targetClassElem = _targetClassElem;
-    //  theData = new ChartPointData
-    //  {
-    //    enabled = false,
-    //    //lineNum = caretPnt.Line,
-    //    //linePos = caretPnt.LineCharOffset,
-    //    //fileName = caretPnt.Parent.Parent.Name,
-    //    //fileFullName = System.IO.Path.GetFullPath(caretPnt.Parent.Parent.FullName).ToLower(),
-    //    className = _targetClassElem.Name,//DisplayName
-    //    varName = "j"
-    //  };
-    //  /*???*/
-    //  //startFuncPnt = _startFuncPnt;
-    //  ///*???*/
-    //  //endFuncPnt = _endFuncPnt;
-    //  //targetClassElem = _targetClassElem;
-    //  vcCodeModel = _targetClassElem.CodeModel;
-    //  status = ETargetPointStatus.Available;
-    //  addFunc = _addFunc;
-    //  remFunc = _remFunc;
-    //}
 
-    //public ChartPoint(IChartPointData _data, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
-    //{
-    //  theData = new ChartPointData(_data);
-    //  //startFuncPnt = _startFuncPnt;
-    //  //endFuncPnt = _endFuncPnt;
-    //  //targetClassElem = _targetClassElem;
-    //  if (data.enabled)
-    //    status = ETargetPointStatus.SwitchedOn;
-    //  else
-    //    status = ETargetPointStatus.SwitchedOff;
-    //  addFunc = _addFunc;
-    //  remFunc = _remFunc;
-    //}
-
-    public ChartPoint(string varName, VCCodeClass ownerClass, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc)
+    public ChartPoint(string varName, VCCodeClass ownerClass, ICPLineData _lineData)
     {
       theData = new ChartPointData
       {
         enabled = true,
         className = (ownerClass != null ? ownerClass.Name : ""),//DisplayName
-        varName = varName
+        status = ETargetPointStatus.SwitchedOn,
+        varName = varName,
+        lineData = _lineData
       };
       vcCodeModel = (ownerClass != null ? ownerClass.CodeModel : null);
-      status = ETargetPointStatus.SwitchedOn;
-      addFunc = _addFunc;
-      remFunc = _remFunc;
     }
 
     public virtual void CalcInjectionPoints(CPClassLayout cpClassLayout, string _fname, int _lineNum, int _linePos)
@@ -217,49 +166,6 @@ namespace ChartPoints
       }
     }
 
-    /// <summary>
-    /// Try to toggle chartpoint
-    /// </summary>
-    /// <returns>new chartpoint status</returns>
-    public ETargetPointStatus Toggle()
-    {
-      switch (status)
-      {
-        case ETargetPointStatus.Available:
-          if (addFunc(this))
-            status = ETargetPointStatus.SwitchedOn;
-          return status;
-        case ETargetPointStatus.SwitchedOff:
-        case ETargetPointStatus.SwitchedOn:
-          if (remFunc(this))
-            status = ETargetPointStatus.Available;
-          return status;
-      }
-
-      return ETargetPointStatus.NotAvailable;
-    }
-
-    /// <summary>
-    /// Try to remove chartpoint
-    /// </summary>
-    /// <returns>new chartpoint status</returns>
-    public ETargetPointStatus Remove()
-    {
-      switch (status)
-      {
-        case ETargetPointStatus.Available:
-        case ETargetPointStatus.NotAvailable:
-          return status;
-        case ETargetPointStatus.SwitchedOff:
-        case ETargetPointStatus.SwitchedOn:
-          if (remFunc(this))
-            status = ETargetPointStatus.Available;
-          return status;
-      }
-
-      return ETargetPointStatus.NotAvailable;
-    }
-
     public bool ValidatePosition(int lineNum, int linePos)
     {
       vcCodeModel.Synchronize();
@@ -278,7 +184,7 @@ namespace ChartPoints
         try
         {
           VCCodeClass vcClass = (VCCodeClass) theClass;
-          CodeElement theFunc = null;
+          //CodeElement theFunc = null;
           foreach (CodeElement _func in vcClass.Functions)
           {
             VCCodeFunction vcFunc = (VCCodeFunction) _func;
@@ -322,28 +228,88 @@ namespace ChartPoints
     }
   }
 
-  public class AddRemover<T>
+  public class TextPosition : ITextPosition
   {
-    public Func<T, bool> addFunc;
-    public Func<T, bool> remFunc;
+    public int lineNum { get; }
+    public int linePos { get; }
+
+    delegate void UpdatePosition(IChartPoint cp, int _lineNum, int _linePos);
+
+    private UpdatePosition updPos;
+
+    public TextPosition(int _lineNum, int _linePos, Action<IChartPoint, int, int> _updPos)
+    {
+      lineNum = _lineNum;
+      linePos = _linePos;
+      updPos = new UpdatePosition(_updPos);
+    }
+    public void Move(IChartPoint cp, int _lineNum, int _linePos)
+    {
+      updPos(cp, _lineNum, _linePos);
+    }
   }
 
-  public class LineChartPoints : AddRemover<LineChartPoints>, ILineChartPoints
+  public class CPLineData : ICPLineData
   {
-    public int lineNum { get; set; }
-    public int linePos { get; set; }
+    public ITextPosition pos { get; set; }
+    public ICPFileData fileData { get; set; }
+  }
+
+  public class CPEvent<T> : ICPEvent<T>
+  {
+    private OnCPEvent<T> _on;
+    public event OnCPEvent<T> On
+    {
+      add
+      {
+        if (_on == null)
+          _on = new OnCPEvent<T>(value);
+        else
+          _on += value;
+      }
+      remove
+      {
+        if (_on != null)
+          _on -= value;
+      }
+    }
+
+    public void Fire(T args)
+    {
+      _on?.Invoke(args);
+    }
+  }
+
+  public class LineChartPoints : Data<LineChartPoints, ICPLineData, CPLineData>, ILineChartPoints
+  {
+    public ICPEvent<CPLineEvArgs> addCPEvent { get; } = new CPEvent<CPLineEvArgs>();
+    public ICPEvent<CPLineEvArgs> remCPEvent { get; } = new CPEvent<CPLineEvArgs>();
+
     public ISet<IChartPoint> chartPoints { get; set; } = new SortedSet<IChartPoint>(Comparer<IChartPoint>.Create((lh, rh) => (lh.data.varName.CompareTo(rh.data.varName))));
 
+    public int Count { get { return chartPoints.Count; } }
+
+    public LineChartPoints(int _lineNum, int _linePos, ICPFileData _fileData)
+    {
+      theData = new CPLineData() { pos = new TextPosition(_lineNum, _linePos, MoveChartPoint), fileData = _fileData };
+    }
+
+    public void MoveChartPoint(IChartPoint cp, int _lineNum, int _linePos)
+    {
+      RemoveChartPoint(cp);
+      theData.fileData.Move(this, cp, _lineNum, _linePos);
+    }
     public virtual IChartPoint GetChartPoint(string varName)
     {
       return chartPoints.FirstOrDefault((lp) => (lp.data.varName == varName));
     }
 
-    protected bool AddChartPoint(IChartPoint chartPnt)
+    public bool AddChartPoint(IChartPoint chartPnt)
     {
       if (GetChartPoint(chartPnt.data.varName) == null)
       {
         chartPoints.Add(chartPnt);
+        addCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
         return true;
       }
 
@@ -353,24 +319,25 @@ namespace ChartPoints
     protected bool RemoveChartPoint(IChartPoint chartPnt)
     {
       bool ret = chartPoints.Remove(chartPnt);
-      if (chartPoints.Count == 0)
-        ret &= remFunc(this);
+      if(ret)
+        remCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
 
       return ret;
     }
 
-    public bool AddChartPoint(string varName, VCCodeClass ownerClass, out IChartPoint chartPnt)
+    public bool AddChartPoint(string varName, VCCodeClass ownerClass, out IChartPoint chartPnt, bool checkExistance = true)
     {
-      chartPnt = GetChartPoint(varName);
-      if (chartPnt == null)
+      if (checkExistance)
       {
-        chartPnt = ChartPntFactory.Instance.CreateChartPoint(varName, ownerClass, AddChartPoint, RemoveChartPoint);
-        chartPoints.Add(chartPnt);
-
-        return true;
-
+        chartPnt = GetChartPoint(varName);
+        if (chartPnt != null)
+          return false;
       }
-      return false;
+      chartPnt = ChartPntFactory.Instance.CreateChartPoint(varName, ownerClass, data);
+      chartPoints.Add(chartPnt);
+      addCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
+
+      return true;
     }
 
     public bool SyncChartPoints(string fname, ISet<string> cpVarNames, VCCodeClass className)
@@ -393,8 +360,8 @@ namespace ChartPoints
       }
       foreach (var varName in cpVarNames)
       {
-        IChartPoint chartPnt = ChartPntFactory.Instance.CreateChartPoint(varName, className, AddChartPoint, RemoveChartPoint);
-        chartPoints.Add(chartPnt);
+        IChartPoint chartPnt = null;
+        AddChartPoint(varName, className, out chartPnt, false);
         changed = true;
       }
       int newCount = chartPoints.Count;
@@ -410,7 +377,7 @@ namespace ChartPoints
       bool changed = false;
       foreach (IChartPoint cp in chartPoints)
       {
-        bool cpValidated = cp.ValidatePosition(lineNum + linesAdd, linePos);
+        bool cpValidated = cp.ValidatePosition(data.pos.lineNum + linesAdd, data.pos.linePos);
         changed = changed || cpValidated;
       }
 
@@ -419,27 +386,61 @@ namespace ChartPoints
 
   }
 
-  public class FileChartPoints : AddRemover<FileChartPoints>, IFileChartPoints
+  public class CPFileData : ICPFileData
   {
-    public string fileName { get; set; }
+    public string fileName { get; set;  }
     public string fileFullName { get; set; }
-    public ISet<ILineChartPoints> linePoints { get; set; }
-      = new SortedSet<ILineChartPoints>(Comparer<ILineChartPoints>.Create((lh, rh) => (lh.lineNum > rh.lineNum ? 1 : lh.lineNum < rh.lineNum ? -1 : 0)));
+    public ICPProjectData projData { get; set; }
 
+    delegate void UpdatePosition(ILineChartPoints lcps, IChartPoint cp, int _lineNum, int _linePos);
+
+    private UpdatePosition updPos;
+
+    public CPFileData(string _fileName, string _fileFullName, ICPProjectData _projData, Action<ILineChartPoints, IChartPoint, int, int> _updPos)
+    {
+      fileName = _fileName;
+      fileFullName = _fileFullName;
+      projData = _projData;
+      updPos = new UpdatePosition(_updPos);
+    }
+    public void Move(ILineChartPoints lcps ,IChartPoint cp, int _lineNum, int _linePos)
+    {
+      updPos(lcps, cp, _lineNum, _linePos);
+    }
+  }
+
+  public class FileChartPoints : Data<FileChartPoints, ICPFileData, CPFileData>, IFileChartPoints
+  {
+    public ICPEvent<CPFileEvArgs> addCPLineEvent { get; } = new CPEvent<CPFileEvArgs>();
+    public ICPEvent<CPFileEvArgs> remCPLineEvent { get; } = new CPEvent<CPFileEvArgs>();
+    public ISet<ILineChartPoints> linePoints { get; set; }
+      = new SortedSet<ILineChartPoints>(Comparer<ILineChartPoints>.Create((lh, rh) => (lh.data.pos.lineNum > rh.data.pos.lineNum ? 1 : lh.data.pos.lineNum < rh.data.pos.lineNum ? -1 : 0)));
+    public int Count { get { return linePoints.Count; } }
+
+    public FileChartPoints(string _fileName, string _fileFullName, ICPProjectData _projData)
+    {
+      theData = new CPFileData(_fileName, _fileFullName, _projData, MoveChartPoint);
+    }
+
+    public void MoveChartPoint(ILineChartPoints _lcps, IChartPoint cp, int _lineNum, int _linePos)
+    {
+      ILineChartPoints lcps = AddLineChartPoints(_lineNum, _linePos);
+      lcps.AddChartPoint(cp);
+    }
     public ILineChartPoints GetLineChartPoints(int lineNum)
     {
-      ILineChartPoints lPnts = linePoints.FirstOrDefault((lp) => (lp.lineNum == lineNum));
+      ILineChartPoints lPnts = linePoints.FirstOrDefault((lp) => (lp.data.pos.lineNum == lineNum));
 
       return lPnts;
     }
     protected bool AddLineChartPoints(ILineChartPoints linePnts)
     {
-      ILineChartPoints lPnts = GetLineChartPoints(linePnts.lineNum);
+      ILineChartPoints lPnts = GetLineChartPoints(linePnts.data.pos.lineNum);
       if (lPnts == null)
       {
-        //((LineChartPoints)linePnts).addFunc = AddLineChartPoints;
-        //((LineChartPoints)linePnts).remFunc = RemoveLineChartPoints;
         linePoints.Add(linePnts);
+        linePnts.remCPEvent.On += OnRemCp;
+        addCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
 
         return true;
       }
@@ -449,8 +450,8 @@ namespace ChartPoints
     protected bool RemoveLineChartPoints(ILineChartPoints linePnts)
     {
       bool ret = linePoints.Remove(linePnts);
-      if (linePoints.Count == 0)
-        ret &= remFunc(this);
+      if(ret)
+        remCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
 
       return ret;
     }
@@ -458,10 +459,18 @@ namespace ChartPoints
     {
       ILineChartPoints lPnts = GetLineChartPoints(lineNum);
       if (lPnts == null)
-        lPnts = ChartPntFactory.Instance.CreateLineChartPoint(lineNum, linePos, AddLineChartPoints, RemoveLineChartPoints);
+      {
+        lPnts = ChartPntFactory.Instance.CreateLineChartPoint(lineNum, linePos, data);
+      }
       AddLineChartPoints(lPnts);
 
       return lPnts;
+    }
+
+    private void OnRemCp(CPLineEvArgs args)
+    {
+      if (args.lineCPs.Count == 0)
+        RemoveLineChartPoints(args.lineCPs);
     }
 
     public bool ValidatePosition(int lineNum, int linesAdd)
@@ -470,7 +479,7 @@ namespace ChartPoints
       List< KeyValuePair<bool, ILineChartPoints> > changedLines = new List<KeyValuePair<bool, ILineChartPoints>>();
       foreach (ILineChartPoints lPnts in linePoints)
       {
-        if (lPnts.lineNum >= lineNum)
+        if (lPnts.data.pos.lineNum >= lineNum)
         {
           bool lineChanged = lPnts.ValidatePosition(linesAdd);
           if (lineChanged && linesAdd != 0)
@@ -484,20 +493,20 @@ namespace ChartPoints
       {
         foreach (KeyValuePair<bool, ILineChartPoints> lPnts in changedLines)
         {
-          linePoints.Remove(lPnts.Value);
+          linePoints.Remove(lPnts.Value);//!!!EVENT!!!
           //if (RemoveLineChartPoints(lPnts.Value))
-          Globals.taggerUpdater.RaiseChangeTagEvent(fileFullName, lPnts.Value);
+          Globals.taggerUpdater.RaiseChangeTagEvent(data.fileFullName, lPnts.Value);
         }
         foreach (KeyValuePair<bool, ILineChartPoints> lPnts in changedLines)
         {
           if (lPnts.Key == true)
           {
-            ((LineChartPoints) lPnts.Value).lineNum += linesAdd;
+//            ((LineChartPoints) lPnts.Value).theData.pos.lineNum += linesAdd;
             linePoints.Add(lPnts.Value);
           }
         }
-        if(linePoints.Count == 0)
-          remFunc(this);
+        //if(linePoints.Count == 0)
+        //  remFunc(this);
       }
 
       return changed;
@@ -505,14 +514,21 @@ namespace ChartPoints
 
   }
 
-  public class ProjectChartPoints : AddRemover<ProjectChartPoints>, IProjectChartPoints
+  public class CPProjectData : ICPProjectData
   {
     public string projName { get; set; }
-    public ISet<IFileChartPoints> filePoints { get; set; } = new SortedSet<IFileChartPoints>(Comparer<IFileChartPoints>.Create((lh, rh) => (lh.fileName.CompareTo(rh.fileName))));
+  }
 
+  public class ProjectChartPoints : Data<ProjectChartPoints, ICPProjectData, CPProjectData>, IProjectChartPoints
+  {
+    public ICPEvent<CPProjEvArgs> addCPFileEvent { get; } = new CPEvent<CPProjEvArgs>();
+    public ICPEvent<CPProjEvArgs> remCPFileEvent { get; } = new CPEvent<CPProjEvArgs>();
+    public ISet<IFileChartPoints> filePoints { get; set; } = new SortedSet<IFileChartPoints>(Comparer<IFileChartPoints>.Create((lh, rh) => (lh.data.fileName.CompareTo(rh.data.fileName))));
+
+    public int Count { get { return filePoints.Count; } }
     public IFileChartPoints GetFileChartPoints(string fname)
     {
-      IFileChartPoints fPnts = filePoints.FirstOrDefault((fp) => (fp.fileName == fname));
+      IFileChartPoints fPnts = filePoints.FirstOrDefault((fp) => (fp.data.fileName == fname));
 
       return fPnts;
     }
@@ -522,27 +538,35 @@ namespace ChartPoints
       IFileChartPoints fPnts = GetFileChartPoints(fname);
       if (fPnts != null)
         lPnts = fPnts.GetLineChartPoints(lineNum);
-      addFunc(this);
 
       return lPnts;
     }
     protected bool AddFileChartPoints(IFileChartPoints filePnts)
     {
-      IFileChartPoints fPnts = GetFileChartPoints(filePnts.fileName);
+      IFileChartPoints fPnts = GetFileChartPoints(filePnts.data.fileName);
       if (fPnts == null)
       {
         filePoints.Add(filePnts);
+        filePnts.remCPLineEvent.On += OnRemLineCPs;
+        addCPFileEvent.Fire(new CPProjEvArgs(this, filePnts));
 
         return true;
       }
 
       return false;
     }
+
+    private void OnRemLineCPs(CPFileEvArgs args)
+    {
+      if (args.fileCPs.Count == 0)
+        RemoveFileChartPoints(args.fileCPs);
+    }
+
     protected bool RemoveFileChartPoints(IFileChartPoints filePnts)
     {
       bool ret = filePoints.Remove(filePnts);
-      if (filePoints.Count == 0)
-        ret &= remFunc(this);
+      if(ret)
+        remCPFileEvent.Fire(new CPProjEvArgs(this, filePnts));
 
       return ret;
     }
@@ -550,7 +574,7 @@ namespace ChartPoints
     {
       IFileChartPoints fPnts = GetFileChartPoints(fileName);
       if (fPnts == null)
-        fPnts = ChartPntFactory.Instance.CreateFileChartPoint(fileName, fileFullName, AddFileChartPoints, RemoveFileChartPoints);
+        fPnts = ChartPntFactory.Instance.CreateFileChartPoint(fileName, fileFullName, data);
       AddFileChartPoints(fPnts);
 
       return fPnts;
@@ -594,7 +618,7 @@ namespace ChartPoints
       fPnts = pPnts.AddFileChartPoints(doc.Name, System.IO.Path.GetFullPath(doc.FullName).ToLower());
       lPnts = null;
       lPnts = fPnts.AddLineChartPoints(lineNum, linePos);
-      bool changed = lPnts.SyncChartPoints(fPnts.fileFullName, cpVarNames, ownerClass);
+      bool changed = lPnts.SyncChartPoints(fPnts.data.fileFullName, cpVarNames, ownerClass);
       //if (changed)
       //  Globals.taggerUpdater.RaiseChangeTagEvent(fPnts);
 

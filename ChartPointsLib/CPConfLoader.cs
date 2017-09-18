@@ -108,7 +108,7 @@ namespace ChartPoints
           }
         }
       }
-      catch (Exception ex)
+      catch (Exception /*ex*/)
       {
       }
 
