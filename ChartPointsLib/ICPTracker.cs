@@ -7,14 +7,28 @@ using System.Threading.Tasks;
 namespace ChartPoints
 {
 
-  public interface ICPValidator
+  public interface ICPEntTracker
   {
+    ICPEvent<CPEntTrackerArgs> emptyCpEvent { get; }
     void Validate(int lineNum, int linesAdd);
   }
 
-  public interface ICPTracker
+  public interface IFileTracker
   {
-    void Add(string fileFullName, ICPValidator cpValidator);
+    string fileFullName { get; }
+    ICPEvent<FileTrackerArgs> emptyFTrackerEvent { get; }
+    void Add(ICPEntTracker cpValidator);
+    void Validate(int lineNum, int linesAdd);
+  }
+
+  public interface ICPTrackManager
+  {
+    ICPEvent<FileTrackerArgs> addFTrackerEvent { get; }
+    ICPEvent<FileTrackerArgs> remFTrackerEvent { get; }
+    IFileTracker GetFileTracker(string fileFullName);
+    void Register(IChartPoint cp);
+    void Register(ILineChartPoints lcp);
+    void Register(IFileChartPoints fcp);
   }
 
 }

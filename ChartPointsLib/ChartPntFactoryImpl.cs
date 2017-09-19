@@ -21,6 +21,7 @@ namespace ChartPoints
       // helps to hide the injection of another factory object, eg. factory stub in tests
       if (ChartPntFactory.factory == null)
         ChartPntFactory.factory = this;
+      Globals.cpTrackManager = new CPTrackManager();
     }
 
     public override IChartPointsProcessor CreateProcessor()
@@ -40,16 +41,25 @@ namespace ChartPoints
 
     public override IFileChartPoints CreateFileChartPoint(string _fileName, string _fileFullName, ICPProjectData _projData)
     {
-      return new FileChartPoints(_fileName, _fileFullName, _projData);
+      IFileChartPoints fcps = new FileChartPoints(_fileName, _fileFullName, _projData);
+      Globals.cpTrackManager.Register(fcps);
+
+      return fcps;
     }
     public override ILineChartPoints CreateLineChartPoint(int _lineNum, int _linePos, ICPFileData _fileData)
     {
-      return new LineChartPoints(_lineNum, _linePos, _fileData);
+      ILineChartPoints lcps = new LineChartPoints(_lineNum, _linePos, _fileData);
+      //Globals.cpTrackManager.Register(lcps);
+
+      return lcps;
     }
 
     public override IChartPoint CreateChartPoint(string varName, VCCodeClass ownerClass, ICPLineData _lineData)
     {
-      return new ChartPoint(varName, ownerClass, _lineData);
+      IChartPoint cp = new ChartPoint(varName, ownerClass, _lineData);
+      Globals.cpTrackManager.Register(cp);
+
+      return cp;
     }
   }
 }

@@ -70,6 +70,7 @@
     <Compile Include="ChartPoint.cs" />
     <Compile Include="ChartPointsProcessorImpl.cs" />
     <Compile Include="CPConfLoader.cs" />
+    <Compile Include="CPEvents.cs" />
     <Compile Include="CPOrchestrator.cs" />
     <Compile Include="CPTraceHandler.cs" />
     <Compile Include="CPTracker.cs" />

@@ -30,6 +30,8 @@ namespace ChartPoints
     public static IVsOutputWindow outputWindow { get; set; }
     public static ICPTracer cpTracer { get; set; }
     public static ITextChangedListener textChangedListener { get; set; }
+    public static ICPTrackManager cpTrackManager { get; set; }
+
   }
 
   /// <summary>

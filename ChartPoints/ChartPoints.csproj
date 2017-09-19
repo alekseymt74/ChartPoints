@@ -76,6 +76,7 @@
     <Compile Include="SelectVarsDlg.Designer.cs">
       <DependentUpon>SelectVarsDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="TextChangedListener.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />

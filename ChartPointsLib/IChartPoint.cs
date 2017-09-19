@@ -33,25 +33,6 @@ namespace ChartPoints
     TData data { get; }
   }
 
-  public delegate void OnCPEvent<T>(T args);
-  public interface ICPEvent<T>
-  {
-    event OnCPEvent<T> On;
-    void Fire(T args);
-  }
-
-  public class CPLineEvArgs
-  {
-    public ILineChartPoints lineCPs { get; }
-    public IChartPoint cp { get; }
-
-    public CPLineEvArgs(ILineChartPoints _lineCPs, IChartPoint _cp)
-    {
-      lineCPs = _lineCPs;
-      cp = _cp;
-    }
-  }
-
   /// <summary>
   /// Interface for chartpoint object
   /// </summary>
@@ -96,18 +77,6 @@ namespace ChartPoints
     void Move(ILineChartPoints lcps, IChartPoint cp, int _lineNum, int _linePos);
   }
 
-  public class CPFileEvArgs
-  {
-    public IFileChartPoints fileCPs { get; }
-    public ILineChartPoints lineCPs { get; }
-
-    public CPFileEvArgs(IFileChartPoints _fileCPs, ILineChartPoints _lineCPs)
-    {
-      fileCPs = _fileCPs;
-      lineCPs = _lineCPs;
-    }
-  }
-
   public interface IFileChartPoints : IData<ICPFileData>
   {
     ICPEvent<CPFileEvArgs> addCPLineEvent { get; }
@@ -122,18 +91,6 @@ namespace ChartPoints
   public interface ICPProjectData
   {
     string projName { get; }
-  }
-
-  public class CPProjEvArgs
-  {
-    public IProjectChartPoints projCPs { get; }
-    public IFileChartPoints fileCPs { get; }
-
-    public CPProjEvArgs(IProjectChartPoints _projCPs, IFileChartPoints _fileCPs)
-    {
-      projCPs = _projCPs;
-      fileCPs = _fileCPs;
-    }
   }
 
   public interface IProjectChartPoints : IData<ICPProjectData>
