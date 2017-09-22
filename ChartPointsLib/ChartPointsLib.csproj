@@ -69,6 +69,7 @@
     <Compile Include="ChartPntFactoryImpl.cs" />
     <Compile Include="ChartPoint.cs" />
     <Compile Include="ChartPointsProcessorImpl.cs" />
+    <Compile Include="CPCodeModel.cs" />
     <Compile Include="CPConfLoader.cs" />
     <Compile Include="CPEvents.cs" />
     <Compile Include="CPOrchestrator.cs" />
@@ -76,6 +77,7 @@
     <Compile Include="CPTracker.cs" />
     <Compile Include="IChartPoint.cs" />
     <Compile Include="IChartPointsProcessor.cs" />
+    <Compile Include="ICPCodeModel.cs" />
     <Compile Include="ICPOrchestrator.cs" />
     <Compile Include="ICPTraceConsumer.cs" />
     <Compile Include="ICPTracker.cs" />

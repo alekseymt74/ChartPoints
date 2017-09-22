@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CP.Code;
 using EnvDTE;
 using Microsoft.VisualStudio.VCCodeModel;
 
@@ -65,7 +66,7 @@ namespace ChartPoints
     IChartPoint GetChartPoint(string varName);
     bool AddChartPoint(IChartPoint chartPnt);
     bool AddChartPoint(string varName, VCCodeClass ownerClass, out IChartPoint chartPnt, bool checkExistance = true);
-    bool SyncChartPoints(string fname, ISet<string> cpVarNames, VCCodeClass className);
+    bool SyncChartPoint(ICheckElem checkElem, IClassElement ownerClass);
     bool ValidatePosition(int linesAdd);
   }
 
@@ -102,12 +103,7 @@ namespace ChartPoints
     IFileChartPoints GetFileChartPoints(string fname);
     ILineChartPoints GetFileLineChartPoints(string fname, int lineNum);
     IFileChartPoints AddFileChartPoints(string fileName, string fileFullName);
-  }
-
-  public interface ICheckPoint
-  {
-    bool SyncChartPoints(ISet<string> cpVarNames);
-    void GetAvailableVars(out List<Tuple<string, string, bool>> _availableVars);
+    ICheckCPPoint CheckCursorPos();
   }
 
 }

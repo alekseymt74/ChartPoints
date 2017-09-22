@@ -87,7 +87,7 @@ namespace ChartPoints
 
     public void Validate(int lineNum, int linesAdd)
     {
-      fcps.ValidatePosition(lineNum, linesAdd);
+      //fcps.ValidatePosition(lineNum, linesAdd);
     }
   }
 

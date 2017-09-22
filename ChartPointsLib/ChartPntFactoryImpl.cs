@@ -36,7 +36,7 @@ namespace ChartPoints
 
     public override IProjectChartPoints CreateProjectChartPoint(string _projName)
     {
-      return new ProjectChartPoints() { theData = new CPProjectData() { projName = _projName} };
+      return new ProjectChartPoints(_projName);
     }
 
     public override IFileChartPoints CreateFileChartPoint(string _fileName, string _fileFullName, ICPProjectData _projData)

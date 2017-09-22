@@ -4,29 +4,12 @@
 // </copyright>
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using EnvDTE;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.Win32;
-using Microsoft.VisualStudio.Text.Projection;
 
 namespace ChartPoints
 {
@@ -37,7 +20,6 @@ namespace ChartPoints
     //rest of the code
     public int OnAfterCloseSolution(object pUnkReserved)
     {
-      //throw new NotImplementedException();
       return VSConstants.S_OK;
     }
 
@@ -46,7 +28,6 @@ namespace ChartPoints
       object propItemObj = null;
       pStubHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
       pRealHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
-      //throw new NotImplementedException();
       //foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
       //{
       //  bool ret = false;
@@ -102,7 +83,9 @@ namespace ChartPoints
       foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
       {
         if (proj.Name != "Miscellaneous Files")
+        {
           Globals.orchestrator.LoadProjChartPoints(proj);
+        }
       }
 
       return VSConstants.S_OK;
@@ -135,13 +118,11 @@ namespace ChartPoints
 
     public int OnBeforeCloseSolution(object pUnkReserved)
     {
-      //throw new NotImplementedException();
       return VSConstants.S_OK;
     }
 
     public int OnBeforeUnloadProject(IVsHierarchy pRealHierarchy, IVsHierarchy pStubHierarchy)
     {
-      //throw new NotImplementedException();
       return VSConstants.S_OK;
     }
 
@@ -189,13 +170,11 @@ namespace ChartPoints
 
     public int OnQueryCloseSolution(object pUnkReserved, ref int pfCancel)
     {
-      //throw new NotImplementedException();
       return VSConstants.S_OK;
     }
 
     public int OnQueryUnloadProject(IVsHierarchy pRealHierarchy, ref int pfCancel)
     {
-      //throw new NotImplementedException();
       return VSConstants.S_OK;
     }
   }

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Globalization;
 using System.Windows.Forms;
+using CP.Code;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -24,7 +25,7 @@ namespace ChartPoints
     /// <summary>
     /// ChartPoint object
     /// </summary>
-    private ICheckPoint checkPnt;
+    private ICheckCPPoint checkPnt;
     /// <summary>
     /// Command ID.
     /// </summary>
@@ -77,22 +78,18 @@ namespace ChartPoints
       {
         menuCommand.Visible = false;
         menuCommand.Enabled = false;
-        TextSelection sel = (TextSelection)Globals.dte.ActiveDocument.Selection;
-        checkPnt = Globals.processor.Check(Globals.dte.ActiveDocument.ProjectItem.ContainingProject.Name, (TextPoint)sel.ActivePoint);
+        IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(Globals.dte.ActiveDocument.ProjectItem.ContainingProject.Name);
+        checkPnt = pPnts.CheckCursorPos();
+
         if (checkPnt != null)
         {
-          //switch (linePnts.status)
-          //{
-          //  case ETargetPointStatus.Available:
-          //    menuCommand.Text = "Insert ChartPoint";
-          //    break;
-          //  case ETargetPointStatus.SwitchedOn:
-          //  case ETargetPointStatus.SwitchedOff:
-          //    menuCommand.Text = "Remove ChartPoint";
-          //    break;
-          //}
-          menuCommand.Visible = true;
-          menuCommand.Enabled = true;
+          if (checkPnt.elems.Count > 0)
+          {
+            menuCommand.Visible = true;
+            menuCommand.Enabled = true;
+          }
+          else
+            checkPnt = null;
         }
       }
     }
@@ -133,21 +130,9 @@ namespace ChartPoints
     /// <param name="e">Event args.</param>
     private void MenuItemCallback(object sender, EventArgs e)
     {
-      List<Tuple<string, string, bool>> availableVars = null;
-      checkPnt.GetAvailableVars(out availableVars);
-      if (availableVars.Count > 0)
-      {
-        SelectVarsDlg dlg = new SelectVarsDlg(ref availableVars);
-        dlg.ShowDialog();
-        ISet<string> selectedVars = dlg.GetSelectedVars();
-        if (selectedVars != null)
-        {
-          if (checkPnt.SyncChartPoints(selectedVars))
-          {
-            //Globals.textChangedListener.TrackCurPoint();
-          }
-        }
-      }
+      SelectVarsDlg dlg = new SelectVarsDlg(checkPnt);
+      dlg.ShowDialog();
+      checkPnt.Synchronize();
     }
   }
 }

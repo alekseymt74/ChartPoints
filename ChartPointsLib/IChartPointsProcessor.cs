@@ -25,13 +25,6 @@ namespace ChartPoints
     IChartPointsProcessorData data { get; }
     IProjectChartPoints GetProjectChartPoints(string projName);
     bool AddProjectChartPoints(string projName, out IProjectChartPoints pPnts);
-    /// <summary>
-    /// Checks the ability to insert chartpoint at specified position
-    /// </summary>
-    /// <param name="pnt">cursor position in document</param>
-    /// <returns></returns>
-    ICheckPoint Check(string projName, TextPoint pnt);
-
     bool RemoveChartPoints(string projName);
   }
 

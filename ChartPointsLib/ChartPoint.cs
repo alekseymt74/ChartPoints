@@ -5,7 +5,9 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using CP.Code;
 using EnvDTE;
+using EnvDTE80;
 using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
@@ -315,36 +317,21 @@ namespace ChartPoints
       return true;
     }
 
-    public bool SyncChartPoints(string fname, ISet<string> cpVarNames, VCCodeClass className)
+    public bool SyncChartPoint(ICheckElem checkElem, IClassElement ownerClass)
     {
-      bool changed = false;
-      int prevCount = chartPoints.Count;
-      foreach (var chartPnt in chartPoints.Reverse())
-      //var enumerator = chartPoints.GetEnumerator();
-      //while (enumerator.MoveNext())
-      {
-        //IChartPoint chartPnt = enumerator.Current;
-        string varName = cpVarNames.FirstOrDefault((s) => (s == chartPnt.data.varName));
-        if (varName == null)
-        {
-          //enumerator.MoveNext();
-          RemoveChartPoint(chartPnt);
-          cpVarNames.Remove(varName);
-          changed = true;
-        }
-      }
-      foreach (var varName in cpVarNames)
+      if (checkElem.exists)
       {
         IChartPoint chartPnt = null;
-        AddChartPoint(varName, className, out chartPnt, false);
-        changed = true;
+        AddChartPoint(checkElem.var.name, ownerClass.to(), out chartPnt, false);
       }
-      //int newCount = chartPoints.Count;
-      //if (newCount != prevCount && (prevCount == 0 || newCount == 0))
-      //  Globals.taggerUpdater.RaiseChangeTagEvent(fname, this);
+      else
+      {
+        IChartPoint cp = chartPoints.FirstOrDefault((lp) => (lp.data.varName == checkElem.var.name));
+        if (cp != null)
+          RemoveChartPoint(cp);
+      }
 
-
-      return changed;
+      return false;
     }
 
     public bool ValidatePosition(int linesAdd)
@@ -477,7 +464,9 @@ namespace ChartPoints
               changedLines.Add(new KeyValuePair<bool, ILineChartPoints>(true, lPnts));
           }
           else
+          {
             changedLines.Add(new KeyValuePair<bool, ILineChartPoints>(false, lPnts));
+          }
           changed = changed || lineChanged;
         }
       }
@@ -518,11 +507,30 @@ namespace ChartPoints
 
   public class ProjectChartPoints : Data<ProjectChartPoints, ICPProjectData, CPProjectData>, IProjectChartPoints
   {
+    private static CP.Code.IModel cpCodeModel;
     public ICPEvent<CPProjEvArgs> addCPFileEvent { get; } = new CPEvent<CPProjEvArgs>();
     public ICPEvent<CPProjEvArgs> remCPFileEvent { get; } = new CPEvent<CPProjEvArgs>();
     public ISet<IFileChartPoints> filePoints { get; set; } = new SortedSet<IFileChartPoints>(Comparer<IFileChartPoints>.Create((lh, rh) => (lh.data.fileName.CompareTo(rh.data.fileName))));
 
     public int Count { get { return filePoints.Count; } }
+
+    public ProjectChartPoints(string _projName)//, CodeModel cm)//, string _projUniqueName)
+    {
+      theData = new CPProjectData() {projName = _projName};
+      DTE2 dte2 = (DTE2)Globals.dte;
+      Events2 evs2 = (Events2)dte2.Events;
+      EnvDTE.Project proj = null;
+      foreach (Project _proj in Globals.dte.Solution.Projects)
+      {
+        if (_proj.Name == data.projName)
+        {
+          proj = _proj;
+          break;
+        }
+      }
+      if (proj != null)
+        cpCodeModel = new CP.Code.Model(proj.CodeModel, evs2);
+    }
     public IFileChartPoints GetFileChartPoints(string fname)
     {
       IFileChartPoints fPnts = filePoints.FirstOrDefault((fp) => (fp.data.fileName == fname));
@@ -553,6 +561,11 @@ namespace ChartPoints
       return false;
     }
 
+    public ICheckCPPoint CheckCursorPos()
+    {
+      return cpCodeModel.CheckCursorPos();
+    }
+
     private void OnRemLineCPs(CPFileEvArgs args)
     {
       if (args.fileCPs.Count == 0)
@@ -575,100 +588,6 @@ namespace ChartPoints
       AddFileChartPoints(fPnts);
 
       return fPnts;
-    }
-  }
-
-  public class CheckPoint : ICheckPoint
-  {
-    public VCCodeClass ownerClass;
-    public string projName;
-    public EnvDTE.Document doc;
-    public int lineNum;
-    public int linePos;
-    private List<Tuple<string, string, bool>> availableVars;
-    private ILineChartPoints lPnts;
-
-    //public bool AddChartPoint(string varName)
-    //{
-    //  IProjectChartPoints pPnts = null;//Globals.processor.GetProjectChartPoints(projName);
-    //  //if (pPnts == null)
-    //    Globals.processor.AddProjectChartPoints(projName, out pPnts);
-    //  IFileChartPoints fPnts = pPnts.GetFileChartPoints(doc.Name);
-    //  if (fPnts == null)
-    //    fPnts = pPnts.AddFileChartPoints(doc.Name, System.IO.Path.GetFullPath(doc.FullName).ToLower());
-    //  lPnts = fPnts.GetLineChartPoints(lineNum);
-    //  if (lPnts == null)
-    //    lPnts = fPnts.AddLineChartPoints(lineNum, linePos);
-    //  //if (chartPnt == null || chartPnt.status != ETargetPointStatus.Available)
-    //  //  return false;
-    //  //StoreChartPnt(chartPnt);
-    //  Globals.taggerUpdater.RaiseChangeTagEvent(fPnts);
-
-    //  return true;
-    //}
-
-    public bool SyncChartPoints(ISet<string> cpVarNames)
-    {
-      IProjectChartPoints pPnts = null;
-      Globals.processor.AddProjectChartPoints(projName, out pPnts);
-      IFileChartPoints fPnts = null;
-      fPnts = pPnts.AddFileChartPoints(doc.Name, System.IO.Path.GetFullPath(doc.FullName).ToLower());
-      lPnts = null;
-      lPnts = fPnts.AddLineChartPoints(lineNum, linePos);
-      bool changed = lPnts.SyncChartPoints(fPnts.data.fileFullName, cpVarNames, ownerClass);
-      //if (changed)
-      //  Globals.taggerUpdater.RaiseChangeTagEvent(fPnts);
-
-      return changed;
-    }
-
-    public void GetAvailableVars(out List<Tuple<string, string, bool>> _availableVars)
-    {
-      availableVars = _availableVars = null;
-      if (ownerClass == null)
-        return;
-      availableVars = new List<Tuple<string, string, bool>>();
-      string className = ownerClass.FullName;
-      CodeElements vcElems = ownerClass.Children;
-      if (vcElems.Count > 0)
-      {
-        IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(projName);
-        IFileChartPoints fPnts = pPnts?.GetFileChartPoints(doc.Name);
-        lPnts = fPnts?.GetLineChartPoints(lineNum);
-        foreach (CodeElement el in vcElems)
-        {
-          if (el.Kind == vsCMElement.vsCMElementVariable)
-          {
-            //CodeVariable cv = (CodeVariable) el;
-            //CodeType _ct = cv.Type.CodeType;
-            VCCodeVariable varElem = (VCCodeVariable)el;
-            //CodeType ct = varElem.Type.CodeType;
-            //if (ct != null)
-            //{
-            //  CodeElements ce = varElem.Type.CodeType.Bases;
-            //}
-            if (varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefBool
-                || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefByte
-                || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefChar
-                || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefDecimal
-                || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefDouble
-                || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefFloat
-                || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefInt
-                || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefLong
-                || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefShort)
-            {
-              bool exists = false;
-              if (lPnts != null)
-              {
-                if (lPnts.GetChartPoint(varElem.DisplayName) != null)
-                  exists = true;
-              }
-              availableVars.Add(new Tuple<string, string, bool>(varElem.DisplayName, varElem.TypeString, exists));
-            }
-          }
-        }
-        _availableVars = availableVars;
-      }
     }
   }
 
