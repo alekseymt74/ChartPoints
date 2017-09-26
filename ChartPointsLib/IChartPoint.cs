@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using CP.Code;
-using EnvDTE;
-using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
 {
@@ -23,9 +17,9 @@ namespace ChartPoints
   public interface IChartPointData
   {
     bool enabled { get; }
-    string varName { get; }
+    string name { get; }
+    string uniqueName { get; }
     ETargetPointStatus status { get; }
-    string className { get; }
     ICPLineData lineData { get; }
   }
 
@@ -39,7 +33,7 @@ namespace ChartPoints
   /// </summary>
   public interface IChartPoint : IData<IChartPointData>
   {
-    void CalcInjectionPoints(/*out */CPClassLayout cpInjPoints, string fname, int _lineNum, int _linePos);
+    CPTraceVar CalcInjectionPoints(CPClassLayout cpInjPoints, string className, out bool needDeclare);
 
     bool ValidatePosition(int lineNum, int linePos);
   }
@@ -64,10 +58,12 @@ namespace ChartPoints
     ISet<IChartPoint> chartPoints { get; }
     int Count { get; }
     IChartPoint GetChartPoint(string varName);
+    bool AddChartPoint(string varName, out IChartPoint chartPnt);
     bool AddChartPoint(IChartPoint chartPnt);
-    bool AddChartPoint(string varName, VCCodeClass ownerClass, out IChartPoint chartPnt, bool checkExistance = true);
+    bool AddChartPoint(CP.Code.IClassVarElement codeElem, out IChartPoint chartPnt, bool checkExistance = true);
     bool SyncChartPoint(ICheckElem checkElem, IClassElement ownerClass);
     bool ValidatePosition(int linesAdd);
+    void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model);
   }
 
   public interface ICPFileData
@@ -87,6 +83,7 @@ namespace ChartPoints
     ILineChartPoints GetLineChartPoints(int lineNum);
     ILineChartPoints AddLineChartPoints(int lineNum, int linePos);
     bool ValidatePosition(int lineNum, int linesAdd);
+    void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model);
   }
 
   public interface ICPProjectData
@@ -102,8 +99,9 @@ namespace ChartPoints
     int Count { get; }
     IFileChartPoints GetFileChartPoints(string fname);
     ILineChartPoints GetFileLineChartPoints(string fname, int lineNum);
-    IFileChartPoints AddFileChartPoints(string fileName, string fileFullName);
+    IFileChartPoints AddFileChartPoints(string fileName);
     ICheckCPPoint CheckCursorPos();
+    void CalcInjectionPoints(CPClassLayout cpInjPoints);
   }
 
 }

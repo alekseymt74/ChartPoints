@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ChartPoints;
-using EnvDTE;
+﻿using EnvDTE;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
 {
@@ -66,8 +59,8 @@ namespace ChartPoints
     /// <returns>IChartPointsProcessor</returns>
     public virtual ICPOrchestrator CreateOrchestrator() { return null; }
     public virtual IProjectChartPoints CreateProjectChartPoint(string _projName) { return null; }
-    public virtual IFileChartPoints CreateFileChartPoint(string _fileName, string _fileFullName, ICPProjectData _projData) { return null; }
-    public virtual ILineChartPoints CreateLineChartPoint(int _lineNum, int _linePos, ICPFileData _fileData) { return null; }
-    public virtual IChartPoint CreateChartPoint(string varName, VCCodeClass ownerClass, ICPLineData _lineData) { return null; }
+    public virtual IFileChartPoints CreateFileChartPoint(CP.Code.IFileElem _fileElem, ICPProjectData _projData) { return null; }
+    public virtual ILineChartPoints CreateLineChartPoint(CP.Code.IClassElement _classElem, int _lineNum, int _linePos, ICPFileData _fileData) { return null; }
+    public virtual IChartPoint CreateChartPoint(CP.Code.IClassVarElement codeElem, ICPLineData _lineData) { return null; }
   }
 }

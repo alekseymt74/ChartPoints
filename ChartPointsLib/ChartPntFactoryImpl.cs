@@ -1,13 +1,4 @@
-﻿using EnvDTE;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ChartPoints;
-using Microsoft.VisualStudio.VCCodeModel;
-
-namespace ChartPoints
+﻿namespace ChartPoints
 {
 
   /// <summary>
@@ -39,24 +30,24 @@ namespace ChartPoints
       return new ProjectChartPoints(_projName);
     }
 
-    public override IFileChartPoints CreateFileChartPoint(string _fileName, string _fileFullName, ICPProjectData _projData)
+    public override IFileChartPoints CreateFileChartPoint(CP.Code.IFileElem _fileElem, ICPProjectData _projData)
     {
-      IFileChartPoints fcps = new FileChartPoints(_fileName, _fileFullName, _projData);
+      IFileChartPoints fcps = new FileChartPoints(_fileElem, _projData);
       Globals.cpTrackManager.Register(fcps);
 
       return fcps;
     }
-    public override ILineChartPoints CreateLineChartPoint(int _lineNum, int _linePos, ICPFileData _fileData)
+    public override ILineChartPoints CreateLineChartPoint(CP.Code.IClassElement _classElem, int _lineNum, int _linePos, ICPFileData _fileData)
     {
-      ILineChartPoints lcps = new LineChartPoints(_lineNum, _linePos, _fileData);
+      ILineChartPoints lcps = new LineChartPoints(_classElem, _lineNum, _linePos, _fileData);
       //Globals.cpTrackManager.Register(lcps);
 
       return lcps;
     }
 
-    public override IChartPoint CreateChartPoint(string varName, VCCodeClass ownerClass, ICPLineData _lineData)
+    public override IChartPoint CreateChartPoint(CP.Code.IClassVarElement codeElem, ICPLineData _lineData)
     {
-      IChartPoint cp = new ChartPoint(varName, ownerClass, _lineData);
+      IChartPoint cp = new ChartPoint(codeElem, _lineData);
       Globals.cpTrackManager.Register(cp);
 
       return cp;

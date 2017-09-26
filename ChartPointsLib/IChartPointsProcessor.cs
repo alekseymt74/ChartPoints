@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms.Design;
-using EnvDTE;
-using Microsoft.VisualStudio.VCCodeModel;
+﻿using System.Collections.Generic;
 
 namespace ChartPoints
 {

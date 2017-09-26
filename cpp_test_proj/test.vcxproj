@@ -308,7 +308,7 @@
         <ChartPoint xmlns="">
           <Variable>test_01::d_01</Variable>
           <LineNum>14</LineNum>
-          <LinePos>1</LinePos>
+          <LinePos>3</LinePos>
           <Enabled>true</Enabled>
         </ChartPoint>
       </ChartPoints>

@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 using CP.Code;
-using EnvDTE;
 using EnvDTE80;
-using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
 {
@@ -19,16 +14,16 @@ namespace ChartPoints
     [DataMember]
     public bool enabled { get; set; }
     [DataMember]
-    public string varName { get; set; }
+    public string name { get; set; }
+    public string uniqueName { get; set; }
     public ETargetPointStatus status { get; set; }
-    public string className { get; set; }
     public ICPLineData lineData { get; set; }
     public ChartPointData() { }
     public ChartPointData(IChartPointData _data)
     {
       enabled = _data.enabled;
-      varName = _data.varName;
-      className = _data.className;
+      name = _data.name;
+      uniqueName = _data.uniqueName;
     }
   }
 
@@ -49,183 +44,85 @@ namespace ChartPoints
   /// </summary>
   public class ChartPoint : Data<ChartPoint, IChartPointData, ChartPointData>, IChartPoint
   {
-    private VCCodeModel vcCodeModel;
+    private CP.Code.IClassVarElement codeElem;
     protected ChartPoint() { }
 
-    public ChartPoint(string varName, VCCodeClass ownerClass, ICPLineData _lineData)
+    public ChartPoint(CP.Code.IClassVarElement _codeElem, ICPLineData _lineData)
     {
+      codeElem = _codeElem;
       theData = new ChartPointData
       {
         enabled = true,
-        className = (ownerClass != null ? ownerClass.Name : ""),//DisplayName
         status = ETargetPointStatus.SwitchedOn,
-        varName = varName,
+        name = codeElem.name,
+        uniqueName = codeElem.uniqueName/*varName*/,
         lineData = _lineData
       };
-      vcCodeModel = (ownerClass != null ? ownerClass.CodeModel : null);
     }
 
-    public virtual void CalcInjectionPoints(CPClassLayout cpClassLayout, string _fname, int _lineNum, int _linePos)
+    public virtual CPTraceVar CalcInjectionPoints(CPClassLayout cpClassLayout, string className, out bool needDeclare)
     {
-      CodeElement theClass = null;
-      // find class, containing specified memeber
-      foreach (CodeElement _class in vcCodeModel.Classes)
-      {
-        if (_class.Name == data.className)
-        {
-          theClass = _class;
-          break;
-        }
-      }
-      if (theClass != null)
-      {
-        VCCodeClass vcClass = (VCCodeClass)theClass;
-        // find VCCodeVariable
-        CodeElement theVar = null;
-        foreach (CodeElement _var in vcClass.Variables)
-        {
-          if (_var.Name == /*"j"*/data.varName)
-          {
-            theVar = _var;
-            break;
-          }
-        }
-        if (theVar != null)
-        {
-          // check if trace var definition already exists
-          CPTraceVar traceVar = null;
-          if (!cpClassLayout.traceVarPos.TryGetValue(theVar.Name, out traceVar))
-          {
-            // add trace pos data
-            traceVar = new CPTraceVar()
-            {
-              name = data.varName,
-              type = ((VCCodeVariable)theVar).TypeString,
-              className = data.className
-            };
-            cpClassLayout.traceVarPos.Add(traceVar.name, traceVar);
-            // define trace var definition placement
-            traceVar.defPos.fileName = theVar.ProjectItem.Name;
-            traceVar.defPos.pos.lineNum = theVar.EndPoint.Line - 1;
-            traceVar.defPos.pos.linePos = theVar.EndPoint.LineCharOffset - 1;
-            // find all places, where this file included
-            CodeElement theFunc = null;
-            // find & store all constructors init points of this class
-            foreach (CodeElement _func in vcClass.Functions)
-            {
-              if (_func.Name == data.className)
-              {
-                theFunc = _func;
-                VCCodeFunction vcFunc = (VCCodeFunction)_func;
-                EditPoint pnt = _func.StartPoint.CreateEditPoint();
-                if (pnt.FindPattern("{"))
-                  traceVar.traceVarInitPos.Add(new FilePosPnt() { fileName = _func.ProjectItem.Name, pos = { lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset } });
-              }
-            }
-            // if no constructor found add default one
-            if (traceVar.traceVarInitPos.Count == 0)
-            {
-              EditPoint pnt = vcClass.StartPoint.CreateEditPoint();
-              if (pnt.FindPattern("{"))
-                traceVar.injConstructorPos = new FilePosPnt() { fileName = vcClass.ProjectItem.Name, pos = { lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset } };
-            }
-          }
-          traceVar.traceVarTracePos.Add(new FilePosPnt()
-          {
-            fileName = _fname,
-            pos = {lineNum = _lineNum, linePos = _linePos}
-          });
-          TextPos traceInclPos = null;
-          if(!cpClassLayout.traceInclPos.TryGetValue(theVar.ProjectItem.Name, out traceInclPos))
-            cpClassLayout.traceInclPos.Add(theVar.ProjectItem.Name, new TextPos() {lineNum = 0, linePos = 0});
-          foreach (var inclStmt in vcCodeModel.Includes)
-          {
-            VCCodeInclude vcinclStmt = (VCCodeInclude)inclStmt;
-            CPInclude incl = null;
-            string fname = Path.GetFileName(vcinclStmt.File);
-            if (!cpClassLayout.includesPos.TryGetValue(new Tuple<string, string>(vcinclStmt.Name, fname), out incl))
-            {
-              if (vcinclStmt.Name == traceVar.defPos.fileName)
-              {
-                // define include placement
-                FilePosText inclPos = new FilePosText()
-                {
-                  fileName = fname,
-                  pos = { lineNum = vcinclStmt.StartPoint.Line - 1, linePos = vcinclStmt.StartPoint.LineCharOffset },
-                  posEnd = { lineNum = vcinclStmt.EndPoint.Line - 1, linePos = vcinclStmt.EndPoint.LineCharOffset }
-                };
-                incl = new CPInclude()
-                {
-                  inclOrig = vcinclStmt.Name,
-                  inclReplace = "__cp__." + vcinclStmt.Name,
-                  pos = inclPos
-                };
-                cpClassLayout.includesPos.Add(new Tuple<string, string>(vcinclStmt.Name, incl.pos.fileName), incl);
-              }
-            }
-          }
-        }
-      }
+      return codeElem.CalcInjectionPoints(cpClassLayout, className, data.lineData.fileData.fileName, data.lineData.pos, out needDeclare);
     }
 
     public bool ValidatePosition(int lineNum, int linePos)
     {
-      vcCodeModel.Synchronize();
-      CodeElement theClass = null;
-      // find class, containing specified memeber
-      foreach (CodeElement _class in vcCodeModel.Classes)
-      {
-        if (_class.Name == data.className)
-        {
-          theClass = _class;
-          break;
-        }
-      }
-      if (theClass != null)
-      {
-        try
-        {
-          VCCodeClass vcClass = (VCCodeClass) theClass;
-          //CodeElement theFunc = null;
-          foreach (CodeElement _func in vcClass.Functions)
-          {
-            VCCodeFunction vcFunc = (VCCodeFunction) _func;
-            //TextPoint startFuncBody = vcFunc.StartPoint;// GetStartPoint(vsCMPart.vsCMPartBodyWithDelimiter);//vcFunc.StartPointOf[vsCMPart.vsCMPartBodyWithDelimiter, vsCMWhere.vsCMWhereDefinition];
-            //TextPoint endFuncBody = vcFunc.EndPoint;// GetEndPoint(vsCMPart.vsCMPartBodyWithDelimiter);//vcFunc.EndPointOf[vsCMPart.vsCMPartBodyWithDelimiter, vsCMWhere.vsCMWhereDefinition];
-            TextPoint startFuncBody = vcFunc.StartPointOf[vsCMPart.vsCMPartBody, vsCMWhere.vsCMWhereDefinition];
-            TextPoint endFuncBody = vcFunc.EndPointOf[vsCMPart.vsCMPartBody, vsCMWhere.vsCMWhereDefinition];
-            EditPoint startPnt = startFuncBody.CreateEditPoint();
-            EditPoint endPnt = endFuncBody.CreateEditPoint();
-            startPnt.FindPattern("{", (int) vsFindOptions.vsFindOptionsBackwards);
-            endPnt.FindPattern("}");
-            //if (lineNum >= startPnt.Line && linePos >= startPnt.LineCharOffset && lineNum <= endPnt.Line && linePos <= endPnt.LineCharOffset)
-            if ((lineNum > startPnt.Line && lineNum < endPnt.Line) ||
-                (lineNum == startPnt.Line && linePos >= startPnt.LineCharOffset) ||
-                (lineNum == endPnt.Line && linePos <= endPnt.LineCharOffset))
-            {
-              // Oh, oh you're in the body, now.. (c)
-              return true;
-            }
-          }
-          //// find VCCodeVariable
-          //CodeElement theVar = null;
-          //foreach (CodeElement _var in vcClass.Variables)
-          //{
-          //  if (_var.Name == /*"j"*/ data.varName)
-          //  {
-          //    theVar = _var;
-          //    break;
-          //  }
-          //}
-          //if (theVar != null)
-          //{
-          //}
-        }
-        catch (Exception e)
-        {
-          Console.WriteLine(e);
-        }
-      }
+      //////vcCodeModel.Synchronize();
+      //////CodeElement theClass = null;
+      //////// find class, containing specified memeber
+      //////foreach (CodeElement _class in vcCodeModel.Classes)
+      //////{
+      //////  if (_class.Name == data.className)
+      //////  {
+      //////    theClass = _class;
+      //////    break;
+      //////  }
+      //////}
+      //////if (theClass != null)
+      //////{
+      //////  try
+      //////  {
+      //////    VCCodeClass vcClass = (VCCodeClass) theClass;
+      //////    //CodeElement theFunc = null;
+      //////    foreach (CodeElement _func in vcClass.Functions)
+      //////    {
+      //////      VCCodeFunction vcFunc = (VCCodeFunction) _func;
+      //////      //TextPoint startFuncBody = vcFunc.StartPoint;// GetStartPoint(vsCMPart.vsCMPartBodyWithDelimiter);//vcFunc.StartPointOf[vsCMPart.vsCMPartBodyWithDelimiter, vsCMWhere.vsCMWhereDefinition];
+      //////      //TextPoint endFuncBody = vcFunc.EndPoint;// GetEndPoint(vsCMPart.vsCMPartBodyWithDelimiter);//vcFunc.EndPointOf[vsCMPart.vsCMPartBodyWithDelimiter, vsCMWhere.vsCMWhereDefinition];
+      //////      TextPoint startFuncBody = vcFunc.StartPointOf[vsCMPart.vsCMPartBody, vsCMWhere.vsCMWhereDefinition];
+      //////      TextPoint endFuncBody = vcFunc.EndPointOf[vsCMPart.vsCMPartBody, vsCMWhere.vsCMWhereDefinition];
+      //////      EditPoint startPnt = startFuncBody.CreateEditPoint();
+      //////      EditPoint endPnt = endFuncBody.CreateEditPoint();
+      //////      startPnt.FindPattern("{", (int) vsFindOptions.vsFindOptionsBackwards);
+      //////      endPnt.FindPattern("}");
+      //////      //if (lineNum >= startPnt.Line && linePos >= startPnt.LineCharOffset && lineNum <= endPnt.Line && linePos <= endPnt.LineCharOffset)
+      //////      if ((lineNum > startPnt.Line && lineNum < endPnt.Line) ||
+      //////          (lineNum == startPnt.Line && linePos >= startPnt.LineCharOffset) ||
+      //////          (lineNum == endPnt.Line && linePos <= endPnt.LineCharOffset))
+      //////      {
+      //////        // Oh, oh you're in the body, now.. (c)
+      //////        return true;
+      //////      }
+      //////    }
+      //////    //// find VCCodeVariable
+      //////    //CodeElement theVar = null;
+      //////    //foreach (CodeElement _var in vcClass.Variables)
+      //////    //{
+      //////    //  if (_var.Name == /*"j"*/ data.varName)
+      //////    //  {
+      //////    //    theVar = _var;
+      //////    //    break;
+      //////    //  }
+      //////    //}
+      //////    //if (theVar != null)
+      //////    //{
+      //////    //}
+      //////  }
+      //////  catch (Exception e)
+      //////  {
+      //////    Console.WriteLine(e);
+      //////  }
+      //////}
       return false;
     }
   }
@@ -259,16 +156,23 @@ namespace ChartPoints
 
   public class LineChartPoints : Data<LineChartPoints, ICPLineData, CPLineData>, ILineChartPoints
   {
+    private CP.Code.IClassElement codeClass;
     public ICPEvent<CPLineEvArgs> addCPEvent { get; } = new CPEvent<CPLineEvArgs>();
     public ICPEvent<CPLineEvArgs> remCPEvent { get; } = new CPEvent<CPLineEvArgs>();
 
-    public ISet<IChartPoint> chartPoints { get; set; } = new SortedSet<IChartPoint>(Comparer<IChartPoint>.Create((lh, rh) => (lh.data.varName.CompareTo(rh.data.varName))));
+    public ISet<IChartPoint> chartPoints { get; set; } =
+      new SortedSet<IChartPoint>(
+        Comparer<IChartPoint>.Create((lh, rh) => (lh.data.uniqueName.CompareTo(rh.data.uniqueName))));
 
-    public int Count { get { return chartPoints.Count; } }
-
-    public LineChartPoints(int _lineNum, int _linePos, ICPFileData _fileData)
+    public int Count
     {
-      theData = new CPLineData() { pos = new TextPosition(_lineNum, _linePos, MoveChartPoint), fileData = _fileData };
+      get { return chartPoints.Count; }
+    }
+
+    public LineChartPoints(CP.Code.IClassElement _codeClass, int _lineNum, int _linePos, ICPFileData _fileData)
+    {
+      codeClass = _codeClass;
+      theData = new CPLineData() {pos = new TextPosition(_lineNum, _linePos, MoveChartPoint), fileData = _fileData};
     }
 
     public void MoveChartPoint(IChartPoint cp, int _lineNum, int _linePos)
@@ -276,14 +180,25 @@ namespace ChartPoints
       RemoveChartPoint(cp);
       theData.fileData.Move(this, cp, _lineNum, _linePos);
     }
+
     public virtual IChartPoint GetChartPoint(string varName)
     {
-      return chartPoints.FirstOrDefault((lp) => (lp.data.varName == varName));
+      return chartPoints.FirstOrDefault((lp) => (lp.data.uniqueName == varName));
+    }
+
+    public bool AddChartPoint(string varName, out IChartPoint chartPnt)
+    {
+      chartPnt = null;
+      CP.Code.IClassVarElement codeElem = codeClass.GetVar(varName);
+      if (codeElem != null)
+        return AddChartPoint(codeElem, out chartPnt, false);
+
+      return false;
     }
 
     public bool AddChartPoint(IChartPoint chartPnt)
     {
-      if (GetChartPoint(chartPnt.data.varName) == null)
+      if (GetChartPoint(chartPnt.data.uniqueName) == null)
       {
         chartPoints.Add(chartPnt);
         addCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
@@ -296,13 +211,14 @@ namespace ChartPoints
     protected bool RemoveChartPoint(IChartPoint chartPnt)
     {
       bool ret = chartPoints.Remove(chartPnt);
-      if(ret)
+      if (ret)
         remCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
 
       return ret;
     }
 
-    public bool AddChartPoint(string varName, VCCodeClass ownerClass, out IChartPoint chartPnt, bool checkExistance = true)
+    public bool AddChartPoint(string varName, CP.Code.IClassElement codeClass, out IChartPoint chartPnt,
+      bool checkExistance = true)
     {
       if (checkExistance)
       {
@@ -310,7 +226,23 @@ namespace ChartPoints
         if (chartPnt != null)
           return false;
       }
-      chartPnt = ChartPntFactory.Instance.CreateChartPoint(varName, ownerClass, data);
+      CP.Code.IClassVarElement codeElem = codeClass.GetVar(varName);
+      chartPnt = ChartPntFactory.Instance.CreateChartPoint(codeElem, data);
+      chartPoints.Add(chartPnt);
+      addCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
+
+      return true;
+    }
+
+    public bool AddChartPoint(CP.Code.IClassVarElement codeElem, out IChartPoint chartPnt, bool checkExistance = true)
+    {
+      if (checkExistance)
+      {
+        chartPnt = GetChartPoint(codeElem.uniqueName);
+        if (chartPnt != null)
+          return false;
+      }
+      chartPnt = ChartPntFactory.Instance.CreateChartPoint(codeElem, data);
       chartPoints.Add(chartPnt);
       addCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
 
@@ -322,11 +254,11 @@ namespace ChartPoints
       if (checkElem.exists)
       {
         IChartPoint chartPnt = null;
-        AddChartPoint(checkElem.var.name, ownerClass.to(), out chartPnt, false);
+        AddChartPoint(checkElem.var, out chartPnt, false);
       }
       else
       {
-        IChartPoint cp = chartPoints.FirstOrDefault((lp) => (lp.data.varName == checkElem.var.name));
+        IChartPoint cp = chartPoints.FirstOrDefault((lp) => (lp.data.uniqueName == checkElem.var.uniqueName));
         if (cp != null)
           RemoveChartPoint(cp);
       }
@@ -344,6 +276,17 @@ namespace ChartPoints
       }
 
       return changed;
+    }
+
+    public void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model)
+    {
+      foreach (IChartPoint cp in chartPoints)
+      {
+        bool needDeclare = false;
+        CPTraceVar traceVar = cp.CalcInjectionPoints(cpInjPoints, this.codeClass.name, out needDeclare);
+        codeClass.CalcInjectionPoints(cpInjPoints, traceVar, needDeclare);
+        model.CalcInjectionPoints(cpInjPoints, traceVar);
+      }
     }
 
   }
@@ -375,13 +318,25 @@ namespace ChartPoints
   {
     public ICPEvent<CPFileEvArgs> addCPLineEvent { get; } = new CPEvent<CPFileEvArgs>();
     public ICPEvent<CPFileEvArgs> remCPLineEvent { get; } = new CPEvent<CPFileEvArgs>();
-    public ISet<ILineChartPoints> linePoints { get; set; }
-      = new SortedSet<ILineChartPoints>(Comparer<ILineChartPoints>.Create((lh, rh) => (lh.data.pos.lineNum > rh.data.pos.lineNum ? 1 : lh.data.pos.lineNum < rh.data.pos.lineNum ? -1 : 0)));
-    public int Count { get { return linePoints.Count; } }
 
-    public FileChartPoints(string _fileName, string _fileFullName, ICPProjectData _projData)
+    public ISet<ILineChartPoints> linePoints { get; set; }
+      =
+      new SortedSet<ILineChartPoints>(
+        Comparer<ILineChartPoints>.Create(
+          (lh, rh) =>
+            (lh.data.pos.lineNum > rh.data.pos.lineNum ? 1 : lh.data.pos.lineNum < rh.data.pos.lineNum ? -1 : 0)));
+
+    private CP.Code.IFileElem fileElem;
+
+    public int Count
     {
-      theData = new CPFileData(_fileName, _fileFullName, _projData, MoveChartPoint);
+      get { return linePoints.Count; }
+    }
+
+    public FileChartPoints(CP.Code.IFileElem _fileElem, ICPProjectData _projData)
+    {
+      fileElem = _fileElem;
+      theData = new CPFileData(_fileElem.name, _fileElem.uniqueName, _projData, MoveChartPoint);
     }
 
     public void MoveChartPoint(ILineChartPoints _lcps, IChartPoint cp, int _lineNum, int _linePos)
@@ -389,12 +344,14 @@ namespace ChartPoints
       ILineChartPoints lcps = AddLineChartPoints(_lineNum, _linePos);
       lcps.AddChartPoint(cp);
     }
+
     public ILineChartPoints GetLineChartPoints(int lineNum)
     {
       ILineChartPoints lPnts = linePoints.FirstOrDefault((lp) => (lp.data.pos.lineNum == lineNum));
 
       return lPnts;
     }
+
     protected bool AddLineChartPoints(ILineChartPoints linePnts)
     {
       ILineChartPoints lPnts = GetLineChartPoints(linePnts.data.pos.lineNum);
@@ -409,21 +366,23 @@ namespace ChartPoints
 
       return false;
     }
+
     protected bool RemoveLineChartPoints(ILineChartPoints linePnts)
     {
       bool ret = linePoints.Remove(linePnts);
-      if(ret)
+      if (ret)
         remCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
 
       return ret;
     }
+
     protected bool MoveLineChartPoints(ILineChartPoints linePnts, int linesAdd)
     {
       bool ret = linePoints.Remove(linePnts);
       if (ret)
       {
         Globals.taggerUpdater.RaiseChangeTagEvent(data.fileFullName, linePnts);
-        ((TextPosition)((LineChartPoints)linePnts).theData.pos).lineNum += linesAdd;
+        ((TextPosition) ((LineChartPoints) linePnts).theData.pos).lineNum += linesAdd;
         linePoints.Add(linePnts);
         addCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
       }
@@ -436,9 +395,13 @@ namespace ChartPoints
       ILineChartPoints lPnts = GetLineChartPoints(lineNum);
       if (lPnts == null)
       {
-        lPnts = ChartPntFactory.Instance.CreateLineChartPoint(lineNum, linePos, data);
+        CP.Code.IClassElement classElem = fileElem.GetClassFromFilePos(lineNum, linePos);
+        if (classElem != null)
+        {
+          lPnts = ChartPntFactory.Instance.CreateLineChartPoint(classElem, lineNum, linePos, data);
+          AddLineChartPoints(lPnts);
+        }
       }
-      AddLineChartPoints(lPnts);
 
       return lPnts;
     }
@@ -452,7 +415,7 @@ namespace ChartPoints
     public bool ValidatePosition(int lineNum, int linesAdd)
     {
       bool changed = false;
-      List< KeyValuePair<bool, ILineChartPoints> > changedLines = new List<KeyValuePair<bool, ILineChartPoints>>();
+      List<KeyValuePair<bool, ILineChartPoints>> changedLines = new List<KeyValuePair<bool, ILineChartPoints>>();
       foreach (ILineChartPoints lPnts in linePoints.Reverse())
       {
         if (lPnts.data.pos.lineNum >= lineNum)
@@ -498,6 +461,11 @@ namespace ChartPoints
       return changed;
     }
 
+    public void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model)
+    {
+      foreach (var lPnts in linePoints)
+        lPnts.CalcInjectionPoints(cpInjPoints, model);
+    }
   }
 
   public class CPProjectData : ICPProjectData
@@ -507,36 +475,28 @@ namespace ChartPoints
 
   public class ProjectChartPoints : Data<ProjectChartPoints, ICPProjectData, CPProjectData>, IProjectChartPoints
   {
-    private static CP.Code.IModel cpCodeModel;
+    private CP.Code.IModel cpCodeModel;
     public ICPEvent<CPProjEvArgs> addCPFileEvent { get; } = new CPEvent<CPProjEvArgs>();
     public ICPEvent<CPProjEvArgs> remCPFileEvent { get; } = new CPEvent<CPProjEvArgs>();
     public ISet<IFileChartPoints> filePoints { get; set; } = new SortedSet<IFileChartPoints>(Comparer<IFileChartPoints>.Create((lh, rh) => (lh.data.fileName.CompareTo(rh.data.fileName))));
 
     public int Count { get { return filePoints.Count; } }
 
-    public ProjectChartPoints(string _projName)//, CodeModel cm)//, string _projUniqueName)
+    public ProjectChartPoints(string _projName)
     {
       theData = new CPProjectData() {projName = _projName};
       DTE2 dte2 = (DTE2)Globals.dte;
       Events2 evs2 = (Events2)dte2.Events;
-      EnvDTE.Project proj = null;
-      foreach (Project _proj in Globals.dte.Solution.Projects)
-      {
-        if (_proj.Name == data.projName)
-        {
-          proj = _proj;
-          break;
-        }
-      }
-      if (proj != null)
-        cpCodeModel = new CP.Code.Model(proj.CodeModel, evs2);
+      cpCodeModel = new CP.Code.Model(data.projName, evs2);
     }
+
     public IFileChartPoints GetFileChartPoints(string fname)
     {
       IFileChartPoints fPnts = filePoints.FirstOrDefault((fp) => (fp.data.fileName == fname));
 
       return fPnts;
     }
+
     public ILineChartPoints GetFileLineChartPoints(string fname, int lineNum)
     {
       ILineChartPoints lPnts = null;
@@ -546,19 +506,20 @@ namespace ChartPoints
 
       return lPnts;
     }
-    protected bool AddFileChartPoints(IFileChartPoints filePnts)
+
+    protected bool AddFileChartPoints(IFileChartPoints filePnts, bool checkExistance = true)
     {
-      IFileChartPoints fPnts = GetFileChartPoints(filePnts.data.fileName);
-      if (fPnts == null)
+      if (checkExistance)
       {
-        filePoints.Add(filePnts);
-        filePnts.remCPLineEvent.On += OnRemLineCPs;
-        addCPFileEvent.Fire(new CPProjEvArgs(this, filePnts));
-
-        return true;
+        IFileChartPoints fPnts = GetFileChartPoints(filePnts.data.fileName);
+        if (fPnts != null)
+          return false;
       }
+      filePoints.Add(filePnts);
+      filePnts.remCPLineEvent.On += OnRemLineCPs;
+      addCPFileEvent.Fire(new CPProjEvArgs(this, filePnts));
 
-      return false;
+      return true;
     }
 
     public ICheckCPPoint CheckCursorPos()
@@ -580,15 +541,29 @@ namespace ChartPoints
 
       return ret;
     }
-    public IFileChartPoints AddFileChartPoints(string fileName, string fileFullName)
+
+    public IFileChartPoints AddFileChartPoints(string fileName)
     {
       IFileChartPoints fPnts = GetFileChartPoints(fileName);
       if (fPnts == null)
-        fPnts = ChartPntFactory.Instance.CreateFileChartPoint(fileName, fileFullName, data);
-      AddFileChartPoints(fPnts);
+      {
+        IFileElem fileElem = cpCodeModel.GetFile(fileName);
+        if (fileElem != null)
+        {
+          fPnts = ChartPntFactory.Instance.CreateFileChartPoint(fileElem, data);
+          AddFileChartPoints(fPnts, false);
+        }
+      }
 
       return fPnts;
     }
+
+    public void CalcInjectionPoints(CPClassLayout cpInjPoints)
+    {
+      foreach (IFileChartPoints fPnts in filePoints)
+        fPnts.CalcInjectionPoints(cpInjPoints, cpCodeModel);
+    }
+
   }
 
 }

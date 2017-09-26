@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace CP
     public abstract class CodeModelEnt<T> : ICodeEelement// where T : VCCodeElement, VCCodeFunction, VCCodeClass
     {
       public string name { get; }
+      public string uniqueName { get; }
       protected T ent;
 
       public CodeModelEnt(CodeElement _codeElem)
@@ -31,18 +33,54 @@ namespace CP
 
     public class ClassVarElement : CodeModelEnt<VCCodeVariable>, IClassVarElement
     {
-      public new string name { get { return ent.FullName; } }
+      public new string name { get { return ent.Name; } }
+      public new string uniqueName { get { return ent.FullName; } }
       public string type { get { return ent.TypeString; } }
 
       public ClassVarElement(CodeElement _codeElem) : base(_codeElem)
       {}
       public ClassVarElement(VCCodeVariable _codeElem) : base(_codeElem)
       {}
+      public CPTraceVar CalcInjectionPoints(CPClassLayout cpClassLayout, string className, string _fname, ITextPosition pos, out bool needDeclare)
+      {
+        CPTraceVar traceVar = null;
+        if (!cpClassLayout.traceVarPos.TryGetValue(name, out traceVar))
+        {
+          needDeclare = true;
+          // add trace pos data
+          traceVar = new CPTraceVar()
+          {
+            name = name,
+            type = type,
+            className = className
+          };
+          cpClassLayout.traceVarPos.Add(traceVar.name, traceVar);
+          // define trace var definition placement
+          traceVar.defPos.fileName = ent.ProjectItem.Name;
+          traceVar.defPos.pos.lineNum = ent.EndPoint.Line - 1;
+          traceVar.defPos.pos.linePos = ent.EndPoint.LineCharOffset - 1;
+        }
+        else
+          needDeclare = false;
+        // add trace pos
+        traceVar.traceVarTracePos.Add(new FilePosPnt()
+        {
+          fileName = _fname,
+          pos = { lineNum = pos.lineNum, linePos = pos.linePos }
+        });
+        // check and add if need file containing original variable declaration
+        TextPos traceInclPos = null;
+        if (!cpClassLayout.traceInclPos.TryGetValue(ent.ProjectItem.Name, out traceInclPos))
+          cpClassLayout.traceInclPos.Add(ent.ProjectItem.Name, new TextPos() { lineNum = 0, linePos = 0 });
+
+        return traceVar;
+      }
     }
 
     public class ClassElement : CodeModelEnt<VCCodeClass>, IClassElement
     {
-      public new string name { get { return ent.FullName; } }
+      public new string name { get { return ent.Name; } }
+      public new string uniqueName { get { return ent.FullName; } }
       protected ISet<IClassVarElement> theVars;
 
       public ICollection<IClassVarElement> variables
@@ -71,25 +109,60 @@ namespace CP
           }
           return theVars;
         }
+
       }
       public ClassElement(CodeElement _codeElem) : base(_codeElem)
       {}
       public ClassElement(VCCodeClass _codeElem) : base(_codeElem)
       {}
 
-      public IClassVarElement GetVar(string name)
+      public IClassVarElement GetVar(string uniqueName)
       {
         foreach (CodeElement _var in ent.Variables)
         {
-          if (_var.Name == name)
+          if (_var.FullName == uniqueName)
             return new ClassVarElement(_var);
         }
 
         return null;
       }
-      public VCCodeClass to()
+
+      public void CalcInjectionPoints(CPClassLayout cpClassLayout, CPTraceVar traceVar, bool needDeclare)
       {
-        return ent;
+        if (needDeclare)
+        {
+          // find all places, where this file included
+          CodeElement theFunc = null;
+          // find & store all constructors init points of this class
+          foreach (CodeElement _func in /*vcClass*/ent.Functions)
+          {
+            if (_func.Name == ent.Name)
+            {
+              theFunc = _func;
+              VCCodeFunction vcFunc = (VCCodeFunction) _func;
+              EditPoint pnt = _func.StartPoint.CreateEditPoint();
+              if (pnt.FindPattern("{"))
+                traceVar.traceVarInitPos.Add(new FilePosPnt()
+                {
+                  fileName = _func.ProjectItem.Name,
+                  pos = {lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset}
+                });
+            }
+          }
+          // if no constructor found add default one
+          if (traceVar.traceVarInitPos.Count == 0)
+          {
+            EditPoint pnt = ent.StartPoint.CreateEditPoint();
+            if (pnt.FindPattern("{"))
+            {
+              traceVar.injConstructorPos = new FilePosPnt()
+              {
+                fileName = ent.ProjectItem.Name,
+                pos = {lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset}
+              };
+            }
+          }
+        }
       }
     }
 
@@ -147,7 +220,7 @@ namespace CP
                 bool exists = false;
                 if (lPnts != null)
                 {
-                  if (lPnts.GetChartPoint(var.name) != null)
+                  if (lPnts.GetChartPoint(var.uniqueName) != null)
                     exists = true;
                 }
                 theElems.Add(new CheckElem(var, exists));
@@ -178,7 +251,7 @@ namespace CP
             if(pPnts == null)
               ChartPoints.Globals.processor.AddProjectChartPoints(projName, out pPnts);
             if(fPnts == null)
-              fPnts = pPnts.AddFileChartPoints(fileName, System.IO.Path.GetFullPath(fileFullName).ToLower());
+              fPnts = pPnts.AddFileChartPoints(fileName);//, System.IO.Path.GetFullPath(fileFullName).ToLower());
             if(lPnts == null)
               lPnts = fPnts.AddLineChartPoints(lineNum, linePos);
             changed = lPnts.SyncChartPoint(_elem, classElem);
@@ -189,16 +262,90 @@ namespace CP
       }
     }
 
+    public class FileElem : IFileElem
+    {
+      public string name { get { return projItem.Name; } }
+      public string uniqueName { get; }
+      private EnvDTE.ProjectItem projItem;
+
+      public FileElem(EnvDTE.ProjectItem _projItem)
+      {
+        projItem = _projItem;
+        uniqueName = System.IO.Path.GetFullPath(projItem.FileNames[0]).ToLower();
+      }
+      public void Synchronize()
+      {
+        ;
+      }
+
+      private ClassElement GetTraceVarClassElem(CodeElement codeElem, int lineNum, int linePos)
+      {
+        if (codeElem.Kind == vsCMElement.vsCMElementFunction)
+        {
+          if ((lineNum > codeElem.StartPoint.Line && lineNum < codeElem.EndPoint.Line) ||
+              (lineNum == codeElem.StartPoint.Line && linePos >= codeElem.StartPoint.LineCharOffset) ||
+              (lineNum == codeElem.EndPoint.Line && linePos <= codeElem.EndPoint.LineCharOffset))
+          {
+            VCCodeFunction targetFunc = (VCCodeFunction)codeElem;
+            if (targetFunc != null)
+            {
+              VCCodeElement targetClassElem = (VCCodeElement)targetFunc.Parent;
+              if (targetClassElem != null && targetClassElem.Kind == vsCMElement.vsCMElementClass)
+                return new ClassElement((VCCodeClass) targetClassElem);
+            }
+          }
+        }
+        else
+        {
+          foreach (CodeElement classCodeElem in codeElem.Children)
+          {
+            ClassElement theClass = GetTraceVarClassElem(classCodeElem, lineNum, linePos);
+            if (theClass != null)
+              return theClass;
+          }
+        }
+
+        return null;
+      }
+
+      private ClassElement GetTraceVarClassElem(FileCodeModel fcm, int lineNum, int linePos)
+      {
+        foreach (CodeElement codeElem in fcm.CodeElements)
+        {
+          ClassElement theClass = GetTraceVarClassElem(codeElem, lineNum, linePos);
+          if (theClass != null)
+            return theClass;//!!! NOTIFY MODEL !!!
+        }
+
+        return null;
+      }
+
+      public IClassElement GetClassFromFilePos(int lineNum, int linePos)
+      {
+        return GetTraceVarClassElem(projItem.FileCodeModel, lineNum, linePos);
+      }
+    }
+
     public class Model : IModel
     {
       protected VCCodeModel vcCodeModel;
+      protected EnvDTE.Project proj;
       protected static Events2 evs2;
       protected static CodeModelEvents cmEvs;
       protected ISet<IClassElement> classes = new SortedSet<IClassElement>(Comparer<IClassElement>.Create((lh, rh) => (String.Compare(lh.name, rh.name, StringComparison.Ordinal))));
 
-      public Model(CodeModel _codeModel, Events2 _evs2)
+      public Model(string projName, Events2 _evs2)
       {
-        vcCodeModel = (VCCodeModel) _codeModel;
+        foreach (Project _proj in ChartPoints.Globals.dte.Solution.Projects)
+        {
+          if (_proj.Name == projName)
+          {
+            proj = _proj;
+            break;
+          }
+        }
+        if(proj != null)
+          vcCodeModel = (VCCodeModel)proj.CodeModel;
         evs2 = _evs2;
         cmEvs = evs2.CodeModelEvents;
         cmEvs.ElementChanged += OnElementChanged;
@@ -219,6 +366,29 @@ namespace CP
       public void OnElementChanged(CodeElement element, vsCMChangeKind change)
       {
         ;
+      }
+
+      private EnvDTE.ProjectItem GetProjItem(EnvDTE.ProjectItems projItems, string fileName)
+      {
+        if (projItems == null)
+          return null;
+        foreach (EnvDTE.ProjectItem projItem in projItems)
+        {
+          if (projItem.Name == fileName)
+            return projItem;
+          EnvDTE.ProjectItem theProjItem = GetProjItem(projItem.ProjectItems, fileName);
+          if (theProjItem != null)
+            return theProjItem;
+        }
+
+        return null;
+      }
+      public IFileElem GetFile(string fileName)
+      {
+        EnvDTE.ProjectItem theProjItem = GetProjItem(proj.ProjectItems, fileName);
+        if(theProjItem != null)
+          return new FileElem(theProjItem);
+        return null;
       }
 
       public IClassElement GetClass(string name)
@@ -308,6 +478,36 @@ namespace CP
         }
 
         return checkPnt;
+      }
+
+      public void CalcInjectionPoints(CPClassLayout cpInjPoints, CPTraceVar traceVar)
+      {
+        foreach (var inclStmt in vcCodeModel.Includes)
+        {
+          VCCodeInclude vcinclStmt = (VCCodeInclude)inclStmt;
+          CPInclude incl = null;
+          string fname = Path.GetFileName(vcinclStmt.File);
+          if (!cpInjPoints.includesPos.TryGetValue(new Tuple<string, string>(vcinclStmt.Name, fname), out incl))
+          {
+            if (vcinclStmt.Name == traceVar.defPos.fileName)
+            {
+              // define include placement
+              FilePosText inclPos = new FilePosText()
+              {
+                fileName = fname,
+                pos = { lineNum = vcinclStmt.StartPoint.Line - 1, linePos = vcinclStmt.StartPoint.LineCharOffset },
+                posEnd = { lineNum = vcinclStmt.EndPoint.Line - 1, linePos = vcinclStmt.EndPoint.LineCharOffset }
+              };
+              incl = new CPInclude()
+              {
+                inclOrig = vcinclStmt.Name,
+                inclReplace = "__cp__." + vcinclStmt.Name,
+                pos = inclPos
+              };
+              cpInjPoints.includesPos.Add(new Tuple<string, string>(vcinclStmt.Name, incl.pos.fileName), incl);
+            }
+          }
+        }
       }
     }
 

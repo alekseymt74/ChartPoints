@@ -8,8 +8,6 @@ using EnvDTE;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using EnvDTE80;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
 {
@@ -197,7 +195,7 @@ namespace ChartPoints
               //IChartPoint chartPnt = v1.Value;
               xmlTxtWriter.WriteStartElement("ChartPoint");
               {
-                xmlTxtWriter.WriteElementString("Variable", chartPnt.data.varName);
+                xmlTxtWriter.WriteElementString("Variable", chartPnt.data.uniqueName);
                 xmlTxtWriter.WriteElementString("LineNum", Convert.ToString((Int32) lPnts.data.pos.lineNum));//chartPnt.data.lineNum));
                 xmlTxtWriter.WriteElementString("LinePos", Convert.ToString((Int32) lPnts.data.pos.linePos));//chartPnt.data.linePos));
                 xmlTxtWriter.WriteElementString("Enabled", chartPnt.data.enabled ? "true" : "false");
@@ -250,89 +248,6 @@ namespace ChartPoints
       return (msBuildProject != null);
     }
 
-    private EnvDTE.ProjectItem GetProjItem(EnvDTE.ProjectItems projItems, string fileName)
-    {
-      if (projItems == null)
-        return null;
-      foreach (EnvDTE.ProjectItem projItem in projItems)
-      {
-        if (projItem.Name == fileName)
-          return projItem;
-        EnvDTE.ProjectItem theProjItem = GetProjItem(projItem.ProjectItems, fileName);
-        if (theProjItem != null)
-          return theProjItem;
-      }
-
-      return null;
-    }
-
-    private EnvDTE.ProjectItem GetProjItem(string projName, string fileName)
-    {
-      EnvDTE.Project theProj = null;
-      foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-      {
-        if (proj.Name == projName)
-        {
-          theProj = proj;
-          break;
-        }
-      }
-      if (theProj != null)
-      {
-        EnvDTE.ProjectItem projItem = GetProjItem(theProj.ProjectItems, fileName);
-        if (projItem != null)
-          return projItem;
-      }
-
-      return null;
-    }
-
-    private VCCodeClass GetTraceVarClassElem(CodeElement codeElem, int lineNum, int linePos)
-    {
-      if (codeElem.Kind == vsCMElement.vsCMElementFunction)
-      {
-        //if (codeElem.StartPoint.Line <= lineNum
-        //    && codeElem.EndPoint.Line >= lineNum
-        //    && codeElem.StartPoint.LineCharOffset <= linePos
-        //    && codeElem.EndPoint.LineCharOffset >= linePos)
-        if ((lineNum > codeElem.StartPoint.Line && lineNum < codeElem.EndPoint.Line) ||
-            (lineNum == codeElem.StartPoint.Line && linePos >= codeElem.StartPoint.LineCharOffset) ||
-            (lineNum == codeElem.EndPoint.Line && linePos <= codeElem.EndPoint.LineCharOffset))
-        {
-          VCCodeFunction targetFunc = (VCCodeFunction)codeElem;
-          if (targetFunc != null)
-          {
-            VCCodeElement targetClassElem = (VCCodeElement)targetFunc.Parent;
-            if (targetClassElem != null && targetClassElem.Kind == vsCMElement.vsCMElementClass)
-              return (VCCodeClass)targetClassElem;
-          }
-        }
-      }
-      else
-      {
-        foreach (CodeElement classCodeElem in codeElem.Children)
-        {
-          VCCodeClass theClass = GetTraceVarClassElem(classCodeElem, lineNum, linePos);
-          if (theClass != null)
-            return theClass;
-        }
-      }
-
-      return null;
-    }
-
-    private VCCodeClass GetTraceVarClassElem(FileCodeModel fcm, int lineNum, int linePos)
-    {
-      foreach (CodeElement codeElem in fcm.CodeElements)
-      {
-        VCCodeClass theClass = GetTraceVarClassElem(codeElem, lineNum, linePos);
-        if (theClass != null)
-          return theClass;
-      }
-
-      return null;
-    }
-
     public Microsoft.Build.Evaluation.Project LoadProjChartPoints(string projConfFile)
     {
       if (projConfFile == "")
@@ -361,21 +276,11 @@ namespace ChartPoints
         {
           foreach (ProjectItemElement cpFileElem in cpg.Items)
           {
-            //ProjectItemElement cpFileElem = cpg.Items.ElementAt(0);
             if (cpFileElem.HasMetadata)
             {
               for (;;)
               {
-                EnvDTE.ProjectItem projItem = GetProjItem(projName, cpFileElem.Include);
-                if (projItem == null)
-                  break;
-                FileCodeModel fcm = projItem.FileCodeModel;
-                if (fcm == null)
-                  break;
-                VCFileCodeModel vcFCM = (VCFileCodeModel) fcm;
-                if (vcFCM == null)
-                  break;
-                vcFCM.Synchronize();
+                IFileChartPoints fPnts = pPnts.AddFileChartPoints(cpFileElem.Include);
                 foreach (ProjectMetadataElement me in cpFileElem.Metadata)
                 {
                   Action<int, CPData> addCPDataAction
@@ -384,14 +289,11 @@ namespace ChartPoints
                       data.fileName = cpFileElem.Include;
                       data.lineNum = i;
                       data.projName = projName;
-                      VCCodeClass ownerClass = GetTraceVarClassElem(fcm, data.lineNum, data.linePos);
-                      if (ownerClass != null)
+                      ILineChartPoints lPnts = fPnts.AddLineChartPoints(data.lineNum, data.linePos);
+                      if(lPnts != null)
                       {
-                        string fileFullName = System.IO.Path.GetFullPath(projItem.FileNames[0]).ToLower();
-                        IFileChartPoints fPnts = pPnts.AddFileChartPoints(cpFileElem.Include, fileFullName);
-                        ILineChartPoints lPnts = fPnts.AddLineChartPoints(data.lineNum, data.linePos);
                         IChartPoint chartPnt = null;
-                        lPnts.AddChartPoint(data.varName, ownerClass, out chartPnt);
+                        lPnts.AddChartPoint(data.varName, out chartPnt);
                       }
                     };
                   confLoader.LoadChartPoint("<" + me.Name + ">" + me.Value + "</" + me.Name + ">", addCPDataAction);
