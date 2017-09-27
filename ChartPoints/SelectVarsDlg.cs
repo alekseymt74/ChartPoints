@@ -13,7 +13,6 @@ namespace ChartPoints
 {
   public partial class SelectVarsDlg : Form
   {
-    private ISet<string> selected_vars;
     public SelectVarsDlg(ICheckCPPoint checkPnt)
     {
       InitializeComponent();
@@ -39,11 +38,6 @@ namespace ChartPoints
         _elem.Toggle((bool)row.Cells[0].Value);
       }
       this.Close();
-    }
-
-    public ISet<string> GetSelectedVars()
-    {
-      return selected_vars;
     }
 
   }

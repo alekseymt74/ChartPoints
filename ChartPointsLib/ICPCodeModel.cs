@@ -15,6 +15,12 @@ namespace CP
     {
       string type { get; }
       CPTraceVar CalcInjectionPoints(CPClassLayout cpClassLayout, string className, string _fname, ITextPosition pos, out bool needDeclare);
+      ICPEvent<ClassVarElemTrackerArgs> classVarChangedEvent { get; }
+      ICPEvent<ClassVarElemTrackerArgs> classVarDeletedEvent { get; }
+    }
+
+    public interface IClassMethodElement : ICodeEelement
+    {
     }
 
     public interface IClassElement : ICodeEelement
@@ -47,7 +53,7 @@ namespace CP
     public interface IModel
     {
       IFileElem GetFile(string fileName);
-      IClassElement GetClass(string name);
+      //IClassElement GetClass(string name);
       ICheckCPPoint CheckCursorPos();
       void CalcInjectionPoints(CPClassLayout cpInjPoints, CPTraceVar traceVar);
     }

@@ -36,7 +36,7 @@ namespace ChartPoints
     public TData data
     {
       get { return theData; }
-      set { theData = (TDataImpl)value; }
+      //set { theData = (TDataImpl)value; }
     }
   }
   /// <summary>
@@ -50,6 +50,8 @@ namespace ChartPoints
     public ChartPoint(CP.Code.IClassVarElement _codeElem, ICPLineData _lineData)
     {
       codeElem = _codeElem;
+      codeElem.classVarChangedEvent.On += ClassVarChangedEventOn;
+      codeElem.classVarDeletedEvent.On += ClassVarDeletedEventOn;
       theData = new ChartPointData
       {
         enabled = true,
@@ -58,6 +60,16 @@ namespace ChartPoints
         uniqueName = codeElem.uniqueName/*varName*/,
         lineData = _lineData
       };
+    }
+
+    private void ClassVarChangedEventOn(ClassVarElemTrackerArgs args)
+    {
+      ;
+    }
+
+    private void ClassVarDeletedEventOn(ClassVarElemTrackerArgs args)
+    {
+      ;
     }
 
     public virtual CPTraceVar CalcInjectionPoints(CPClassLayout cpClassLayout, string className, out bool needDeclare)
@@ -249,7 +261,7 @@ namespace ChartPoints
       return true;
     }
 
-    public bool SyncChartPoint(ICheckElem checkElem, IClassElement ownerClass)
+    public bool SyncChartPoint(ICheckElem checkElem)//, IClassElement ownerClass)
     {
       if (checkElem.exists)
       {
@@ -415,48 +427,61 @@ namespace ChartPoints
     public bool ValidatePosition(int lineNum, int linesAdd)
     {
       bool changed = false;
-      List<KeyValuePair<bool, ILineChartPoints>> changedLines = new List<KeyValuePair<bool, ILineChartPoints>>();
-      foreach (ILineChartPoints lPnts in linePoints.Reverse())
+      if (linesAdd != 0)
       {
-        if (lPnts.data.pos.lineNum >= lineNum)
+        foreach (ILineChartPoints lPnts in linePoints.Reverse())
         {
-          bool lineChanged = lPnts.ValidatePosition(linesAdd);
-          if (lineChanged)
+          if (lPnts.data.pos.lineNum >= lineNum)
           {
-            if (linesAdd != 0)
-              changedLines.Add(new KeyValuePair<bool, ILineChartPoints>(true, lPnts));
+            if (linesAdd < 0 && lineNum + (-linesAdd) >= lPnts.data.pos.lineNum)
+              RemoveLineChartPoints(lPnts);
+            else
+              MoveLineChartPoints(lPnts, linesAdd);
           }
-          else
-          {
-            changedLines.Add(new KeyValuePair<bool, ILineChartPoints>(false, lPnts));
-          }
-          changed = changed || lineChanged;
         }
       }
-      if (changedLines.Count > 0)
-      {
-        foreach (KeyValuePair<bool, ILineChartPoints> lPnts in changedLines)
-        {
-          if (lPnts.Key == true)
-            MoveLineChartPoints(lPnts.Value, linesAdd);
-          else
-            RemoveLineChartPoints(lPnts.Value);
-          //linePoints.Remove(lPnts.Value);//!!!EVENT!!!
-          ////if (RemoveLineChartPoints(lPnts.Value))
-          //Globals.taggerUpdater.RaiseChangeTagEvent(data.fileFullName, lPnts.Value);
-        }
-        //foreach (KeyValuePair<bool, ILineChartPoints> lPnts in changedLines)
-        //{
-        //  if (lPnts.Key == true)
-        //  {
-        //    ((TextPosition)((LineChartPoints) lPnts.Value).theData.pos).lineNum += linesAdd;
-        //    //linePoints.Add(lPnts.Value);
-        //    AddLineChartPoints(lPnts.Value);
-        //  }
-        //}
-        //if(linePoints.Count == 0)
-        //  remFunc(this);
-      }
+      //List<KeyValuePair<bool, ILineChartPoints>> changedLines = new List<KeyValuePair<bool, ILineChartPoints>>();
+      //foreach (ILineChartPoints lPnts in linePoints.Reverse())
+      //{
+      //  if (lPnts.data.pos.lineNum >= lineNum)
+      //  {
+      //    bool lineChanged = lPnts.ValidatePosition(linesAdd);
+      //    if (lineChanged)
+      //    {
+      //      if (linesAdd != 0)
+      //        changedLines.Add(new KeyValuePair<bool, ILineChartPoints>(true, lPnts));
+      //    }
+      //    else
+      //    {
+      //      changedLines.Add(new KeyValuePair<bool, ILineChartPoints>(false, lPnts));
+      //    }
+      //    changed = changed || lineChanged;
+      //  }
+      //}
+      //if (changedLines.Count > 0)
+      //{
+      //  foreach (KeyValuePair<bool, ILineChartPoints> lPnts in changedLines)
+      //  {
+      //    if (lPnts.Key == true)
+      //      MoveLineChartPoints(lPnts.Value, linesAdd);
+      //    else
+      //      RemoveLineChartPoints(lPnts.Value);
+      //    //linePoints.Remove(lPnts.Value);//!!!EVENT!!!
+      //    ////if (RemoveLineChartPoints(lPnts.Value))
+      //    //Globals.taggerUpdater.RaiseChangeTagEvent(data.fileFullName, lPnts.Value);
+      //  }
+      //  //foreach (KeyValuePair<bool, ILineChartPoints> lPnts in changedLines)
+      //  //{
+      //  //  if (lPnts.Key == true)
+      //  //  {
+      //  //    ((TextPosition)((LineChartPoints) lPnts.Value).theData.pos).lineNum += linesAdd;
+      //  //    //linePoints.Add(lPnts.Value);
+      //  //    AddLineChartPoints(lPnts.Value);
+      //  //  }
+      //  //}
+      //  //if(linePoints.Count == 0)
+      //  //  remFunc(this);
+      //}
 
       return changed;
     }

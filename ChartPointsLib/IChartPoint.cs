@@ -61,7 +61,7 @@ namespace ChartPoints
     bool AddChartPoint(string varName, out IChartPoint chartPnt);
     bool AddChartPoint(IChartPoint chartPnt);
     bool AddChartPoint(CP.Code.IClassVarElement codeElem, out IChartPoint chartPnt, bool checkExistance = true);
-    bool SyncChartPoint(ICheckElem checkElem, IClassElement ownerClass);
+    bool SyncChartPoint(ICheckElem checkElem);//, IClassElement ownerClass);
     bool ValidatePosition(int linesAdd);
     void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model);
   }

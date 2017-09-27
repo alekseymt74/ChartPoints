@@ -29,11 +29,11 @@
     private void InitializeComponent()
     {
       this.vars_dgv = new System.Windows.Forms.DataGridView();
+      this.ok_btn = new System.Windows.Forms.Button();
+      this.cancel_btn = new System.Windows.Forms.Button();
       this.chk_box_col = new System.Windows.Forms.DataGridViewCheckBoxColumn();
       this.name_col = new System.Windows.Forms.DataGridViewTextBoxColumn();
       this.type_col = new System.Windows.Forms.DataGridViewTextBoxColumn();
-      this.ok_btn = new System.Windows.Forms.Button();
-      this.cancel_btn = new System.Windows.Forms.Button();
       ((System.ComponentModel.ISupportInitialize)(this.vars_dgv)).BeginInit();
       this.SuspendLayout();
       // 
@@ -41,6 +41,9 @@
       // 
       this.vars_dgv.AllowUserToAddRows = false;
       this.vars_dgv.AllowUserToDeleteRows = false;
+      this.vars_dgv.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
       this.vars_dgv.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
       this.vars_dgv.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.chk_box_col,
@@ -48,27 +51,8 @@
             this.type_col});
       this.vars_dgv.Location = new System.Drawing.Point(0, 0);
       this.vars_dgv.Name = "vars_dgv";
-      this.vars_dgv.Size = new System.Drawing.Size(672, 302);
+      this.vars_dgv.Size = new System.Drawing.Size(499, 302);
       this.vars_dgv.TabIndex = 0;
-      // 
-      // chk_box_col
-      // 
-      this.chk_box_col.HeaderText = "v";
-      this.chk_box_col.Name = "chk_box_col";
-      // 
-      // name_col
-      // 
-      this.name_col.HeaderText = "Name";
-      this.name_col.Name = "name_col";
-      this.name_col.ReadOnly = true;
-      this.name_col.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-      this.name_col.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-      // 
-      // type_col
-      // 
-      this.type_col.HeaderText = "Type";
-      this.type_col.Name = "type_col";
-      this.type_col.ReadOnly = true;
       // 
       // ok_btn
       // 
@@ -88,6 +72,29 @@
       this.cancel_btn.TabIndex = 2;
       this.cancel_btn.Text = "Cancel";
       this.cancel_btn.UseVisualStyleBackColor = true;
+      // 
+      // chk_box_col
+      // 
+      this.chk_box_col.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
+      this.chk_box_col.HeaderText = "v";
+      this.chk_box_col.Name = "chk_box_col";
+      this.chk_box_col.Width = 19;
+      // 
+      // name_col
+      // 
+      this.name_col.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+      this.name_col.HeaderText = "Name";
+      this.name_col.Name = "name_col";
+      this.name_col.ReadOnly = true;
+      this.name_col.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+      this.name_col.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+      // 
+      // type_col
+      // 
+      this.type_col.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+      this.type_col.HeaderText = "Type";
+      this.type_col.Name = "type_col";
+      this.type_col.ReadOnly = true;
       // 
       // SelectVarsDlg
       // 
@@ -111,10 +118,10 @@
     #endregion
 
     private System.Windows.Forms.DataGridView vars_dgv;
+    private System.Windows.Forms.Button ok_btn;
+    private System.Windows.Forms.Button cancel_btn;
     private System.Windows.Forms.DataGridViewCheckBoxColumn chk_box_col;
     private System.Windows.Forms.DataGridViewTextBoxColumn name_col;
     private System.Windows.Forms.DataGridViewTextBoxColumn type_col;
-    private System.Windows.Forms.Button ok_btn;
-    private System.Windows.Forms.Button cancel_btn;
   }
 }

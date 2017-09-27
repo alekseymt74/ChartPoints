@@ -36,6 +36,8 @@ namespace CP
       public new string name { get { return ent.Name; } }
       public new string uniqueName { get { return ent.FullName; } }
       public string type { get { return ent.TypeString; } }
+      public ICPEvent<ClassVarElemTrackerArgs> classVarChangedEvent { get; } = new CPEvent<ClassVarElemTrackerArgs>();
+      public ICPEvent<ClassVarElemTrackerArgs> classVarDeletedEvent { get; } = new CPEvent<ClassVarElemTrackerArgs>();
 
       public ClassVarElement(CodeElement _codeElem) : base(_codeElem)
       {}
@@ -75,6 +77,16 @@ namespace CP
 
         return traceVar;
       }
+    }
+
+    public class ClassMethodElement : CodeModelEnt<VCCodeFunction>, IClassMethodElement
+    {
+      public new string name { get { return ent.Name; } }
+      public new string uniqueName { get { return ent.FullName; } }
+      public ClassMethodElement(CodeElement _codeElem) : base(_codeElem)
+      { }
+      public ClassMethodElement(VCCodeFunction _codeElem) : base(_codeElem)
+      { }
     }
 
     public class ClassElement : CodeModelEnt<VCCodeClass>, IClassElement
@@ -170,7 +182,7 @@ namespace CP
     {
       public IClassVarElement var { get; }
       public bool exists { get; set; }
-      private bool existsOrig;
+      private readonly bool existsOrig;
 
       public CheckElem(IClassVarElement _var, bool _exists)
       {
@@ -198,6 +210,7 @@ namespace CP
       private int lineNum;
       private int linePos;
       private IClassElement classElem;
+      private IClassMethodElement methodElem;
       private IProjectChartPoints pPnts;
       private IFileChartPoints fPnts;
       private ILineChartPoints lPnts;
@@ -231,9 +244,10 @@ namespace CP
         }
       }
 
-      public CheckCPPoint(IClassElement _classElem, string _projName, string _fileName, string _fileFullName, int _lineNum, int _linePos)
+      public CheckCPPoint(IClassElement _classElem, IClassMethodElement _methodElem, string _projName, string _fileName, string _fileFullName, int _lineNum, int _linePos)
       {
         classElem = _classElem;
+        methodElem = _methodElem;
         projName = _projName;
         fileName = _fileName;
         fileFullName = _fileFullName;
@@ -254,7 +268,7 @@ namespace CP
               fPnts = pPnts.AddFileChartPoints(fileName);//, System.IO.Path.GetFullPath(fileFullName).ToLower());
             if(lPnts == null)
               lPnts = fPnts.AddLineChartPoints(lineNum, linePos);
-            changed = lPnts.SyncChartPoint(_elem, classElem);
+            changed = lPnts.SyncChartPoint(_elem);//, classElem);
           }
         }
 
@@ -391,24 +405,24 @@ namespace CP
         return null;
       }
 
-      public IClassElement GetClass(string name)
-      {
-        IClassElement cpClass = classes.FirstOrDefault((v) => (v.name == name));
-        if (cpClass == null)
-        {
-          foreach (CodeElement _class in vcCodeModel.Classes)
-          {
-            if (_class.Name == name)
-            {
-              cpClass = new ClassElement(_class);
-              classes.Add(cpClass);
-              return cpClass;
-            }
-          }
-        }
+      //public IClassElement GetClass(string name)
+      //{
+      //  IClassElement cpClass = classes.FirstOrDefault((v) => (v.name == name));
+      //  if (cpClass == null)
+      //  {
+      //    foreach (CodeElement _class in vcCodeModel.Classes)
+      //    {
+      //      if (_class.Name == name)
+      //      {
+      //        cpClass = new ClassElement(_class);
+      //        classes.Add(cpClass);
+      //        return cpClass;
+      //      }
+      //    }
+      //  }
 
-        return cpClass;
-      }
+      //  return cpClass;
+      //}
 
       public ICheckCPPoint CheckCursorPos()
       {
@@ -471,7 +485,9 @@ namespace CP
               (caretPnt.Line == endPnt.Line && caretPnt.LineCharOffset <= endPnt.LineCharOffset))
           {
             // Oh, oh you're in the body, now.. (c)
-            checkPnt = new CheckCPPoint(new ClassElement(ownerClass), projName, activeDoc.Name, System.IO.Path.GetFullPath(activeDoc.FullName).ToLower(), caretPnt.Line, caretPnt.LineCharOffset);
+            int linePos = (caretPnt.Line == startPnt.Line ? startPnt.LineCharOffset /*+ 1*/ : 1/*0*/);
+            checkPnt = new CheckCPPoint(new ClassElement(ownerClass), new ClassMethodElement(targetFunc), projName, activeDoc.Name, System.IO.Path.GetFullPath(activeDoc.FullName).ToLower(), caretPnt.Line, linePos);
+
             return checkPnt;
           }
           break;

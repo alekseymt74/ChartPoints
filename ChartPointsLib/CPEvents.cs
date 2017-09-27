@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChartPoints
 {
+  //#####################
   public delegate void OnCPEvent<T>(T args);
   public interface ICPEvent<T>
   {
@@ -13,6 +14,32 @@ namespace ChartPoints
     void Fire(T args);
   }
 
+  public class CPEvent<T> : ICPEvent<T>
+  {
+    private OnCPEvent<T> _on;
+    public event OnCPEvent<T> On
+    {
+      add
+      {
+        if (_on == null)
+          _on = new OnCPEvent<T>(value);
+        else
+          _on += value;
+      }
+      remove
+      {
+        if (_on != null)
+          _on -= value;
+      }
+    }
+
+    public void Fire(T args)
+    {
+      _on?.Invoke(args);
+    }
+  }
+
+  //#####################
   public class CPLineEvArgs
   {
     public ILineChartPoints lineCPs { get; }
@@ -49,6 +76,7 @@ namespace ChartPoints
     }
   }
 
+  //#####################
   public class CPEntTrackerArgs
   {
     public ICPEntTracker entTracker { get; }
@@ -67,29 +95,14 @@ namespace ChartPoints
     }
   }
 
-  public class CPEvent<T> : ICPEvent<T>
+  //#####################
+  public class ClassVarElemTrackerArgs
   {
-    private OnCPEvent<T> _on;
-    public event OnCPEvent<T> On
-    {
-      add
-      {
-        if (_on == null)
-          _on = new OnCPEvent<T>(value);
-        else
-          _on += value;
-      }
-      remove
-      {
-        if (_on != null)
-          _on -= value;
-      }
-    }
-
-    public void Fire(T args)
-    {
-      _on?.Invoke(args);
-    }
+    //public ICPEntTracker entTracker { get; }
+    //public CPEntTrackerArgs(ICPEntTracker _entTracker)
+    //{
+    //  entTracker = _entTracker;
+    //}
   }
 
 }

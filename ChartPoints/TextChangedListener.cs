@@ -77,7 +77,7 @@ namespace ChartPoints
   [ContentType("C/C++")]
   [Export(typeof(IWpfTextViewCreationListener))]
   [TextViewRole(PredefinedTextViewRoles.Editable)]
-  public sealed class TextChangedListener : IWpfTextViewCreationListener, ITextChangedListener
+  public /*sealed*/ class TextChangedListener : IWpfTextViewCreationListener, ITextChangedListener
   {
     private IDictionary<string, IWpfTextView> openedFiles = new SortedDictionary<string, IWpfTextView>();
     private ISet<FileChangeTracker> fileTrackers
