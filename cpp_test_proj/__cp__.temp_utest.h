@@ -1,7 +1,7 @@
 #include "..\tracer\tracer.h"
 #ifndef _TEMP_UTEST_H
 #define _TEMP_UTEST_H
-
+#include <stdint.h>
 class c1
 {};
 typedef c1 TC1;
@@ -11,6 +11,7 @@ typedef c1 TC1;
 
 class temp_utest
 {
+
 TC1 _c1;
 //c1 _c1;
 //c1 *pc1;

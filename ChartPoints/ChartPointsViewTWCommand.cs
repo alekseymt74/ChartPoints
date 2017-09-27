@@ -63,8 +63,8 @@ namespace ChartPoints
     public void Activate()
     {
       window = package.FindToolWindow(typeof(ChartPoints.ChartPointsViewTW), 0, true) as ChartPointsViewTW;
-      window?.Clear();
       Show();
+      window?.Clear();
     }
 
     public void UpdateView()

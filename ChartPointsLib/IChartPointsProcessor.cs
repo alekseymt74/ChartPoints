@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms.Design;
-using EnvDTE;
-using Microsoft.VisualStudio.VCCodeModel;
+﻿using System.Collections.Generic;
 
 namespace ChartPoints
 {
@@ -25,29 +18,7 @@ namespace ChartPoints
     IChartPointsProcessorData data { get; }
     IProjectChartPoints GetProjectChartPoints(string projName);
     bool AddProjectChartPoints(string projName, out IProjectChartPoints pPnts);
-    /// <summary>
-    /// Checks the ability to insert chartpoint at specified position
-    /// </summary>
-    /// <param name="pnt">cursor position in document</param>
-    /// <returns></returns>
-    ICheckPoint Check(string projName, TextPoint pnt);
-
     bool RemoveChartPoints(string projName);
-
-    //bool AddProjectChartPoints(IProjectChartPoints projPnts);
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /// <summary>
-    /// Returns all chartpoints in specified file
-    /// </summary>
-    /// <param name="fileName">Name of the cpp file</param>
-    /// <returns>chartpoints sorted by line numbers in specified file</returns>
-    //IDictionary<int, IChartPoint> GetFileChartPoints(string fileName);
-    ////bool AddChartPoint(IChartPoint chartPnt);
-    //bool AddChartPoint(IChartPointData chartPntData);
-    //IChartPoint GetChartPoint(IChartPointData cpData);
-    //IDictionary<int, IChartPoint> GetOrCreateFileChartPoints(string fname);
   }
 
   public interface IChartPointsTagger

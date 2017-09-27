@@ -4,19 +4,12 @@
 // </copyright>
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Runtime.InteropServices;
 using EnvDTE;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.Win32;
 
 namespace ChartPoints
 {
@@ -27,13 +20,14 @@ namespace ChartPoints
     //rest of the code
     public int OnAfterCloseSolution(object pUnkReserved)
     {
-      //throw new NotImplementedException();
       return VSConstants.S_OK;
     }
 
     public int OnAfterLoadProject(IVsHierarchy pStubHierarchy, IVsHierarchy pRealHierarchy)
     {
-      //throw new NotImplementedException();
+      object propItemObj = null;
+      pStubHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
+      pRealHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
       //foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
       //{
       //  bool ret = false;
@@ -43,6 +37,7 @@ namespace ChartPoints
       return VSConstants.S_OK;
     }
 
+    // Somethimes it's not called...
     public int OnAfterOpenProject(IVsHierarchy pHierarchy, int fAdded)
     {
       object propItemObj = null;
@@ -85,6 +80,14 @@ namespace ChartPoints
       string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
       if (activeConfig.Contains(" [ChartPoints]"))
         ChartPointsViewTWCommand.Instance.Enable(true);
+      foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+      {
+        if (proj.Name != "Miscellaneous Files")
+        {
+          Globals.orchestrator.LoadProjChartPoints(proj);
+        }
+      }
+
       return VSConstants.S_OK;
     }
 
@@ -115,13 +118,11 @@ namespace ChartPoints
 
     public int OnBeforeCloseSolution(object pUnkReserved)
     {
-      //throw new NotImplementedException();
       return VSConstants.S_OK;
     }
 
     public int OnBeforeUnloadProject(IVsHierarchy pRealHierarchy, IVsHierarchy pStubHierarchy)
     {
-      //throw new NotImplementedException();
       return VSConstants.S_OK;
     }
 
@@ -169,13 +170,11 @@ namespace ChartPoints
 
     public int OnQueryCloseSolution(object pUnkReserved, ref int pfCancel)
     {
-      //throw new NotImplementedException();
       return VSConstants.S_OK;
     }
 
     public int OnQueryUnloadProject(IVsHierarchy pRealHierarchy, ref int pfCancel)
     {
-      //throw new NotImplementedException();
       return VSConstants.S_OK;
     }
   }
@@ -236,6 +235,8 @@ namespace ChartPoints
 
     private IVsSolutionBuildManager3 buildManager3;
 
+    //public static IComponentModel componentModel;
+
     /// <summary>
     /// ChartPointsPackage GUID string.
     /// </summary>
@@ -276,7 +277,19 @@ namespace ChartPoints
       ChartPntToggleCmd.Initialize(this);
       ChartPointsViewTWCommand.Initialize(this);
       Globals.cpTracer = ChartPointsViewTWCommand.Instance;
+      //componentModel = (IComponentModel)this.GetService(typeof(SComponentModel));
+      //Globals.dte.Events.WindowEvents.WindowActivated += OnWindowActivated;
     }
+
+    //private void OnWindowActivated(Window GotFocus, Window LostFocus)
+    //{
+    //  var textManager = (IVsTextManager)this.GetService(typeof(SVsTextManager));
+    //  var componentModel = (IComponentModel)this.GetService(typeof(SComponentModel));
+    //  var editor = componentModel.GetService<IVsEditorAdaptersFactoryService>();
+    //  IVsTextView textViewCurrent = null;
+    //  textManager.GetActiveView(1, null, out textViewCurrent);
+    //  IWpfTextView vpfTextView = editor.GetWpfTextView(textViewCurrent);
+    //}
 
     public static void StartEvents(DTE dte)
     {

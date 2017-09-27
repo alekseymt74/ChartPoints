@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using EnvDTE;
-using Microsoft.VisualStudio.VCCodeModel;
+﻿using System.Collections.Generic;
+using CP.Code;
 
 namespace ChartPoints
 {
@@ -21,74 +16,92 @@ namespace ChartPoints
 
   public interface IChartPointData
   {
-    //string fileName { get; }
-    //string fileFullName { get; }
-    //int lineNum { get; }
-    //int linePos { get; }
     bool enabled { get; }
-    string varName { get; }
-    string className { get; }
+    string name { get; }
+    string uniqueName { get; }
+    ETargetPointStatus status { get; }
+    ICPLineData lineData { get; }
+  }
+
+  public interface IData<TData>
+  {
+    TData data { get; }
   }
 
   /// <summary>
   /// Interface for chartpoint object
   /// </summary>
-  public interface IChartPoint
+  public interface IChartPoint : IData<IChartPointData>
   {
-    ETargetPointStatus status { get; }
-    /// <summary>
-    /// Tries to toggle chartpoint. If changed from initial state (Available) -> adds it to IChartPointsProcessor container
-    /// </summary>
-    /// <returns>result of the operation (see ChartPoints::ETargetPointStatus)</returns>
-    ETargetPointStatus Toggle();
-    /// <summary>
-    /// Tries to remove chartpoint. If changed from state (SwitchedOn / SwitchedOff) -> removes it from IChartPointsProcessor container
-    /// </summary>
-    /// <returns>result of the operation (see ChartPoints::ETargetPointStatus)</returns>
-    ETargetPointStatus Remove();
+    CPTraceVar CalcInjectionPoints(CPClassLayout cpInjPoints, string className, out bool needDeclare);
 
-    void CalcInjectionPoints(/*out */CPClassLayout cpInjPoints, string fname, int _lineNum, int _linePos);
-    /// <summary>
-    /// Cpp class variable
-    /// </summary>
-    //VCCodeVariable var { get; }
-    IChartPointData data { get; }
+    bool ValidatePosition(int lineNum, int linePos);
   }
 
-  public interface ILineChartPoints
+  public interface ITextPosition
   {
     int lineNum { get; }
     int linePos { get; }
-    ISet<IChartPoint> chartPoints { get; }
-    IChartPoint GetChartPoint(string varName);
-    bool AddChartPoint(string varName, VCCodeClass ownerClass, out IChartPoint chartPnt);
-    bool SyncChartPoints(string fname, ISet<string> cpVarNames, VCCodeClass className);
+    void Move(IChartPoint cp, int _lineNum, int _linePos);
   }
 
-  public interface IFileChartPoints
+  public interface ICPLineData
+  {
+    ITextPosition pos { get; }
+    ICPFileData fileData { get; }
+  }
+
+  public interface ILineChartPoints : IData<ICPLineData>
+  {
+    ICPEvent<CPLineEvArgs> addCPEvent { get; }
+    ICPEvent<CPLineEvArgs> remCPEvent { get; }
+    ISet<IChartPoint> chartPoints { get; }
+    int Count { get; }
+    IChartPoint GetChartPoint(string varName);
+    bool AddChartPoint(string varName, out IChartPoint chartPnt);
+    bool AddChartPoint(IChartPoint chartPnt);
+    bool AddChartPoint(CP.Code.IClassVarElement codeElem, out IChartPoint chartPnt, bool checkExistance = true);
+    bool SyncChartPoint(ICheckElem checkElem);//, IClassElement ownerClass);
+    bool ValidatePosition(int linesAdd);
+    void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model);
+  }
+
+  public interface ICPFileData
   {
     string fileName { get; }
     string fileFullName { get; }
+    ICPProjectData projData { get; }
+    void Move(ILineChartPoints lcps, IChartPoint cp, int _lineNum, int _linePos);
+  }
+
+  public interface IFileChartPoints : IData<ICPFileData>
+  {
+    ICPEvent<CPFileEvArgs> addCPLineEvent { get; }
+    ICPEvent<CPFileEvArgs> remCPLineEvent { get; }
     ISet<ILineChartPoints> linePoints { get; }
+    int Count { get; }
     ILineChartPoints GetLineChartPoints(int lineNum);
     ILineChartPoints AddLineChartPoints(int lineNum, int linePos);
-    //bool AddLineChartPoints(ILineChartPoints linePnts);
+    bool ValidatePosition(int lineNum, int linesAdd);
+    void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model);
   }
 
-  public interface IProjectChartPoints
+  public interface ICPProjectData
   {
     string projName { get; }
-    ISet<IFileChartPoints> filePoints { get; }
-    IFileChartPoints GetFileChartPoints(string fname);
-    ILineChartPoints GetFileLineChartPoints(string fname, int lineNum);
-    IFileChartPoints AddFileChartPoints(string fileName, string fileFullName);
   }
 
-  public interface ICheckPoint
+  public interface IProjectChartPoints : IData<ICPProjectData>
   {
-    //bool AddChartPoint(string varName);
-    bool SyncChartPoints(ISet<string> cpVarNames);
-    void GetAvailableVars(out List<Tuple<string, string, bool>> _availableVars);
+    ICPEvent<CPProjEvArgs> addCPFileEvent { get; }
+    ICPEvent<CPProjEvArgs> remCPFileEvent { get; }
+    ISet<IFileChartPoints> filePoints { get; }
+    int Count { get; }
+    IFileChartPoints GetFileChartPoints(string fname);
+    ILineChartPoints GetFileLineChartPoints(string fname, int lineNum);
+    IFileChartPoints AddFileChartPoints(string fileName);
+    ICheckCPPoint CheckCursorPos();
+    void CalcInjectionPoints(CPClassLayout cpInjPoints);
   }
 
 }

@@ -38,7 +38,7 @@ namespace ChartPoints
   [Export(typeof(IGlyphFactoryProvider))]
   [Name("ChartGlyph")]
   [Order(After = "VsTextMarker")]
-  [ContentType("code")]
+  [ContentType("C/C++")]
   [TagType(typeof(ChartPointTag))]
   internal sealed class ChartPointFactoryProvider : IGlyphFactoryProvider
   {

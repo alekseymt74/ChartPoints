@@ -4,6 +4,7 @@
 // </copyright>
 //------------------------------------------------------------------------------
 
+using System;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 
@@ -24,45 +25,68 @@ namespace ChartPoints
     public ChartPointsViewTWControl()
     {
       this.InitializeComponent();
-      // Все графики находятся в пределах области построения ChartArea, создадим ее
       chart.ChartAreas.Add(new ChartArea("Default"));
-
-      //// Добавим линию, и назначим ее в ранее созданную область "Default"
-      //chart.Series.Add(new Series("Series1"));
-      //chart.Series["Series1"].ChartArea = "Default";
-      //chart.Series["Series1"].ChartType = SeriesChartType.Line;
-
-      //// добавим данные линии
-      //string[] axisXData = new string[] { "a", "b", "c" };
-      //double[] axisYData = new double[] { 0.1, 1.5, 1.9 };
-      //chart.Series["Series1"].Points.DataBindXY(axisXData, axisYData);
     }
 
     public void Clear()
     {
-      chart.Invoke((MethodInvoker) (() =>
+      if (chart.InvokeRequired)
       {
+        if (chart.IsHandleCreated)
+        {
+          chart.Invoke((MethodInvoker) (() =>
+          {
+            chart.Series.Clear();
+          }));
+        }
+        else
+          Console.WriteLine("");
+      }
+      else
         chart.Series.Clear();
-      }));
     }
 
     public void UpdateView()
     {
-      chart.Invoke((MethodInvoker)(() =>
+      if (chart.InvokeRequired)
       {
+        if (chart.IsHandleCreated)
+        {
+          chart.BeginInvoke((MethodInvoker)(() =>
+          {
+            chart.DataBind();
+          }));
+        }
+        else
+          Console.WriteLine("");
+      }
+      else
         chart.DataBind();
-      }));
     }
 
     public ICPTracerDelegate CreateTracer(string varName)
     {
       Series ser = null;
-      chart.Invoke((MethodInvoker)(() =>
+      if (chart.InvokeRequired)
+      {
+        if (chart.IsHandleCreated)
+        {
+          chart.Invoke((MethodInvoker) (() =>
+          {
+            ser = chart.Series.Add(varName);
+            ser.ChartType = SeriesChartType.Line; //StepLine;
+            ser.LegendText = varName;
+          }));
+        }
+        else
+          Console.WriteLine("");
+      }
+      else
       {
         ser = chart.Series.Add(varName);
-        ser.ChartType = SeriesChartType.Line;//StepLine;
+        ser.ChartType = SeriesChartType.Line; //StepLine;
         ser.LegendText = varName;
-      }));
+      }
       ICPTraceConsumer cons = new CPTraceConsumer(chart, ser/*chart.Series[0]*/);//, varName);
       ICPTracerDelegate cpDelegate = new CPTracerDelegate(cons);
 

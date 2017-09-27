@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ChartPoints;
-using EnvDTE;
+﻿using EnvDTE;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.VCCodeModel;
 
 namespace ChartPoints
 {
+
+  public interface ITextChangedListener
+  {
+    //void TrackCurPoint();
+  }
+
   /// <summary>
   /// Global elements. Initialized by ChartPointsPackage
   /// </summary>
@@ -23,6 +22,9 @@ namespace ChartPoints
     public static IChartPointTagUpdater taggerUpdater { get; set; }
     public static IVsOutputWindow outputWindow { get; set; }
     public static ICPTracer cpTracer { get; set; }
+    public static ITextChangedListener textChangedListener { get; set; }
+    public static ICPTrackManager cpTrackManager { get; set; }
+
   }
 
   /// <summary>
@@ -56,12 +58,9 @@ namespace ChartPoints
     /// </summary>
     /// <returns>IChartPointsProcessor</returns>
     public virtual ICPOrchestrator CreateOrchestrator() { return null; }
-    public virtual IProjectChartPoints CreateProjectChartPoint(string _projName, Func<IProjectChartPoints, bool> _addFunc, Func<IProjectChartPoints, bool> _remFunc) { return null; }
-    public virtual IFileChartPoints CreateFileChartPoint(string _fileName, string _fileFullName, Func<IFileChartPoints, bool> _addFunc, Func<IFileChartPoints, bool> _remFunc) { return null; }
-    public virtual ILineChartPoints CreateLineChartPoint(int _lineNum, int _linePos, Func<ILineChartPoints, bool> _addFunc, Func<ILineChartPoints, bool> _remFunc) { return null; }
-    //public virtual IChartPoint CreateChartPoint(TextPoint caretPnt, TextPoint _startFuncPnt, TextPoint _endFuncPnt
-    //      , VCCodeClass _targetClassElem, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc) { return null; }
-    //public virtual IChartPoint CreateChartPoint(IChartPointData _data, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc) { return null; }
-    public virtual IChartPoint CreateChartPoint(string varName, VCCodeClass ownerClass, Func<IChartPoint, bool> _addFunc, Func<IChartPoint, bool> _remFunc) { return null; }
+    public virtual IProjectChartPoints CreateProjectChartPoint(string _projName) { return null; }
+    public virtual IFileChartPoints CreateFileChartPoint(CP.Code.IFileElem _fileElem, ICPProjectData _projData) { return null; }
+    public virtual ILineChartPoints CreateLineChartPoint(CP.Code.IClassElement _classElem, int _lineNum, int _linePos, ICPFileData _fileData) { return null; }
+    public virtual IChartPoint CreateChartPoint(CP.Code.IClassVarElement codeElem, ICPLineData _lineData) { return null; }
   }
 }

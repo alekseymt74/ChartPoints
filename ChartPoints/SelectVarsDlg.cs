@@ -7,43 +7,38 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using CP.Code;
 
 namespace ChartPoints
 {
   public partial class SelectVarsDlg : Form
   {
-    private ISet<string> selected_vars;
-    public SelectVarsDlg(ref List<Tuple<string, string, bool>> classVars)
+    public SelectVarsDlg(ICheckCPPoint checkPnt)
     {
       InitializeComponent();
-      foreach(var classVar in classVars)
-        AddVariable(classVar.Item1, classVar.Item2, classVar.Item3);
+      foreach (ICheckElem classVar in checkPnt.elems)
+        AddVariable(classVar);
     }
 
-    public void AddVariable(string name, string type, bool exists)
+    public void AddVariable(ICheckElem classVar)
     {
-      //DataGridViewRow row = new DataGridViewRow();
-      vars_dgv.Rows.Add();//row);
+      vars_dgv.Rows.Add();
       DataGridViewRow row = vars_dgv.Rows[vars_dgv.Rows.Count - 1];
-      row.Cells[0].Value = exists;
-      row.Cells[1].Value = name;
-      row.Cells[2].Value = type;
+      row.Tag = classVar;
+      row.Cells[0].Value = classVar.exists;
+      row.Cells[1].Value = classVar.var.name;
+      row.Cells[2].Value = classVar.var.type;
     }
 
     private void ok_btn_Click(object sender, EventArgs e)
     {
-      selected_vars = new SortedSet<string>();
       foreach (DataGridViewRow row in vars_dgv.Rows)
       {
-        if ((bool)row.Cells[0].Value == true)
-          selected_vars.Add( (string)row.Cells[1].Value);
+        ICheckElem _elem = (ICheckElem) row.Tag;
+        _elem.Toggle((bool)row.Cells[0].Value);
       }
       this.Close();
     }
 
-    public ISet<string> GetSelectedVars()
-    {
-      return selected_vars;
-    }
   }
 }

@@ -52,11 +52,11 @@ namespace ChartPointsInstrTests
       {
         IProjectChartPoints pPnts = null;
         Globals.processor.AddProjectChartPoints(cpData.projName, out pPnts);
-        IFileChartPoints fPnts = pPnts.AddFileChartPoints(cpData.fileName, "!!!!!!!!!!!!");
+        IFileChartPoints fPnts = pPnts.AddFileChartPoints(cpData.fileName);//, "!!!!!!!!!!!!");
           //Path.GetDirectoryName(projConfFile) + "\\" + cpFileElem.Include);
         ILineChartPoints lPnts = fPnts.AddLineChartPoints(cpData.lineNum, cpData.linePos);
         IChartPoint chartPnt = null;
-        lPnts.AddChartPoint(cpData.varName, null /*"!!!!!!!"*/, out chartPnt); //!!!!!!!!!!!!!!!!
+        lPnts.AddChartPoint(cpData.varName/*, null*/ /*"!!!!!!!"*/, out chartPnt); //!!!!!!!!!!!!!!!!
         CheckChartPointData(cpData.fileName, cpData.lineNum, cpData);
         cpOrchestrator = new CPOrchestrator();
         msBuildProject = cpOrchestrator.SaveProjChartPoints(testProjFName);

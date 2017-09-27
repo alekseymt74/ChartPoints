@@ -76,6 +76,7 @@
     <Compile Include="SelectVarsDlg.Designer.cs">
       <DependentUpon>SelectVarsDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="TextChangedListener.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
@@ -105,10 +106,12 @@
     <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.CoreUtility.14.3.25407\lib\net45\Microsoft.VisualStudio.CoreUtility.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Editor, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Imaging, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.Imaging.14.3.25407\lib\net45\Microsoft.VisualStudio.Imaging.dll</HintPath>
       <Private>True</Private>
@@ -228,7 +231,7 @@
       <SubType>Designer</SubType>
     </VSCTCompile>
     <Content Include="ChartPntGlyph.png" />
-    <Content Include="Resources\ChartPntGlyph.png" />
+    <EmbeddedResource Include="Resources\ChartPntGlyph.png" />
     <Content Include="Resources\ChartPntToggleCmd.png" />
     <Content Include="Resources\ChartPointsPackage.ico" />
   </ItemGroup>
