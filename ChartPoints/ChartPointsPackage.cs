@@ -186,13 +186,19 @@ namespace ChartPoints
       string newConfName;
       pNewActiveSlnCfg.get_DisplayName(out newConfName);
       if (newConfName.Contains(" [ChartPoints]"))
+      {
         ChartPointsViewTWCommand.Instance.Enable(true);
+        CPListTWCommand.Instance.Enable(true);
+      }
       else
       {
         string prevConfName;
         pOldActiveSlnCfg.get_DisplayName(out prevConfName);
         if (prevConfName.Contains(" [ChartPoints]"))
+        {
           ChartPointsViewTWCommand.Instance.Enable(false);
+          CPListTWCommand.Instance.Enable(false);
+        }
       }
 
       return VSConstants.S_OK;
@@ -229,13 +235,13 @@ namespace ChartPoints
   [ProvideMenuResource("Menus.ctmenu", 1)]
   [ProvideToolWindow(typeof(ChartPointsViewTW))]
   [ProvideToolWindowVisibility(typeof(ChartPointsViewTW), VSConstants.UICONTEXT.SolutionExists_string)]
+  [ProvideToolWindow(typeof(CPListTW))]
+  [ProvideToolWindowVisibility(typeof(CPListTW), VSConstants.UICONTEXT.SolutionExists_string)]
   public sealed class ChartPointsPackage : Package
   {
     private ChartPntFactory factory;
 
     private IVsSolutionBuildManager3 buildManager3;
-
-    //public static IComponentModel componentModel;
 
     /// <summary>
     /// ChartPointsPackage GUID string.
@@ -277,19 +283,8 @@ namespace ChartPoints
       ChartPntToggleCmd.Initialize(this);
       ChartPointsViewTWCommand.Initialize(this);
       Globals.cpTracer = ChartPointsViewTWCommand.Instance;
-      //componentModel = (IComponentModel)this.GetService(typeof(SComponentModel));
-      //Globals.dte.Events.WindowEvents.WindowActivated += OnWindowActivated;
+      CPListTWCommand.Initialize(this);
     }
-
-    //private void OnWindowActivated(Window GotFocus, Window LostFocus)
-    //{
-    //  var textManager = (IVsTextManager)this.GetService(typeof(SVsTextManager));
-    //  var componentModel = (IComponentModel)this.GetService(typeof(SComponentModel));
-    //  var editor = componentModel.GetService<IVsEditorAdaptersFactoryService>();
-    //  IVsTextView textViewCurrent = null;
-    //  textManager.GetActiveView(1, null, out textViewCurrent);
-    //  IWpfTextView vpfTextView = editor.GetWpfTextView(textViewCurrent);
-    //}
 
     public static void StartEvents(DTE dte)
     {
