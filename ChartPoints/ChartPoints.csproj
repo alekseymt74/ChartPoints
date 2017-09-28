@@ -68,6 +68,11 @@
     <Compile Include="ChartPointsViewTWControl.xaml.cs">
       <DependentUpon>ChartPointsViewTWControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CPListTW.cs" />
+    <Compile Include="CPListTWCommand.cs" />
+    <Compile Include="CPListTWControl.xaml.cs">
+      <DependentUpon>CPListTWControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="CPTraceConsumer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SelectVarsDlg.cs">
@@ -226,6 +231,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\ChartPointsViewTWCommand.png" />
+    <Content Include="Resources\CPListTWCommand.png" />
     <VSCTCompile Include="ChartPointsPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
@@ -251,6 +257,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ChartPointsViewTWControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CPListTWControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
