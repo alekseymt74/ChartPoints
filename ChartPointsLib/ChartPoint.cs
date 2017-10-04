@@ -16,6 +16,7 @@ namespace ChartPoints
     [DataMember]
     public string name { get; set; }
     public string uniqueName { get; set; }
+    public string type { get; set; }
     public ETargetPointStatus status { get; set; }
     public ICPLineData lineData { get; set; }
     public ChartPointData() { }
@@ -24,6 +25,7 @@ namespace ChartPoints
       enabled = _data.enabled;
       name = _data.name;
       uniqueName = _data.uniqueName;
+      type = _data.type;
     }
   }
 
@@ -39,6 +41,7 @@ namespace ChartPoints
       //set { theData = (TDataImpl)value; }
     }
   }
+
   /// <summary>
   /// Implementation of IChartPoint interface
   /// </summary>
@@ -58,6 +61,7 @@ namespace ChartPoints
         status = ETargetPointStatus.SwitchedOn,
         name = codeElem.name,
         uniqueName = codeElem.uniqueName/*varName*/,
+        type = codeElem.type,
         lineData = _lineData
       };
     }
@@ -220,7 +224,7 @@ namespace ChartPoints
       return false;
     }
 
-    protected bool RemoveChartPoint(IChartPoint chartPnt)
+    public bool RemoveChartPoint(IChartPoint chartPnt)
     {
       bool ret = chartPoints.Remove(chartPnt);
       if (ret)

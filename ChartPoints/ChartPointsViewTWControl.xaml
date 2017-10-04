@@ -4,16 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:charting="clr-namespace:System.Windows.Forms.DataVisualization.Charting;assembly=System.Windows.Forms.DataVisualization"
-             Background="{DynamicResource VsBrush.Window}"
-             Foreground="{DynamicResource VsBrush.WindowText}"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300"
-             Name="MyToolWindow">
+             Name="CPTraceView">
   <Grid>
-    <StackPanel Orientation="Vertical">
-      <WindowsFormsHost>
+    <!--<StackPanel Orientation="Vertical">-->
+      <WindowsFormsHost ClipToBounds="True">
         <charting:Chart x:Name="chart" />
       </WindowsFormsHost>
-    </StackPanel>
+    <!--</StackPanel>-->
   </Grid>
 </UserControl>

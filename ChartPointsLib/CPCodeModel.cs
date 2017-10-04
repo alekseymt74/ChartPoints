@@ -362,9 +362,9 @@ namespace CP
           vcCodeModel = (VCCodeModel)proj.CodeModel;
         evs2 = _evs2;
         cmEvs = evs2.CodeModelEvents;
-        cmEvs.ElementChanged += OnElementChanged;
-        cmEvs.ElementDeleted += OnElementDeleted;
-        cmEvs.ElementAdded += OnElementAdded;
+        //cmEvs.ElementChanged += OnElementChanged;
+        //cmEvs.ElementDeleted += OnElementDeleted;
+        //cmEvs.ElementAdded += OnElementAdded;
       }
 
       public void OnElementAdded(CodeElement element)

@@ -9,6 +9,7 @@ namespace ChartPoints
   using System;
   using System.Runtime.InteropServices;
   using Microsoft.VisualStudio.Shell;
+  using System.Windows.Forms;
 
   /// <summary>
   /// This class implements the tool window exposed by this package and hosts a user control.
@@ -24,6 +25,7 @@ namespace ChartPoints
   [Guid("4b5a33a1-7bd0-4c99-980d-32360eb36779")]
   public class CPListTW : ToolWindowPane
   {
+    private CPListTWCtrl control;
     /// <summary>
     /// Initializes a new instance of the <see cref="CPListTW"/> class.
     /// </summary>
@@ -34,7 +36,15 @@ namespace ChartPoints
       // This is the user control hosted by the tool window; Note that, even if this class implements IDisposable,
       // we are not calling Dispose on this object. This is because ToolWindowPane calls Dispose on
       // the object returned by the Content property.
-      this.Content = new CPListTWControl();
+      //this.Content = new CPListTWControl();
+      control = new CPListTWCtrl();
+    }
+    override public IWin32Window Window
+    {
+      get
+      {
+        return (IWin32Window)control;
+      }
     }
   }
 }

@@ -6,12 +6,16 @@
   /// </summary>
   public class ChartPntFactoryImpl : ChartPntFactory
   {
+    ConstructEvents constrEvents = new ConstructEvents();
+    private CPEventProvider<IConstructEvents> constrEvsProv;
     public ChartPntFactoryImpl()
     {
       // check and set singleton factory instance
       // helps to hide the injection of another factory object, eg. factory stub in tests
       if (ChartPntFactory.factory == null)
         ChartPntFactory.factory = this;
+      constrEvsProv = new CPEventProvider<IConstructEvents>( constrEvents );
+      Globals.cpEventsService.RegisterConstructEventProvider( constrEvsProv );
       Globals.cpTrackManager = new CPTrackManager();
     }
 
@@ -41,6 +45,7 @@
     {
       ILineChartPoints lcps = new LineChartPoints(_classElem, _lineNum, _linePos, _fileData);
       //Globals.cpTrackManager.Register(lcps);
+      constrEvents.createdLineCPsEvent.Fire( new ConstructEventArgs<ILineChartPoints>( lcps ) );
 
       return lcps;
     }
@@ -49,6 +54,7 @@
     {
       IChartPoint cp = new ChartPoint(codeElem, _lineData);
       Globals.cpTrackManager.Register(cp);
+      constrEvents.createdCPEvent.Fire(new ConstructEventArgs<IChartPoint>(cp));
 
       return cp;
     }

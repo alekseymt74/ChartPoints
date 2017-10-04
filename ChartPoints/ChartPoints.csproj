@@ -70,8 +70,11 @@
     </Compile>
     <Compile Include="CPListTW.cs" />
     <Compile Include="CPListTWCommand.cs" />
-    <Compile Include="CPListTWControl.xaml.cs">
-      <DependentUpon>CPListTWControl.xaml</DependentUpon>
+    <Compile Include="CPListTWCtrl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CPListTWCtrl.Designer.cs">
+      <DependentUpon>CPListTWCtrl.cs</DependentUpon>
     </Compile>
     <Compile Include="CPTraceConsumer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -236,8 +239,13 @@
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
-    <Content Include="ChartPntGlyph.png" />
-    <EmbeddedResource Include="Resources\ChartPntGlyph.png" />
+    <EmbeddedResource Include="CPListTWCtrl.resx">
+      <DependentUpon>CPListTWCtrl.cs</DependentUpon>
+    </EmbeddedResource>
+    <Content Include="Resources\ChartPntGlyph.png">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\ChartPntToggleCmd.png" />
     <Content Include="Resources\ChartPointsPackage.ico" />
   </ItemGroup>
@@ -257,10 +265,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ChartPointsViewTWControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="CPListTWControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
