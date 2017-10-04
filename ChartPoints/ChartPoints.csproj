@@ -242,10 +242,9 @@
     <EmbeddedResource Include="CPListTWCtrl.resx">
       <DependentUpon>CPListTWCtrl.cs</DependentUpon>
     </EmbeddedResource>
-    <Content Include="Resources\ChartPntGlyph.png">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Resource Include="Resources\ChartPntGlyph.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Content Include="Resources\ChartPntToggleCmd.png" />
     <Content Include="Resources\ChartPointsPackage.ico" />
   </ItemGroup>

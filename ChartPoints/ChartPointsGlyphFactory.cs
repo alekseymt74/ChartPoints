@@ -22,6 +22,7 @@ namespace ChartPoints
       {
         return null;
       }
+      ChartPointTag theTag = tag as ChartPointTag;
 
       //System.Windows.Shapes.Ellipse ellipse = new Ellipse();
       //ellipse.Fill = Brushes.LightBlue;

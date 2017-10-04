@@ -23,6 +23,7 @@ namespace ChartPoints
     public ChartGlyph()
     {
       InitializeComponent();
+      object obj = this.Content;
     }
   }
 }
