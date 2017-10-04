@@ -14,9 +14,11 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace ChartPoints
 {
-  internal class ChartPointTag : IGlyphTag
+  /*internal*/public class ChartPointTag : IGlyphTag
   {
-
+    public int i = 33;
+    public ChartPointTag()
+    { }
   }
   public class ChartPointsTagger : ITagger<ChartPointTag>, IChartPointsTagger
   {
