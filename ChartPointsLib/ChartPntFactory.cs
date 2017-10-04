@@ -24,6 +24,7 @@ namespace ChartPoints
     public static ICPTracer cpTracer { get; set; }
     public static ITextChangedListener textChangedListener { get; set; }
     public static ICPTrackManager cpTrackManager { get; set; }
+    public static ICPEventService cpEventsService { get; set; }
 
   }
 

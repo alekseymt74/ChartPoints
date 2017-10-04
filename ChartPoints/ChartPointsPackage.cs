@@ -265,6 +265,7 @@ namespace ChartPoints
     {
       base.Initialize();
       Globals.dte = (DTE)GetService(typeof(DTE));
+      Globals.cpEventsService = new CPEventService();
       factory = new ChartPntFactoryImpl();
       Globals.processor = factory.CreateProcessor();
       Globals.orchestrator = factory.CreateOrchestrator();

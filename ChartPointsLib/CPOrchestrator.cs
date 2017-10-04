@@ -200,8 +200,8 @@ namespace ChartPoints
                 xmlTxtWriter.WriteElementString("LinePos", Convert.ToString((Int32) lPnts.data.pos.linePos));//chartPnt.data.linePos));
                 xmlTxtWriter.WriteElementString("Enabled", chartPnt.data.enabled ? "true" : "false");
               }
+              xmlTxtWriter.WriteEndElement();
             }
-            xmlTxtWriter.WriteEndElement();
           }
           //xmlTxtWriter.WriteEndElement();
           cpsFileItem.AddMetadata("ChartPoints", strWriter.ToString());

@@ -6,46 +6,105 @@ using System.Threading.Tasks;
 
 namespace ChartPoints
 {
-  //#####################
-  public delegate void OnCPEvent<T>(T args);
-  public interface ICPEvent<T>
-  {
-    event OnCPEvent<T> On;
-    void Fire(T args);
-  }
 
   public class CPEvent<T> : ICPEvent<T>
   {
     private OnCPEvent<T> _on;
+    private List<T> history = new List<T>();
     public event OnCPEvent<T> On
     {
       add
       {
-        if (_on == null)
-          _on = new OnCPEvent<T>(value);
+        if (value == null)
+          return;
+        lock (history)
+        {
+          if (history.Count > 0)
+          {
+            foreach (T evData in history)
+              value.Invoke(evData);
+          }
+        }
+        if( _on == null )
+          _on = new OnCPEvent<T>( value );
         else
           _on += value;
       }
       remove
       {
-        if (_on != null)
+        if( _on != null )
           _on -= value;
       }
     }
 
-    public void Fire(T args)
+    public void Fire( T args )
     {
-      _on?.Invoke(args);
+      if (_on == null)
+      {
+        lock (history)
+        {
+          history.Add(args);
+        }
+      }
+      else
+        _on.Invoke( args );
+    }
+  }
+
+  public class CPEventProvider<T> : ICPEventProvider<T>
+  {
+    private T theProv;
+    public T prov { get { return theProv; } }
+
+    public CPEventProvider(T _prov)
+    {
+      theProv = _prov;
+    }
+  }
+
+
+  public class CPEventService : ICPEventService
+  {
+    private ICPEventProvider<IConstructEvents> evConstrProv;
+    public void RegisterConstructEventProvider(ICPEventProvider<IConstructEvents> evProv)
+    {
+      evConstrProv = evProv;
+    }
+    public bool GetConstructEventProvider(out ICPEventProvider<IConstructEvents> evProv)
+    {
+      evProv = evConstrProv;
+      if( evConstrProv != null)
+        return true;
+      return false;
+    }
+  }
+
+  public class ConstructEvents : IConstructEvents
+  {
+    public ICPEvent<IConstructEventArgs<IChartPoint>> createdCPEvent { get; } = new CPEvent<IConstructEventArgs<IChartPoint>>();
+    public ICPEvent<IConstructEventArgs<ILineChartPoints>> createdLineCPsEvent { get; } = new CPEvent<IConstructEventArgs<ILineChartPoints>>();
+    public ICPEvent<IConstructEventArgs<IFileChartPoints>> createdFileCPsEvent { get; } = new CPEvent<IConstructEventArgs<IFileChartPoints>>();
+    public ICPEvent<IConstructEventArgs<IProjectChartPoints>> createdProjCPsEvent { get; } = new CPEvent<IConstructEventArgs<IProjectChartPoints>>();
+  }
+
+  public class ConstructEventArgs<T> : IConstructEventArgs<T>
+  {
+    public T obj { get; }
+
+    public ConstructEventArgs(T _obj)
+    {
+      obj = _obj;
     }
   }
 
   //#####################
+
   public class CPLineEvArgs
   {
     public ILineChartPoints lineCPs { get; }
     public IChartPoint cp { get; }
 
-    public CPLineEvArgs(ILineChartPoints _lineCPs, IChartPoint _cp)
+    public CPLineEvArgs( ILineChartPoints _lineCPs, IChartPoint _cp )
     {
       lineCPs = _lineCPs;
       cp = _cp;
@@ -57,7 +116,7 @@ namespace ChartPoints
     public IFileChartPoints fileCPs { get; }
     public ILineChartPoints lineCPs { get; }
 
-    public CPFileEvArgs(IFileChartPoints _fileCPs, ILineChartPoints _lineCPs)
+    public CPFileEvArgs( IFileChartPoints _fileCPs, ILineChartPoints _lineCPs )
     {
       fileCPs = _fileCPs;
       lineCPs = _lineCPs;
@@ -69,7 +128,7 @@ namespace ChartPoints
     public IProjectChartPoints projCPs { get; }
     public IFileChartPoints fileCPs { get; }
 
-    public CPProjEvArgs(IProjectChartPoints _projCPs, IFileChartPoints _fileCPs)
+    public CPProjEvArgs( IProjectChartPoints _projCPs, IFileChartPoints _fileCPs )
     {
       projCPs = _projCPs;
       fileCPs = _fileCPs;
@@ -80,7 +139,7 @@ namespace ChartPoints
   public class CPEntTrackerArgs
   {
     public ICPEntTracker entTracker { get; }
-    public CPEntTrackerArgs(ICPEntTracker _entTracker)
+    public CPEntTrackerArgs( ICPEntTracker _entTracker )
     {
       entTracker = _entTracker;
     }
@@ -89,7 +148,7 @@ namespace ChartPoints
   public class FileTrackerArgs
   {
     public IFileTracker fileTracker { get; }
-    public FileTrackerArgs(IFileTracker _fileTracker)
+    public FileTrackerArgs( IFileTracker _fileTracker )
     {
       fileTracker = _fileTracker;
     }
