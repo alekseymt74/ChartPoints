@@ -63,8 +63,8 @@ namespace ChartPoints
 
   public interface ILineChartPoints : IData<ICPLineData>
   {
-    ICPEvent<CPLineEvArgs> addCPEvent { get; }
-    ICPEvent<CPLineEvArgs> remCPEvent { get; }
+    ICPEvent<CPLineEvArgs> addCPEvent { get; set; }
+    ICPEvent<CPLineEvArgs> remCPEvent { get; set; }
     ISet<IChartPoint> chartPoints { get; }
     int Count { get; }
     IChartPoint GetChartPoint(string varName);
@@ -87,8 +87,8 @@ namespace ChartPoints
 
   public interface IFileChartPoints : IData<ICPFileData>
   {
-    ICPEvent<CPFileEvArgs> addCPLineEvent { get; }
-    ICPEvent<CPFileEvArgs> remCPLineEvent { get; }
+    ICPEvent<CPFileEvArgs> addCPLineEvent { get; set; }
+    ICPEvent<CPFileEvArgs> remCPLineEvent { get; set; }
     ISet<ILineChartPoints> linePoints { get; }
     int Count { get; }
     ILineChartPoints GetLineChartPoints(int lineNum);
@@ -104,8 +104,8 @@ namespace ChartPoints
 
   public interface IProjectChartPoints : IData<ICPProjectData>
   {
-    ICPEvent<CPProjEvArgs> addCPFileEvent { get; }
-    ICPEvent<CPProjEvArgs> remCPFileEvent { get; }
+    ICPEvent<CPProjEvArgs> addCPFileEvent { get; set; }
+    ICPEvent<CPProjEvArgs> remCPFileEvent { get; set; }
     ISet<IFileChartPoints> filePoints { get; }
     int Count { get; }
     IFileChartPoints GetFileChartPoints(string fname);

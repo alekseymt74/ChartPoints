@@ -37,8 +37,8 @@ namespace ChartPoints
       if (pPnts == null)
       {
         pPnts = ChartPntFactory.Instance.CreateProjectChartPoint(projName);
-        pPnts.addCPFileEvent.On += AddProjectChartPoints;
-        pPnts.remCPFileEvent.On += RemoveProjectChartPoints;
+        pPnts.addCPFileEvent += AddProjectChartPoints;
+        pPnts.remCPFileEvent += RemoveProjectChartPoints;
         data.projPoints.Add(pPnts);
 
         return true;

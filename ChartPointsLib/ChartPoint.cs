@@ -53,8 +53,8 @@ namespace ChartPoints
     public ChartPoint(CP.Code.IClassVarElement _codeElem, ICPLineData _lineData)
     {
       codeElem = _codeElem;
-      codeElem.classVarChangedEvent.On += ClassVarChangedEventOn;
-      codeElem.classVarDeletedEvent.On += ClassVarDeletedEventOn;
+      codeElem.classVarChangedEvent += ClassVarChangedEventOn;
+      codeElem.classVarDeletedEvent += ClassVarDeletedEventOn;
       theData = new ChartPointData
       {
         enabled = true,
@@ -181,8 +181,8 @@ namespace ChartPoints
   public class LineChartPoints : Data<LineChartPoints, ICPLineData, CPLineData>, ILineChartPoints
   {
     private CP.Code.IClassElement codeClass;
-    public ICPEvent<CPLineEvArgs> addCPEvent { get; } = new CPEvent<CPLineEvArgs>();
-    public ICPEvent<CPLineEvArgs> remCPEvent { get; } = new CPEvent<CPLineEvArgs>();
+    public ICPEvent<CPLineEvArgs> addCPEvent { get; set; } = new CPEvent<CPLineEvArgs>();
+    public ICPEvent<CPLineEvArgs> remCPEvent { get; set; } = new CPEvent<CPLineEvArgs>();
 
     public ISet<IChartPoint> chartPoints { get; set; } =
       new SortedSet<IChartPoint>(
@@ -340,8 +340,8 @@ namespace ChartPoints
 
   public class FileChartPoints : Data<FileChartPoints, ICPFileData, CPFileData>, IFileChartPoints
   {
-    public ICPEvent<CPFileEvArgs> addCPLineEvent { get; } = new CPEvent<CPFileEvArgs>();
-    public ICPEvent<CPFileEvArgs> remCPLineEvent { get; } = new CPEvent<CPFileEvArgs>();
+    public ICPEvent<CPFileEvArgs> addCPLineEvent { get; set; } = new CPEvent<CPFileEvArgs>();
+    public ICPEvent<CPFileEvArgs> remCPLineEvent { get; set; } = new CPEvent<CPFileEvArgs>();
 
     public ISet<ILineChartPoints> linePoints { get; set; }
       =
@@ -382,7 +382,7 @@ namespace ChartPoints
       if (lPnts == null)
       {
         linePoints.Add(linePnts);
-        linePnts.remCPEvent.On += OnRemCp;
+        linePnts.remCPEvent += OnRemCp;
         addCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
 
         return true;
@@ -513,8 +513,8 @@ namespace ChartPoints
   public class ProjectChartPoints : Data<ProjectChartPoints, ICPProjectData, CPProjectData>, IProjectChartPoints
   {
     private CP.Code.IModel cpCodeModel;
-    public ICPEvent<CPProjEvArgs> addCPFileEvent { get; } = new CPEvent<CPProjEvArgs>();
-    public ICPEvent<CPProjEvArgs> remCPFileEvent { get; } = new CPEvent<CPProjEvArgs>();
+    public ICPEvent<CPProjEvArgs> addCPFileEvent { get; set; } = new CPEvent<CPProjEvArgs>();
+    public ICPEvent<CPProjEvArgs> remCPFileEvent { get; set; } = new CPEvent<CPProjEvArgs>();
     public ISet<IFileChartPoints> filePoints { get; set; } = new SortedSet<IFileChartPoints>(Comparer<IFileChartPoints>.Create((lh, rh) => (lh.data.fileName.CompareTo(rh.data.fileName))));
 
     public int Count { get { return filePoints.Count; } }
@@ -553,7 +553,7 @@ namespace ChartPoints
           return false;
       }
       filePoints.Add(filePnts);
-      filePnts.remCPLineEvent.On += OnRemLineCPs;
+      filePnts.remCPLineEvent += OnRemLineCPs;
       addCPFileEvent.Fire(new CPProjEvArgs(this, filePnts));
 
       return true;

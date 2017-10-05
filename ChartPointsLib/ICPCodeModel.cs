@@ -15,8 +15,8 @@ namespace CP
     {
       string type { get; }
       CPTraceVar CalcInjectionPoints(CPClassLayout cpClassLayout, string className, string _fname, ITextPosition pos, out bool needDeclare);
-      ICPEvent<ClassVarElemTrackerArgs> classVarChangedEvent { get; }
-      ICPEvent<ClassVarElemTrackerArgs> classVarDeletedEvent { get; }
+      ICPEvent<ClassVarElemTrackerArgs> classVarChangedEvent { get; set; }
+      ICPEvent<ClassVarElemTrackerArgs> classVarDeletedEvent { get; set; }
     }
 
     public interface IClassMethodElement : ICodeEelement

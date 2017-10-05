@@ -21,7 +21,7 @@ namespace ChartPoints
       this.list.CellMouseUp += OnCellMouseUp;
       ICPEventProvider<IConstructEvents> evConstrProv;
       if (Globals.cpEventsService.GetConstructEventProvider(out evConstrProv))
-        evConstrProv.prov.createdLineCPsEvent.On += OnCreatedLineCPsEvent;
+        evConstrProv.prov.createdLineCPsEvent += OnCreatedLineCPsEvent;
     }
 
     private void OnCellMouseUp(object sender, DataGridViewCellMouseEventArgs e)
@@ -118,8 +118,8 @@ namespace ChartPoints
 
     private void OnCreatedLineCPsEvent(IConstructEventArgs<ILineChartPoints> args)
     {
-      args.obj.addCPEvent.On += OnAddCpEvent;
-      args.obj.remCPEvent.On += OnRemCpEvent;
+      args.obj.addCPEvent += OnAddCpEvent;
+      args.obj.remCPEvent += OnRemCpEvent;
     }
 
     private void OnRemCpEvent(CPLineEvArgs args)

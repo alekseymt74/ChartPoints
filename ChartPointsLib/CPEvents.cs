@@ -9,37 +9,33 @@ namespace ChartPoints
 
   public class CPEvent<T> : ICPEvent<T>
   {
-    private OnCPEvent<T> _on;
     private List<T> history = new List<T>();
-    public event OnCPEvent<T> On
+
+    private OnCPEvent<T> _event;
+
+    protected override ICPEvent<T> Add(OnCPEvent<T> cb)
     {
-      add
+      lock (history)
       {
-        if (value == null)
-          return;
-        lock (history)
+        if (history.Count > 0)
         {
-          if (history.Count > 0)
-          {
-            foreach (T evData in history)
-              value.Invoke(evData);
-          }
+          foreach (T evData in history)
+            cb.Invoke(evData);
         }
-        if( _on == null )
-          _on = new OnCPEvent<T>( value );
-        else
-          _on += value;
       }
-      remove
-      {
-        if( _on != null )
-          _on -= value;
-      }
+      _event += cb;
+
+      return this;
     }
 
-    public void Fire( T args )
+    protected override ICPEvent<T> Sub(OnCPEvent<T> cb)
     {
-      if (_on == null)
+      _event -= cb;
+      return this;
+    }
+    public override void Fire(T args)
+    {
+      if (_event == null)
       {
         lock (history)
         {
@@ -47,8 +43,9 @@ namespace ChartPoints
         }
       }
       else
-        _on.Invoke( args );
+        _event.Invoke(args);
     }
+
   }
 
   public class CPEventProvider<T> : ICPEventProvider<T>
@@ -81,10 +78,10 @@ namespace ChartPoints
 
   public class ConstructEvents : IConstructEvents
   {
-    public ICPEvent<IConstructEventArgs<IChartPoint>> createdCPEvent { get; } = new CPEvent<IConstructEventArgs<IChartPoint>>();
-    public ICPEvent<IConstructEventArgs<ILineChartPoints>> createdLineCPsEvent { get; } = new CPEvent<IConstructEventArgs<ILineChartPoints>>();
-    public ICPEvent<IConstructEventArgs<IFileChartPoints>> createdFileCPsEvent { get; } = new CPEvent<IConstructEventArgs<IFileChartPoints>>();
-    public ICPEvent<IConstructEventArgs<IProjectChartPoints>> createdProjCPsEvent { get; } = new CPEvent<IConstructEventArgs<IProjectChartPoints>>();
+    public ICPEvent<IConstructEventArgs<IChartPoint>> createdCPEvent { get; set; } = new CPEvent<IConstructEventArgs<IChartPoint>>();
+    public ICPEvent<IConstructEventArgs<ILineChartPoints>> createdLineCPsEvent { get; set; } = new CPEvent<IConstructEventArgs<ILineChartPoints>>();
+    public ICPEvent<IConstructEventArgs<IFileChartPoints>> createdFileCPsEvent { get; set; } = new CPEvent<IConstructEventArgs<IFileChartPoints>>();
+    public ICPEvent<IConstructEventArgs<IProjectChartPoints>> createdProjCPsEvent { get; set; } = new CPEvent<IConstructEventArgs<IProjectChartPoints>>();
   }
 
   public class ConstructEventArgs<T> : IConstructEventArgs<T>

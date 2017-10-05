@@ -9,22 +9,22 @@ namespace ChartPoints
 
   public interface ICPEntTracker
   {
-    ICPEvent<CPEntTrackerArgs> emptyCpEvent { get; }
+    ICPEvent<CPEntTrackerArgs> emptyCpEvent { get; set; }
     void Validate(int lineNum, int linesAdd);
   }
 
   public interface IFileTracker
   {
     string fileFullName { get; }
-    ICPEvent<FileTrackerArgs> emptyFTrackerEvent { get; }
+    ICPEvent<FileTrackerArgs> emptyFTrackerEvent { get; set; }
     void Add(ICPEntTracker cpValidator);
     void Validate(int lineNum, int linesAdd);
   }
 
   public interface ICPTrackManager
   {
-    ICPEvent<FileTrackerArgs> addFTrackerEvent { get; }
-    ICPEvent<FileTrackerArgs> remFTrackerEvent { get; }
+    ICPEvent<FileTrackerArgs> addFTrackerEvent { get; set; }
+    ICPEvent<FileTrackerArgs> remFTrackerEvent { get; set; }
     IFileTracker GetFileTracker(string fileFullName);
     void Register(IChartPoint cp);
     void Register(ILineChartPoints lcp);
