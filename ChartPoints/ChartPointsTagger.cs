@@ -16,9 +16,11 @@ namespace ChartPoints
 {
   /*internal*/public class ChartPointTag : IGlyphTag
   {
-    public int i = 33;
-    public ChartPointTag()
-    { }
+    public ILineChartPoints linePnt { get; }
+    public ChartPointTag(ILineChartPoints _linePnt)
+    {
+      linePnt = _linePnt;
+    }
   }
   public class ChartPointsTagger : ITagger<ChartPointTag>, IChartPointsTagger
   {
@@ -105,7 +107,7 @@ namespace ChartPoints
                 // Text Snapshots - 0-based
                 //if (pair.Key - 1 == firstLineNum)
                 if (linePnt.data.pos.lineNum - 1 == firstLineNum)
-                  yield return new TagSpan<ChartPointTag>(new SnapshotSpan(line.Start, 0), new ChartPointTag());
+                  yield return new TagSpan<ChartPointTag>(new SnapshotSpan(line.Start, 0), new ChartPointTag(linePnt));
               }
             }
           }

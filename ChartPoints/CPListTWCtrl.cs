@@ -17,9 +17,33 @@ namespace ChartPoints
       InitializeComponent();
       this.list.CellDoubleClick += OnListOnCellDoubleClick;
       this.list.KeyDown += OnListOnKeyDown;
+      this.list.CellValueChanged += OnCellValueChanged;
+      this.list.CellMouseUp += OnCellMouseUp;
       ICPEventProvider<IConstructEvents> evConstrProv;
       if (Globals.cpEventsService.GetConstructEventProvider(out evConstrProv))
         evConstrProv.prov.createdLineCPsEvent.On += OnCreatedLineCPsEvent;
+    }
+
+    private void OnCellMouseUp(object sender, DataGridViewCellMouseEventArgs e)
+    {
+      if (e.ColumnIndex == 0 && e.RowIndex != -1)
+        this.list.EndEdit();
+    }
+
+    private void OnCellValueChanged(object sender, DataGridViewCellEventArgs e)
+    {
+      if (e.ColumnIndex == 0 && e.RowIndex != -1)
+      {
+        DataGridViewRow row = list.Rows[e.RowIndex];
+        Tuple<ILineChartPoints, IChartPoint> tagData = (Tuple<ILineChartPoints, IChartPoint>)row.Tag;
+        //switch(tagData.Item2.data.status)
+        //{
+        //  case EChartPointStatus.SwitchedOff
+        //}
+        tagData.Item2.SetStatus(((bool)row.Cells[0].Value) ? EChartPointStatus.SwitchedOn : EChartPointStatus.SwitchedOff);
+        if(Globals.taggerUpdater != null)
+          Globals.taggerUpdater.RaiseChangeTagEvent(tagData.Item1.data.fileData.fileFullName, tagData.Item1);
+      }
     }
 
     //##########################################################
@@ -81,7 +105,11 @@ namespace ChartPoints
             Tuple<ILineChartPoints, IChartPoint> tagData = (Tuple<ILineChartPoints, IChartPoint>)row.Tag;
             //tagData.Item1.remCPEvent.On -= OnRemCpEvent;
             cpIgnore = tagData.Item2;
-            tagData.Item1.RemoveChartPoint(tagData.Item2);
+            if (tagData.Item1.RemoveChartPoint(tagData.Item2))
+            {
+              if (Globals.taggerUpdater != null)
+                Globals.taggerUpdater.RaiseChangeTagEvent(tagData.Item1.data.fileData.fileFullName, tagData.Item1);
+            }
             //list.Rows.RemoveAt( row.Index );
           }
           break;

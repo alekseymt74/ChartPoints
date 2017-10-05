@@ -31,24 +31,24 @@ namespace ChartPoints
     public LineCPTracker(ILineChartPoints _lcps)
     {
       lcps = _lcps;
-      //lcps.addCPEvent.On += OnAddCp;
-      //lcps.remCPEvent.On += OnRemCp;
+      lcps.addCPEvent.On += OnAddCp;
+      lcps.remCPEvent.On += OnRemCp;
     }
 
-    //private void OnRemCp(CPLineEvArgs args)
-    //{
-    //  if (args.lineCPs.Count == 0)
-    //  {
-    //    Globals.taggerUpdater.RaiseChangeTagEvent(lcps.data.fileData.fileFullName, lcps);
-    //    emptyCpEvent.Fire(new CPEntTrackerArgs(this));
-    //  }
-    //}
+    private void OnRemCp(CPLineEvArgs args)
+    {
+      //if (args.lineCPs.Count == 0) // !!! POTENTIAL STATUS UPDATE
+      {
+        Globals.taggerUpdater.RaiseChangeTagEvent(lcps.data.fileData.fileFullName, lcps);
+        //emptyCpEvent.Fire(new CPEntTrackerArgs(this));
+      }
+    }
 
-    //private void OnAddCp(CPLineEvArgs args)
-    //{
-    //  if (args.lineCPs.Count == 1)
-    //    Globals.taggerUpdater.RaiseChangeTagEvent(lcps.data.fileData.fileFullName, lcps);
-    //}
+    private void OnAddCp(CPLineEvArgs args)
+    {
+      //if (args.lineCPs.Count == 1) // !!! POTENTIAL STATUS UPDATE
+        Globals.taggerUpdater.RaiseChangeTagEvent(lcps.data.fileData.fileFullName, lcps);
+    }
 
     public void Validate(int lineNum, int linesAdd)
     {

@@ -6,7 +6,7 @@ namespace ChartPoints
   /// <summary>
   /// Statuses showing the ability to toggle chartpoint
   /// </summary>
-  public enum ETargetPointStatus
+  public enum EChartPointStatus
   {
     Available       /// ready set chartpoint at specified position
     , NotAvailable  /// can't set chartpoint at specified position
@@ -20,7 +20,7 @@ namespace ChartPoints
     string name { get; }
     string uniqueName { get; }
     string type { get; }
-    ETargetPointStatus status { get; }
+    EChartPointStatus status { get; }
     ICPLineData lineData { get; }
   }
 
@@ -34,6 +34,7 @@ namespace ChartPoints
   /// </summary>
   public interface IChartPoint : IData<IChartPointData>
   {
+    EChartPointStatus SetStatus(EChartPointStatus newStatus);
     CPTraceVar CalcInjectionPoints(CPClassLayout cpInjPoints, string className, out bool needDeclare);
 
     bool ValidatePosition(int lineNum, int linePos);
@@ -44,6 +45,14 @@ namespace ChartPoints
     int lineNum { get; }
     int linePos { get; }
     void Move(IChartPoint cp, int _lineNum, int _linePos);
+  }
+
+  public enum ELineCPsStatus//!!!
+  {
+    Available       /// ready set chartpoint at specified position
+    , NotAvailable  /// can't set chartpoint at specified position
+    , SwitchedOn     /// chartpoint already exists and is active
+    , SwitchedOff    /// chartpoint already exists and is inactive
   }
 
   public interface ICPLineData
