@@ -17,7 +17,7 @@ namespace ChartPoints
     public string name { get; set; }
     public string uniqueName { get; set; }
     public string type { get; set; }
-    public ETargetPointStatus status { get; set; }
+    public EChartPointStatus status { get; set; }
     public ICPLineData lineData { get; set; }
     public ChartPointData() { }
     public ChartPointData(IChartPointData _data)
@@ -58,7 +58,7 @@ namespace ChartPoints
       theData = new ChartPointData
       {
         enabled = true,
-        status = ETargetPointStatus.SwitchedOn,
+        status = EChartPointStatus.SwitchedOn,
         name = codeElem.name,
         uniqueName = codeElem.uniqueName/*varName*/,
         type = codeElem.type,
@@ -74,6 +74,14 @@ namespace ChartPoints
     private void ClassVarDeletedEventOn(ClassVarElemTrackerArgs args)
     {
       ;
+    }
+
+    public EChartPointStatus SetStatus(EChartPointStatus newStatus)
+    {
+      EChartPointStatus curStatus = theData.status;
+      theData.status = newStatus;
+
+      return curStatus;
     }
 
     public virtual CPTraceVar CalcInjectionPoints(CPClassLayout cpClassLayout, string className, out bool needDeclare)

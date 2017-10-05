@@ -32,7 +32,7 @@ namespace ChartPoints
       //ellipse.Width = m_glyphSize;
 
       //return ellipse;
-      return new ChartGlyph();
+      return new ChartGlyph(theTag.linePnt);
     }
   }
 

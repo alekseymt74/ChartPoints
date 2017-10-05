@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:ChartPoints"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <Grid>
+  <Grid Name="grdMain">
     <Image x:Name="ChartPntGlyph_png" Width="16" Height="16" Source="pack://application:,,,/ChartPoints;component/Resources/ChartPntGlyph.png" Stretch="Fill"/>
 
   </Grid>

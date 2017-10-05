@@ -47,7 +47,6 @@
       this.list.Location = new System.Drawing.Point(0, 0);
       this.list.MultiSelect = false;
       this.list.Name = "list";
-      this.list.ReadOnly = true;
       this.list.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
       this.list.Size = new System.Drawing.Size(150, 150);
       this.list.TabIndex = 0;
@@ -57,7 +56,6 @@
       this.chk_col.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
       this.chk_col.HeaderText = "v";
       this.chk_col.Name = "chk_col";
-      this.chk_col.ReadOnly = true;
       this.chk_col.Resizable = System.Windows.Forms.DataGridViewTriState.True;
       this.chk_col.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
       this.chk_col.Width = 38;
