@@ -299,7 +299,7 @@
           <Variable>temp_utest::k</Variable>
           <LineNum>36</LineNum>
           <LinePos>16</LinePos>
-          <Enabled>true</Enabled>
+          <Enabled>false</Enabled>
         </ChartPoint>
       </ChartPoints>
     </ChartPointFile>
@@ -309,7 +309,7 @@
           <Variable>test_01::d_01</Variable>
           <LineNum>14</LineNum>
           <LinePos>1</LinePos>
-          <Enabled>true</Enabled>
+          <Enabled>false</Enabled>
         </ChartPoint>
       </ChartPoints>
     </ChartPointFile>

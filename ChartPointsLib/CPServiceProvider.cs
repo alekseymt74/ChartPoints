@@ -3,6 +3,10 @@
 //[assembly: InternalsVisibleTo("ChartPointsLib")]
 namespace ChartPoints
 {
+  interface ICPEventsService
+  {
+
+  }
   namespace impl
   {
     public abstract partial class ICPServiceProvider

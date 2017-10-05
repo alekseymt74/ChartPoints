@@ -36,8 +36,8 @@ namespace CP
       public new string name { get { return ent.Name; } }
       public new string uniqueName { get { return ent.FullName; } }
       public string type { get { return ent.TypeString; } }
-      public ICPEvent<ClassVarElemTrackerArgs> classVarChangedEvent { get; } = new CPEvent<ClassVarElemTrackerArgs>();
-      public ICPEvent<ClassVarElemTrackerArgs> classVarDeletedEvent { get; } = new CPEvent<ClassVarElemTrackerArgs>();
+      public ICPEvent<ClassVarElemTrackerArgs> classVarChangedEvent { get; set; } = new CPEvent<ClassVarElemTrackerArgs>();
+      public ICPEvent<ClassVarElemTrackerArgs> classVarDeletedEvent { get; set; } = new CPEvent<ClassVarElemTrackerArgs>();
 
       public ClassVarElement(CodeElement _codeElem) : base(_codeElem)
       {}

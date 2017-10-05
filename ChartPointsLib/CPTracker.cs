@@ -10,7 +10,7 @@ namespace ChartPoints
 
   public class CPTracker : ICPEntTracker
   {
-    public ICPEvent<CPEntTrackerArgs> emptyCpEvent { get; } = new CPEvent<CPEntTrackerArgs>();
+    public ICPEvent<CPEntTrackerArgs> emptyCpEvent { get; set; } = new CPEvent<CPEntTrackerArgs>();
     private IChartPoint cp;
 
     public CPTracker(IChartPoint _cp)
@@ -25,14 +25,14 @@ namespace ChartPoints
 
   public class LineCPTracker : ICPEntTracker
   {
-    public ICPEvent<CPEntTrackerArgs> emptyCpEvent { get; } = new CPEvent<CPEntTrackerArgs>();
+    public ICPEvent<CPEntTrackerArgs> emptyCpEvent { get; set; } = new CPEvent<CPEntTrackerArgs>();
     private ILineChartPoints lcps;
 
     public LineCPTracker(ILineChartPoints _lcps)
     {
       lcps = _lcps;
-      lcps.addCPEvent.On += OnAddCp;
-      lcps.remCPEvent.On += OnRemCp;
+      lcps.addCPEvent += OnAddCp;
+      lcps.remCPEvent += OnRemCp;
     }
 
     private void OnRemCp(CPLineEvArgs args)
@@ -58,14 +58,14 @@ namespace ChartPoints
 
   public class FileCPTracker : ICPEntTracker
   {
-    public ICPEvent<CPEntTrackerArgs> emptyCpEvent { get; } = new CPEvent<CPEntTrackerArgs>();
+    public ICPEvent<CPEntTrackerArgs> emptyCpEvent { get; set; } = new CPEvent<CPEntTrackerArgs>();
     private IFileChartPoints fcps;
 
     public FileCPTracker(IFileChartPoints _fcps)
     {
       fcps = _fcps;
-      fcps.addCPLineEvent.On += OnAddCpLine;
-      fcps.remCPLineEvent.On += OnRemCpLine;
+      fcps.addCPLineEvent += OnAddCpLine;
+      fcps.remCPLineEvent += OnRemCpLine;
     }
 
     private void OnAddCpLine(CPFileEvArgs args)
@@ -96,7 +96,7 @@ namespace ChartPoints
     private Mutex mtx = new Mutex();
     private bool validation;
     public string fileFullName { get; set; }
-    public ICPEvent<FileTrackerArgs> emptyFTrackerEvent { get; } = new CPEvent<FileTrackerArgs>();
+    public ICPEvent<FileTrackerArgs> emptyFTrackerEvent { get; set; } = new CPEvent<FileTrackerArgs>();
     IList<ICPEntTracker> entTrackers = new List<ICPEntTracker>();
 
     public FileTracker(string _fileFullName)
@@ -108,7 +108,7 @@ namespace ChartPoints
     public void Add(ICPEntTracker cpValidator)
     {
       entTrackers.Add(cpValidator);
-      cpValidator.emptyCpEvent.On += OnEmptyCpEvent;
+      cpValidator.emptyCpEvent += OnEmptyCpEvent;
     }
 
     private void OnEmptyCpEvent(CPEntTrackerArgs args)
@@ -146,8 +146,8 @@ namespace ChartPoints
 
   public class CPTrackManager : ICPTrackManager
   {
-    public ICPEvent<FileTrackerArgs> addFTrackerEvent { get; } = new CPEvent<FileTrackerArgs>();
-    public ICPEvent<FileTrackerArgs> remFTrackerEvent { get; } = new CPEvent<FileTrackerArgs>();
+    public ICPEvent<FileTrackerArgs> addFTrackerEvent { get; set; } = new CPEvent<FileTrackerArgs>();
+    public ICPEvent<FileTrackerArgs> remFTrackerEvent { get; set; } = new CPEvent<FileTrackerArgs>();
     private ISet<IFileTracker> filesTrackers = new SortedSet<IFileTracker>(Comparer<IFileTracker>.Create((lh, rh) => (String.Compare(lh.fileFullName, rh.fileFullName, StringComparison.Ordinal))));
     protected IFileTracker AddFileTracker(string fileFullName)
     {
@@ -155,7 +155,7 @@ namespace ChartPoints
       if (fTracker == null)
       {
         fTracker = new FileTracker(fileFullName);
-        fTracker.emptyFTrackerEvent.On += OnEmptyCpEvent;
+        fTracker.emptyFTrackerEvent += OnEmptyCpEvent;
         filesTrackers.Add(fTracker);
       }
 
