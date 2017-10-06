@@ -293,7 +293,8 @@ namespace ChartPoints
                       if(lPnts != null)
                       {
                         IChartPoint chartPnt = null;
-                        lPnts.AddChartPoint(data.varName, out chartPnt);
+                        if (lPnts.AddChartPoint(data.varName, out chartPnt))
+                          chartPnt.SetStatus(data.enabled ? EChartPointStatus.SwitchedOn : EChartPointStatus.SwitchedOff);
                       }
                     };
                   confLoader.LoadChartPoint("<" + me.Name + ">" + me.Value + "</" + me.Name + ">", addCPDataAction);

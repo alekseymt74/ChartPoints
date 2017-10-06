@@ -289,7 +289,7 @@
           <Variable>temp_utest::j</Variable>
           <LineNum>4</LineNum>
           <LinePos>2</LinePos>
-          <Enabled>true</Enabled>
+          <Enabled>false</Enabled>
         </ChartPoint>
       </ChartPoints>
     </ChartPointFile>
@@ -307,6 +307,12 @@
       <ChartPoints>
         <ChartPoint xmlns="">
           <Variable>test_01::d_01</Variable>
+          <LineNum>14</LineNum>
+          <LinePos>1</LinePos>
+          <Enabled>true</Enabled>
+        </ChartPoint>
+        <ChartPoint xmlns="">
+          <Variable>test_01::d_02</Variable>
           <LineNum>14</LineNum>
           <LinePos>1</LinePos>
           <Enabled>false</Enabled>

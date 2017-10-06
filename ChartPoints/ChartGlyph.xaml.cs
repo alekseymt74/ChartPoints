@@ -75,37 +75,6 @@ namespace ChartPoints
           }
         }
       }
-      //DrawStatus(dc, 0, 0, grdMain.ActualWidth, grdMain.ActualHeight / 3 - 1, Brushes.Green.Color);
-      //DrawStatus(dc, 0, grdMain.ActualHeight / 3, grdMain.ActualWidth, grdMain.ActualHeight / 3 - 1, Brushes.Orange.Color);
-      //DrawStatus(dc, 0, 2 * grdMain.ActualHeight / 3, grdMain.ActualWidth, grdMain.ActualHeight / 3 - 1, Brushes.Red.Color);
-      //EChartPointStatus st = EChartPointStatus.NotAvailable;
-      //bool differ = false;
-      //foreach (IChartPoint cp in linePnt.chartPoints)
-      //{
-      //  if( st != cp.data.status)
-      //  {
-      //    differ = true;
-      //    break;
-      //  }
-      //}
-      //Color penColor;
-      //Color brushColor;
-      //if(differ)
-      //{
-      //  penColor = Brushes.Yellow.Color;
-      //  brushColor = Brushes.LightYellow.Color;
-      //}
-      //else
-      //{
-      //  penColor = Brushes.Green.Color;
-      //  brushColor = Brushes.LightGreen.Color;
-      //}
-      //const double pen_width = 1;
-      //Pen pen = new Pen(new SolidColorBrush(penColor), pen_width);// Brushes.Green, pen_width);
-      //SolidColorBrush br = new SolidColorBrush(brushColor);// Brushes.LightGreen.Color );
-      //br.Opacity = 0.5;
-      //Rect rc = new Rect(0, 0, grdMain.ActualWidth, grdMain.ActualHeight);
-      //dc.DrawRoundedRectangle(br, pen, rc, 0.9, 0.9);
     }
   }
 }
