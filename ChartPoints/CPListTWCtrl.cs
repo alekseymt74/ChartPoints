@@ -149,7 +149,7 @@ namespace ChartPoints
       int i = list.Rows.Add();
       DataGridViewRow row = list.Rows[i];
       row.Tag = new Tuple<ILineChartPoints, IChartPoint>(args.lineCPs, args.cp);
-      row.Cells[0].Value = true;
+      row.Cells[0].Value = args.cp.data.enabled;
       row.Cells[1].Value = args.cp.data.uniqueName;
       row.Cells[2].Value = args.cp.data.type;
       //list.AutoResizeColumns();

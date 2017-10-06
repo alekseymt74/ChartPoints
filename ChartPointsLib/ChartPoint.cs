@@ -78,6 +78,10 @@ namespace ChartPoints
 
     public EChartPointStatus SetStatus(EChartPointStatus newStatus)
     {
+      if (newStatus != EChartPointStatus.SwitchedOn)
+        theData.enabled = false;
+      else
+        theData.enabled = true;
       EChartPointStatus curStatus = theData.status;
       theData.status = newStatus;
 
@@ -307,9 +311,12 @@ namespace ChartPoints
       foreach (IChartPoint cp in chartPoints)
       {
         bool needDeclare = false;
-        CPTraceVar traceVar = cp.CalcInjectionPoints(cpInjPoints, this.codeClass.name, out needDeclare);
-        codeClass.CalcInjectionPoints(cpInjPoints, traceVar, needDeclare);
-        model.CalcInjectionPoints(cpInjPoints, traceVar);
+        if (cp.data.enabled)
+        {
+          CPTraceVar traceVar = cp.CalcInjectionPoints(cpInjPoints, this.codeClass.name, out needDeclare);
+          codeClass.CalcInjectionPoints(cpInjPoints, traceVar, needDeclare);
+          model.CalcInjectionPoints(cpInjPoints, traceVar);
+        }
       }
     }
 
