@@ -10,14 +10,57 @@ using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using System.Diagnostics;
+using Microsoft.VisualStudio.OLE.Interop;
+using System;
+using Microsoft.Internal.VisualStudio.Shell;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
+using System.Reflection;
+using System.IO;
 
 namespace ChartPoints
 {
 
   internal class VsSolutionEvents : IVsSolutionEvents
   {
+    //private Microsoft.VisualStudio.OLE.Interop.IStream propsStream;
+    private MemoryStream propsStream;
 
-    //rest of the code
+    public void SetPropsStream(Microsoft.VisualStudio.OLE.Interop.IStream _propsStream)
+    {
+      //_propsStream.Clone(out propsStream);
+      //DataStreamFromComStream pStream = new DataStreamFromComStream(propsStream);
+      //ULARGE_INTEGER cb = new ULARGE_INTEGER();
+      //cb.QuadPart = (ulong) pStream.Length;
+      //ULARGE_INTEGER[] pcbRead = new ULARGE_INTEGER[1];
+      //ULARGE_INTEGER[] pcbWritten = new ULARGE_INTEGER[1];
+      //_propsStream.CopyTo(propsStream, cb, pcbRead, pcbWritten);
+      DataStreamFromComStream pStream = new DataStreamFromComStream(_propsStream);
+      if (propsStream == null)
+        propsStream = new MemoryStream();
+      pStream.CopyTo(propsStream);
+    }
+
+    private bool LoadCPProps()
+    {
+      //!!! try catch !!!
+      //if (propsStream == null)
+      //  return false;
+      //DataStreamFromComStream pStream = new DataStreamFromComStream(propsStream);
+      //if (pStream == null)
+      //  return false;
+      if (propsStream == null || propsStream.Length == 0)
+        return false;
+      BinaryFormatter formatter = new BinaryFormatter();
+      formatter.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
+      formatter.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;//!!! while develop !!!
+      propsStream.Position = 0;
+      CPPropsDeSerializator cpPropsDeser = (CPPropsDeSerializator)formatter.Deserialize(propsStream/*pStream*/);
+
+      return true;
+    }
+
     public int OnAfterCloseSolution(object pUnkReserved)
     {
       return VSConstants.S_OK;
@@ -55,7 +98,9 @@ namespace ChartPoints
           }
           if (theProj != null)
           {
-            Globals.orchestrator.LoadProjChartPoints(theProj);
+            //Globals.orchestrator.LoadProjChartPoints(theProj);
+            //System.Threading.Thread.Sleep(5000);
+            LoadCPProps();
             if (savedProjects.Contains(projName))
               savedProjects.Remove(projName);
           }
@@ -84,7 +129,8 @@ namespace ChartPoints
       {
         if (proj.Name != "Miscellaneous Files")
         {
-          Globals.orchestrator.LoadProjChartPoints(proj);
+          //Globals.orchestrator.LoadProjChartPoints(proj);
+          LoadCPProps();
         }
       }
 
@@ -129,6 +175,8 @@ namespace ChartPoints
     private ISet<string> savedProjects = new SortedSet<string>();
     public int OnQueryCloseProject(IVsHierarchy pHierarchy, int fRemoving, ref int pfCancel)
     {
+      return VSConstants.S_OK;
+
       object propItemObj = null;
       pHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
       if (propItemObj != null)
@@ -210,6 +258,212 @@ namespace ChartPoints
     }
   }
 
+
+  internal class RunningDocTableEvents : IVsRunningDocTableEvents3
+  {
+    private RunningDocumentTable rdt;
+
+    public RunningDocTableEvents(RunningDocumentTable _rdt)
+    {
+      rdt = _rdt;
+    }
+    public int OnBeforeSave(uint docCookie)
+    {
+      //RunningDocumentInfo rdInfo = rdt.GetDocumentInfo(docCookie);
+      //if (rdInfo.Moniker.EndsWith(".vcxproj"))
+      //{
+      //  EnvDTE.Project theProj = null;
+      //  foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+      //  {
+      //    if (proj.FullName == rdInfo.Moniker)
+      //    {
+      //      theProj = proj;
+      //      break;
+      //    }
+      //  }
+      //  if (theProj != null)
+      //    Globals.orchestrator.SaveProjChartPoints(theProj);
+      //}
+      return VSConstants.S_OK;
+    }
+
+    public int OnAfterAttributeChange(uint docCookie, uint grfAttribs) { return VSConstants.S_OK; }
+    public int OnAfterAttributeChangeEx(uint docCookie, uint grfAttribs, IVsHierarchy pHierOld,
+                                        uint itemidOld, string pszMkDocumentOld, IVsHierarchy pHierNew,
+                                        uint itemidNew, string pszMkDocumentNew)
+    {
+      return VSConstants.S_OK;
+    }
+
+    public int OnAfterDocumentWindowHide(uint docCookie, IVsWindowFrame pFrame) { return VSConstants.S_OK; }
+    public int OnAfterFirstDocumentLock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining)
+    {
+      return VSConstants.S_OK;
+    }
+
+    public int OnAfterSave(uint docCookie)
+    {
+      //RunningDocumentInfo rdInfo = rdt.GetDocumentInfo(docCookie);
+      //if (rdInfo.Moniker.EndsWith(".vcxproj"))
+      //{
+      //  EnvDTE.Project theProj = null;
+      //  foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+      //  {
+      //    if (proj.FullName == rdInfo.Moniker)
+      //    {
+      //      theProj = proj;
+      //      break;
+      //    }
+      //  }
+      //  if (theProj != null)
+      //    Globals.orchestrator.SaveProjChartPoints(theProj);
+      //}
+      return VSConstants.S_OK;
+    }
+    public int OnBeforeDocumentWindowShow(uint docCookie, int fFirstShow, IVsWindowFrame pFrame) { return VSConstants.S_OK; }
+
+    public int OnBeforeLastDocumentUnlock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining)
+    {
+      return VSConstants.S_OK;
+    }
+  }
+
+  //#####################################################################
+
+  sealed class AllowAllAssemblyVersionsDeserializationBinder : System.Runtime.Serialization.SerializationBinder
+  {
+    public override Type BindToType(string assemblyName, string typeName)
+    {
+      //String currentAssembly = Assembly.GetExecutingAssembly().FullName;
+
+      //// In this case we are always using the current assembly
+      //assemblyName = currentAssembly;
+
+      //// Get the type using the typeName and assemblyName
+      //Type typeToDeserialize = Type.GetType(String.Format("{0}, {1}",
+      //    typeName, assemblyName));
+
+      //return typeToDeserialize;
+      //https://techdigger.wordpress.com/2007/12/22/deserializing-data-into-a-dynamically-loaded-assembly/
+      Type typeToDeserialize = null;
+      try
+      {
+        string ToAssemblyName = assemblyName.Split(',')[0];
+        Assembly[] Assemblies = AppDomain.CurrentDomain.GetAssemblies();
+        foreach (Assembly ass in Assemblies)
+        {
+          if (ass.FullName.Split(',')[0] == ToAssemblyName)
+          {
+            typeToDeserialize = ass.GetType(typeName);
+            break;
+          }
+        }
+      }
+      catch (System.Exception exception)
+      {
+        throw exception;
+      }
+
+      return typeToDeserialize;
+    }
+  }
+
+  [Serializable]
+  public class CPPropsDeSerializator : ISerializable
+  {
+    public CPPropsDeSerializator() {}
+    protected CPPropsDeSerializator(SerializationInfo info, StreamingContext context)
+    {
+      //if (Globals.processor == null)
+      //  Globals.processor = factor
+      //Globals.processor.DeserializeProps(info, context);
+      try
+      {
+        UInt32 projsCount = info.GetUInt32("projPoints.Count");
+        for (uint p = 0; p < projsCount; ++p)
+        {
+          //IProjectChartPoints projCPs = null;
+          string projName = info.GetString("projName_" + p.ToString());
+          Globals.processor.RemoveChartPoints(projName);
+          //Globals.processor.AddProjectChartPoints(projName, out projCPs);
+          IProjectChartPoints projCPs = Globals.processor.GetProjectChartPoints(projName);
+          if (projCPs == null)
+            Globals.processor.AddProjectChartPoints(projName, out projCPs);
+          UInt32 filesCount = info.GetUInt32("filePoints.Count_" + p.ToString());
+          for (uint f = 0; f < filesCount; ++f)
+          {
+            string fileName = info.GetString("fileName_" + p.ToString() + f.ToString());
+            IFileChartPoints fPnts = projCPs.AddFileChartPoints(fileName);
+            if (fPnts != null)
+            {
+              UInt32 linesCount = info.GetUInt32("linePoints.Count_" + p.ToString() + f.ToString());
+              for (uint l = 0; l < linesCount; ++l)
+              {
+                //ITextPosition pos = (ITextPosition)info.GetValue("pos_" + p.ToString() + f.ToString() + l.ToString(), typeof(ITextPosition));
+                UInt32 lineNum = info.GetUInt32("lineNum_" + p.ToString() + f.ToString() + l.ToString());
+                UInt32 linePos = info.GetUInt32("linePos_" + p.ToString() + f.ToString() + l.ToString());
+                ILineChartPoints lPnts = fPnts.AddLineChartPoints(/*pos.*/(int)lineNum, /*pos.*/(int)linePos);
+                if (lPnts != null)
+                {
+                  UInt32 cpsCount = info.GetUInt32("cpsPoints.Count_" + p.ToString() + f.ToString() + l.ToString());
+                  for (uint cp = 0; cp < cpsCount; ++cp)
+                  {
+                    IChartPoint chartPnt = null;
+                    string uniqueName = info.GetString("uniqueName_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
+                    bool enabled = info.GetBoolean("enabled_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
+                    if (lPnts.AddChartPoint(uniqueName, out chartPnt))
+                      chartPnt.SetStatus(enabled ? EChartPointStatus.SwitchedOn : EChartPointStatus.SwitchedOff);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine(ex);
+      }
+    }
+
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+      info.AddValue("projPoints.Count", (UInt32)Globals.processor.data.projPoints.Count);
+      int p = 0;
+      foreach (IProjectChartPoints projCPs in Globals.processor.data.projPoints)
+      {
+        info.AddValue("projName_" + p.ToString(), projCPs.data.projName);
+        info.AddValue("filePoints.Count_" + p.ToString(), (UInt32)projCPs.filePoints.Count);
+        int f = 0;
+        foreach (IFileChartPoints fileCPs in projCPs.filePoints)
+        {
+          info.AddValue("fileName_" + p.ToString() + f.ToString(), fileCPs.data.fileName);
+          info.AddValue("linePoints.Count_" + p.ToString() + f.ToString(), (UInt32)fileCPs.linePoints.Count);
+          int l = 0;
+          foreach (ILineChartPoints lineCPs in fileCPs.linePoints)
+          {
+            //info.AddValue("pos_" + p.ToString() + f.ToString() + l.ToString(), lineCPs.data.pos, lineCPs.data.pos.GetType());
+            info.AddValue("lineNum_" + p.ToString() + f.ToString() + l.ToString(), (UInt32) lineCPs.data.pos.lineNum);
+            info.AddValue("linePos_" + p.ToString() + f.ToString() + l.ToString(), (UInt32) lineCPs.data.pos.linePos);
+            info.AddValue("cpsPoints.Count_" + p.ToString() + f.ToString() + l.ToString(), (UInt32)lineCPs.chartPoints.Count);
+            int c = 0;
+            foreach (IChartPoint cp in lineCPs.chartPoints)
+            {
+              info.AddValue("uniqueName_" + p.ToString() + f.ToString() + l.ToString() + c.ToString(), cp.data.uniqueName);
+              info.AddValue("enabled_" + p.ToString() + f.ToString() + l.ToString() + c.ToString(), cp.data.enabled);
+              ++c;
+            }
+            ++l;
+          }
+          ++f;
+        }
+        ++p;
+      }
+    }
+  }
+  //#####################################################################
+
+
   /// <summary>
   /// This is the class that implements the package exposed by this assembly.
   /// </summary>
@@ -231,17 +485,21 @@ namespace ChartPoints
   [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
   [Guid(ChartPointsPackage.PackageGuidString)]
   //[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-  [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
+  //[ProvideAutoLoad(UIContextGuids80.SolutionExists)]
+  [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string)]
   [ProvideMenuResource("Menus.ctmenu", 1)]
   [ProvideToolWindow(typeof(ChartPointsViewTW))]
   [ProvideToolWindowVisibility(typeof(ChartPointsViewTW), VSConstants.UICONTEXT.SolutionExists_string)]
   [ProvideToolWindow(typeof(CPListTW))]
   [ProvideToolWindowVisibility(typeof(CPListTW), VSConstants.UICONTEXT.SolutionExists_string)]
-  public sealed class ChartPointsPackage : Package
+  public sealed class ChartPointsPackage : Package, IVsPersistSolutionOpts, IVsSolutionLoadManager
   {
     private ChartPntFactory factory;
 
     private IVsSolutionBuildManager3 buildManager3;
+    private VsSolutionEvents solEvents;
+    private CommandEvents cmdEvents;
+    private RunningDocumentTable rdt;
 
     /// <summary>
     /// ChartPointsPackage GUID string.
@@ -267,12 +525,15 @@ namespace ChartPoints
       Globals.dte = (DTE)GetService(typeof(DTE));
       Globals.cpEventsService = new CPEventService();
       factory = new ChartPntFactoryImpl();
-      Globals.processor = factory.CreateProcessor();
+      if(Globals.processor == null)
+        Globals.processor = factory.CreateProcessor();
       Globals.orchestrator = factory.CreateOrchestrator();
       //Globals.orchestrator.InitSolutionConfigurations();
       Globals.outputWindow = GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
       IVsSolution vsSolution = GetService(typeof(SVsSolution)) as IVsSolution;
-      VsSolutionEvents solEvents = new VsSolutionEvents();
+      object objLoadMgr = this;   //the class that implements IVsSolutionManager  
+      vsSolution.SetProperty((int)__VSPROPID4.VSPROPID_ActiveSolutionLoadManager, objLoadMgr);
+      solEvents = new VsSolutionEvents();
       uint solEvsCookie;
       vsSolution.AdviseSolutionEvents(solEvents, out solEvsCookie);
       buildManager3 = GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager3;
@@ -280,11 +541,46 @@ namespace ChartPoints
       uint solUpdateEvsCookie;
       buildManager3.AdviseUpdateSolutionEvents3(solUpdateEvents, out solUpdateEvsCookie);
       //EnvDTE.DebuggerEvents debugEvents = _applicationObject.Events.DebuggerEvents;
+      cmdEvents = Globals.dte.Events.CommandEvents;
+      cmdEvents.BeforeExecute += CmdEvents_BeforeExecute;
+
+      rdt = new RunningDocumentTable(this);
+      rdt.Advise(new RunningDocTableEvents(rdt));
 
       ChartPntToggleCmd.Initialize(this);
       ChartPointsViewTWCommand.Initialize(this);
       Globals.cpTracer = ChartPointsViewTWCommand.Instance;
       CPListTWCommand.Initialize(this);
+
+      //IVsMSBuildTaskFileManager
+      //IVsBuildManagerAccessor3 vsBuildMgrAcc = GetService(typeof(SVsBuildManagerAccessor)) as IVsBuildManagerAccessor3;
+      //IVsSolutionBuildManager vsSolBuildMgr = GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager;
+    }
+
+    private void CmdEvents_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
+    {
+      Command objCommand = Globals.dte.Commands.Item(Guid, ID);
+      Debug.WriteLine("CmdEvents_BeforeExecute: " + objCommand.Name);
+      if (objCommand.Name == "Debug.Start" || objCommand.Name == "Build.BuildSolution")
+      {
+        Debug.WriteLine("Debug.Start");
+        foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+        {
+          if (proj.Name != "Miscellaneous Files")
+          {
+            //Globals.orchestrator.SaveProjChartPoints(proj);
+            //proj.Save();
+            //Globals.orchestrator.Orchestrate(proj);
+            //proj.Saved = false;
+            //if (proj.Globals.get_VariableExists("CPS"))
+            //{
+            //  proj.Globals.set_VariablePersists("CPS", false);
+            //}
+            //proj.Globals["CPS"] = "cps_val";
+            //proj.Globals.set_VariablePersists("CPS", true);
+          }
+        }
+      }
     }
 
     public static void StartEvents(DTE dte)
@@ -292,6 +588,97 @@ namespace ChartPoints
       System.Windows.Forms.MessageBox.Show("Events are attached.");
     }
 
+    public int QuerySaveSolutionProps([In] IVsHierarchy pHierarchy, [Out] VSQUERYSAVESLNPROPS[] pqsspSave)//!!! NOT CALLED !!!KKKH
+    {
+      pqsspSave[0] = VSQUERYSAVESLNPROPS./*QSP_HasNoDirtyProps*/QSP_HasDirtyProps;
+      return VSConstants.S_OK;
+    }
+    public int SaveSolutionProps([In] IVsHierarchy pHierarchy, [In] IVsSolutionPersistence pPersistence)
+    {
+      return VSConstants.S_OK;
+    }
+    public int WriteSolutionProps([In] IVsHierarchy pHierarchy, [In] string pszKey, [In] IPropertyBag pPropBag)
+    {
+      return VSConstants.S_OK;
+    }
+
+    public int ReadSolutionProps([In] IVsHierarchy pHierarchy, [In] string pszProjectName, [In] string pszProjectMk, [In] string pszKey, [In] int fPreLoad, [In] IPropertyBag pPropBag)
+    {
+      return VSConstants.S_OK;
+    }
+    private readonly string cpSuoKey = "ChartPointsData";
+    public int SaveUserOptions(IVsSolutionPersistence pPersistence)
+    {
+      pPersistence.SavePackageUserOpts(this, cpSuoKey);
+
+      return VSConstants.S_OK;
+    }
+
+    public int LoadUserOptions(IVsSolutionPersistence pPersistence, uint grfLoadOpts)
+    {
+      pPersistence.LoadPackageUserOpts(this, cpSuoKey);
+
+      return VSConstants.S_OK;
+    }
+
+    public int WriteUserOptions(Microsoft.VisualStudio.OLE.Interop.IStream pOptionsStream, string pszKey)
+    {
+      if(pszKey.CompareTo(cpSuoKey) == 0)
+      {
+        if (Globals.processor.HasData())
+        {
+          DataStreamFromComStream pStream = new DataStreamFromComStream(pOptionsStream);
+          BinaryFormatter formatter = new BinaryFormatter();
+          formatter.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
+          formatter.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;//!!! while develop !!!
+          formatter.Serialize(pStream, new CPPropsDeSerializator());
+          //formatter.Serialize(pStream, Globals.processor);
+        }
+      }
+
+      return VSConstants.S_OK;
+    }
+
+    public int ReadUserOptions(Microsoft.VisualStudio.OLE.Interop.IStream pOptionsStream, string pszKey)
+    {
+      if (pszKey.CompareTo(cpSuoKey) == 0)
+      {
+        if (pOptionsStream == null)
+          return VSConstants.S_OK;
+        //DataStreamFromComStream pStream = new DataStreamFromComStream(pOptionsStream);
+        //if (pStream == null)
+        //  return VSConstants.S_OK;
+        //BinaryFormatter formatter = new BinaryFormatter();
+        //formatter.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
+        //formatter.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;//!!! while develop !!!
+        ////Globals.processor = (IChartPointsProcessor) formatter.Deserialize(pStream);
+        ////Globals.processor.DeserializeProps(pOptionsStream);
+        //if (pStream.Length > 0)
+        //{
+        this.solEvents.SetPropsStream(pOptionsStream);
+        //  CPPropsDeSerializator cpPropsDeser = (CPPropsDeSerializator)formatter.Deserialize(pStream);
+        //}
+      }
+
+      return VSConstants.S_OK;
+    }
+
+    public int OnDisconnect()
+    {
+      return VSConstants.S_OK;
+    }
+
+    public int OnBeforeOpenProject(ref Guid guidProjectID, ref Guid guidProjectType, string pszFileName, IVsSolutionLoadManagerSupport pSLMgrSupport)
+    {
+      Guid cppProjGuid = new Guid("8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942");
+      if (guidProjectType == cppProjGuid)
+      {
+        Microsoft.Build.Evaluation.Project msbuildProj = Globals.orchestrator.Orchestrate(pszFileName);
+        msbuildProj.Save();
+      }
+
+      return VSConstants.S_OK;
+    }
     #endregion
   }
 }

@@ -79,6 +79,8 @@ namespace ChartPoints
         menuCommand.Visible = false;
         menuCommand.Enabled = false;
         IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(Globals.dte.ActiveDocument.ProjectItem.ContainingProject.Name);
+        if (pPnts == null)
+          Globals.processor.AddProjectChartPoints(Globals.dte.ActiveDocument.ProjectItem.ContainingProject.Name, out pPnts);
         checkPnt = pPnts.CheckCursorPos();
 
         if (checkPnt != null)

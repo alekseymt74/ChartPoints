@@ -4,12 +4,14 @@ using System.Linq;
 using System.Runtime.Serialization;
 using CP.Code;
 using EnvDTE80;
+using System.Security.Permissions;
 
 namespace ChartPoints
 {
 
   [DataContract]
-  public class ChartPointData : IChartPointData
+  [Serializable]
+  public class ChartPointData : IChartPointData, ISerializable
   {
     [DataMember]
     public bool enabled { get; set; }
@@ -26,6 +28,12 @@ namespace ChartPoints
       name = _data.name;
       uniqueName = _data.uniqueName;
       type = _data.type;
+    }
+    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+      info.AddValue("uniqueName", uniqueName);
+      info.AddValue("enabled", enabled);
     }
   }
 
@@ -45,7 +53,8 @@ namespace ChartPoints
   /// <summary>
   /// Implementation of IChartPoint interface
   /// </summary>
-  public class ChartPoint : Data<ChartPoint, IChartPointData, ChartPointData>, IChartPoint
+  [Serializable]
+  public class ChartPoint : Data<ChartPoint, IChartPointData, ChartPointData>, IChartPoint, ISerializable
   {
     private CP.Code.IClassVarElement codeElem;
     protected ChartPoint() { }
@@ -64,6 +73,12 @@ namespace ChartPoints
         type = codeElem.type,
         lineData = _lineData
       };
+    }
+
+    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+      info.AddValue(data.GetType().ToString(), data, data.GetType());
     }
 
     private void ClassVarChangedEventOn(ClassVarElemTrackerArgs args)
@@ -155,7 +170,8 @@ namespace ChartPoints
     }
   }
 
-  public class TextPosition : ITextPosition
+  [Serializable]
+  public class TextPosition : ITextPosition, ISerializable
   {
     public int lineNum { get; set; }
     public int linePos { get; set; }
@@ -170,19 +186,34 @@ namespace ChartPoints
       linePos = _linePos;
       updPos = new UpdatePosition(_updPos);
     }
+
     public void Move(IChartPoint cp, int _lineNum, int _linePos)
     {
       updPos(cp, _lineNum, _linePos);
     }
+
+    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+      info.AddValue("lineNum", lineNum, lineNum.GetType());
+      info.AddValue("linePos", linePos, linePos.GetType());
+    }
   }
 
-  public class CPLineData : ICPLineData
+  [Serializable]
+  public class CPLineData : ICPLineData, ISerializable
   {
     public ITextPosition pos { get; set; }
     public ICPFileData fileData { get; set; }
+    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+      info.AddValue("pos", pos, pos.GetType());
+    }
   }
 
-  public class LineChartPoints : Data<LineChartPoints, ICPLineData, CPLineData>, ILineChartPoints
+  [Serializable]
+  public class LineChartPoints : Data<LineChartPoints, ICPLineData, CPLineData>, ILineChartPoints, ISerializable
   {
     private CP.Code.IClassElement codeClass;
     public ICPEvent<CPLineEvArgs> addCPEvent { get; set; } = new CPEvent<CPLineEvArgs>();
@@ -203,6 +234,16 @@ namespace ChartPoints
       theData = new CPLineData() {pos = new TextPosition(_lineNum, _linePos, MoveChartPoint), fileData = _fileData};
     }
 
+    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+      info.AddValue(data.GetType().ToString(), data, data.GetType());
+      info.AddValue("cpsPoints.Count", (UInt32)chartPoints.Count);
+      foreach (IChartPoint cp in chartPoints)
+      {
+        info.AddValue("cp", cp, cp.GetType());
+      }
+    }
     public void MoveChartPoint(IChartPoint cp, int _lineNum, int _linePos)
     {
       RemoveChartPoint(cp);
@@ -220,6 +261,8 @@ namespace ChartPoints
       CP.Code.IClassVarElement codeElem = codeClass.GetVar(varName);
       if (codeElem != null)
         return AddChartPoint(codeElem, out chartPnt, false);
+      else
+        return false;
 
       return false;
     }
@@ -322,7 +365,8 @@ namespace ChartPoints
 
   }
 
-  public class CPFileData : ICPFileData
+  [Serializable]
+  public class CPFileData : ICPFileData, ISerializable
   {
     public string fileName { get; set;  }
     public string fileFullName { get; set; }
@@ -339,13 +383,26 @@ namespace ChartPoints
       projData = _projData;
       updPos = new UpdatePosition(_updPos);
     }
+
+    private CPFileData(SerializationInfo info, StreamingContext context)
+    {
+      fileName = info.GetString("fileName");
+    }
+
+    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+      info.AddValue("fileName", fileName);
+    }
+
     public void Move(ILineChartPoints lcps ,IChartPoint cp, int _lineNum, int _linePos)
     {
       updPos(lcps, cp, _lineNum, _linePos);
     }
   }
 
-  public class FileChartPoints : Data<FileChartPoints, ICPFileData, CPFileData>, IFileChartPoints
+  [Serializable]
+  public class FileChartPoints : Data<FileChartPoints, ICPFileData, CPFileData>, IFileChartPoints, ISerializable
   {
     public ICPEvent<CPFileEvArgs> addCPLineEvent { get; set; } = new CPEvent<CPFileEvArgs>();
     public ICPEvent<CPFileEvArgs> remCPLineEvent { get; set; } = new CPEvent<CPFileEvArgs>();
@@ -368,6 +425,29 @@ namespace ChartPoints
     {
       fileElem = _fileElem;
       theData = new CPFileData(_fileElem.name, _fileElem.uniqueName, _projData, MoveChartPoint);
+    }
+
+    private FileChartPoints(SerializationInfo info, StreamingContext context)
+    {
+      theData = info.GetValue(Globals.GetTypeName(data), Globals.GetType(data)) as CPFileData;
+      UInt32 Count = info.GetUInt32("linePoints.Count");
+      for (uint i = 0; i < Count; ++i)
+      {
+        ILineChartPoints lineCPs = null;
+        lineCPs = info.GetValue(Globals.GetTypeName(lineCPs), Globals.GetType(lineCPs)) as ILineChartPoints;
+        AddLineChartPoints(lineCPs);
+      }
+    }
+
+    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+      info.AddValue(data.GetType().ToString(), data, data.GetType());
+      info.AddValue("linePoints.Count", (UInt32)linePoints.Count);
+      foreach (ILineChartPoints lineCPs in linePoints)
+      {
+        info.AddValue("linePoints", lineCPs, lineCPs.GetType());
+      }
     }
 
     public void MoveChartPoint(ILineChartPoints _lcps, IChartPoint cp, int _lineNum, int _linePos)
@@ -432,6 +512,8 @@ namespace ChartPoints
           lPnts = ChartPntFactory.Instance.CreateLineChartPoint(classElem, lineNum, linePos, data);
           AddLineChartPoints(lPnts);
         }
+        else
+          ;
       }
 
       return lPnts;
@@ -512,12 +594,30 @@ namespace ChartPoints
     }
   }
 
-  public class CPProjectData : ICPProjectData
+  [Serializable]
+  public class CPProjectData : ICPProjectData, ISerializable
   {
     public string projName { get; set; }
+
+    public CPProjectData(string _projName)
+    {
+      projName = _projName;
+    }
+
+    private CPProjectData(SerializationInfo info, StreamingContext context)
+    {
+      projName = info.GetString("projName");
+    }
+
+    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+      info.AddValue("projName", projName);
+    }
   }
 
-  public class ProjectChartPoints : Data<ProjectChartPoints, ICPProjectData, CPProjectData>, IProjectChartPoints
+  [Serializable]
+  public class ProjectChartPoints : Data<ProjectChartPoints, ICPProjectData, CPProjectData>, IProjectChartPoints, ISerializable
   {
     private CP.Code.IModel cpCodeModel;
     public ICPEvent<CPProjEvArgs> addCPFileEvent { get; set; } = new CPEvent<CPProjEvArgs>();
@@ -528,10 +628,36 @@ namespace ChartPoints
 
     public ProjectChartPoints(string _projName)
     {
-      theData = new CPProjectData() {projName = _projName};
+      theData = new CPProjectData(_projName);
       DTE2 dte2 = (DTE2)Globals.dte;
       Events2 evs2 = (Events2)dte2.Events;
       cpCodeModel = new CP.Code.Model(data.projName, evs2);
+    }
+
+    private ProjectChartPoints(SerializationInfo info, StreamingContext context)
+    {
+      theData = info.GetValue(Globals.GetTypeName(data), Globals.GetType(data)) as CPProjectData;
+      DTE2 dte2 = (DTE2)Globals.dte;
+      Events2 evs2 = (Events2)dte2.Events;
+      cpCodeModel = new CP.Code.Model(data.projName, evs2);
+      UInt32 Count = info.GetUInt32("filePoints.Count");
+      for (uint i = 0; i < Count; ++i)
+      {
+        IFileChartPoints fileCPs = null;
+        fileCPs = info.GetValue(Globals.GetTypeName(fileCPs), Globals.GetType(fileCPs)) as IFileChartPoints;
+        AddFileChartPoints(fileCPs, false);
+      }
+    }
+
+    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+      info.AddValue(data.GetType().ToString(), data, data.GetType());
+      info.AddValue("filePoints.Count", (UInt32)filePoints.Count);
+      foreach (IFileChartPoints fileCPs in filePoints)
+      {
+        info.AddValue("filePoints", fileCPs, fileCPs.GetType());
+      }
     }
 
     public IFileChartPoints GetFileChartPoints(string fname)

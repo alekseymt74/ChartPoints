@@ -2,6 +2,8 @@
 #include <iostream>
 #include <math.h>
 
+#include "ddd.h"
+
 #define PI 3.14159265
 
 test_01::test_01()
