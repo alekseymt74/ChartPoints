@@ -1,5 +1,6 @@
 ﻿using EnvDTE;
 using Microsoft.VisualStudio.Shell.Interop;
+using System;
 
 namespace ChartPoints
 {
@@ -25,6 +26,17 @@ namespace ChartPoints
     public static ITextChangedListener textChangedListener { get; set; }
     public static ICPTrackManager cpTrackManager { get; set; }
     public static ICPEventService cpEventsService { get; set; }
+
+
+    public static Type GetType<T>(T obj)
+    {
+      return typeof(T);
+    }
+
+    public static string GetTypeName<T>(T obj)
+    {
+      return typeof(T).ToString();
+    }
 
   }
 

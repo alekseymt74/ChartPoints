@@ -59,8 +59,8 @@ namespace CP
           cpClassLayout.traceVarPos.Add(traceVar.name, traceVar);
           // define trace var definition placement
           traceVar.defPos.fileName = ent.ProjectItem.Name;
-          traceVar.defPos.pos.lineNum = ent.EndPoint.Line - 1;
-          traceVar.defPos.pos.linePos = ent.EndPoint.LineCharOffset - 1;
+          traceVar.defPos.pos.lineNum = ent.EndPoint.Line;// - 1;
+          traceVar.defPos.pos.linePos = ent.EndPoint.LineCharOffset;// - 1;
         }
         else
           needDeclare = false;
@@ -324,6 +324,8 @@ namespace CP
 
       private ClassElement GetTraceVarClassElem(FileCodeModel fcm, int lineNum, int linePos)
       {
+        if (fcm == null)
+          return null;
         foreach (CodeElement codeElem in fcm.CodeElements)
         {
           ClassElement theClass = GetTraceVarClassElem(codeElem, lineNum, linePos);
@@ -485,7 +487,7 @@ namespace CP
               (caretPnt.Line == endPnt.Line && caretPnt.LineCharOffset <= endPnt.LineCharOffset))
           {
             // Oh, oh you're in the body, now.. (c)
-            int linePos = (caretPnt.Line == startPnt.Line ? startPnt.LineCharOffset /*+ 1*/ : 1/*0*/);
+            int linePos = (caretPnt.Line == startPnt.Line ? startPnt.LineCharOffset + 1 : 1/*0*/);
             checkPnt = new CheckCPPoint(new ClassElement(ownerClass), new ClassMethodElement(targetFunc), projName, activeDoc.Name, System.IO.Path.GetFullPath(activeDoc.FullName).ToLower(), caretPnt.Line, linePos);
 
             return checkPnt;

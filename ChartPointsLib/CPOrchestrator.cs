@@ -29,8 +29,8 @@ namespace ChartPoints
       if (solConfig.Contains(" [ChartPoints]"))
       {
         EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
-        SaveProjChartPoints(proj);//.FullName);
-        Orchestrate(proj);//.FullName);
+        //SaveProjChartPoints(proj);//.FullName);
+        //Orchestrate(proj);//.FullName);
         string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
         serviceHost = new ServiceHost(typeof(IPCChartPoint));
         NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
@@ -140,7 +140,9 @@ namespace ChartPoints
     public bool SaveProjChartPoints(EnvDTE.Project proj)
     {
       //!!!!!!!!! CHECK NEED SAVE !!!!!!!!!
+      //proj.Save();
       Microsoft.Build.Evaluation.Project msBuildProject = SaveProjChartPoints(proj.FullName);
+      //proj.IsDirty = true;
       if (msBuildProject != null)
       {
         SaveProject(proj, msBuildProject);
@@ -153,8 +155,20 @@ namespace ChartPoints
     public Microsoft.Build.Evaluation.Project SaveProjChartPoints(string projConfFile)
     {
       Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
+      //Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadedProjects.FirstOrDefault(pr => pr.FullPath == projConfFile);
+      //if(msbuildProj != null)
+      //  ProjectCollection.GlobalProjectCollection.UnloadProject(msbuildProj);
+      //msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
+      //bool remRet = ProjectCollection.GlobalProjectCollection.LoadedProjects.Remove(msbuildProj);
+      //msbuildProj = null;
       if (msbuildProj == null)
-        return null;
+      {
+        msbuildProj = new Microsoft.Build.Evaluation.Project(projConfFile);
+        if(msbuildProj == null)
+          return null;
+      }
+      msbuildProj.MarkDirty();
+      msbuildProj.ReevaluateIfNecessary();
       ProjectRootElement projRoot = msbuildProj.Xml;
       if (projRoot == null)
         return null;
@@ -305,6 +319,8 @@ namespace ChartPoints
           }
         }
       }
+      //Orchestrate(projConfFile);
+      //msbuildProj.Save();
 
       return msbuildProj;
     }
@@ -324,11 +340,24 @@ namespace ChartPoints
     public Microsoft.Build.Evaluation.Project Orchestrate(string projConfFile)
     {
       Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
+      //Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadedProjects.FirstOrDefault(pr => pr.FullPath == projConfFile);
+      //if (msbuildProj != null)
+      //  ProjectCollection.GlobalProjectCollection.UnloadProject(msbuildProj);
+      //msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
+      //bool remRet = ProjectCollection.GlobalProjectCollection.LoadedProjects.Remove(msbuildProj);
+      //msbuildProj = null;
       if (msbuildProj == null)
-        return null;
+      {
+        msbuildProj = new Microsoft.Build.Evaluation.Project(projConfFile);
+        if (msbuildProj == null)
+          return null;
+      }
       ProjectRootElement projRoot = msbuildProj.Xml;
       if (projRoot == null)
         return null;
+      //#####################################
+      //IEnumerable<ProjectItemDefinitionGroupElement> defGroup = projRoot.ItemDefinitionGroups.Where(gr => (gr.Condition.Contains("[ChartPoints]") && gr.Condition.Contains("|$(Platform)")));
+      //#####################################
       //Condition="'$(CONFIG)'=='DEBUG'"
       ProjectUsingTaskElement usingTaskElem;
       IEnumerable<ProjectUsingTaskElement> usingTaskElemCont
@@ -356,10 +385,14 @@ namespace ChartPoints
 
         ProjectItemGroupElement srcItemGroup = target.AddItemGroup();
         srcItemGroup.Condition = "$(SrcFilesChanged) == True";
+        //ProjectItemElement addInclPath = srcItemGroup.AddItem("AdditionalIncludeDirectories", "$(TEMP)");
+        //addInclPath.Include = "";
+        //addInclPath.Remove = "";
         ProjectItemElement srcRemoveItem = srcItemGroup.AddItem("ClCompile", "Fake");
         srcRemoveItem.Include = "";
         srcRemoveItem.Remove = "@(ClCompile)";
         ProjectItemElement srcIncludeItem = srcItemGroup.AddItem("ClCompile", "$(OutputSrcFiles)");
+        srcIncludeItem.AddMetadata("AdditionalIncludeDirectories", "$(MSBuildProjectDirectory);%(AdditionalIncludeDirectories);");
 
         ProjectItemGroupElement headerItemGroup = target.AddItemGroup();
         headerItemGroup.Condition = "$(HeaderFilesChanged) == True";
@@ -387,8 +420,15 @@ namespace ChartPoints
 
     public bool SaveProject(EnvDTE.Project proj, Microsoft.Build.Evaluation.Project msbuildProj)
     {
-      proj.Save();//proj.FullName);
-      msbuildProj.Save();
+      //msbuildProj.Save();
+      //proj.Save();//proj.FullName);
+      //proj.Save();//proj.FullName);
+      //msbuildProj.DisableMarkDirty = false;
+      //msbuildProj.MarkDirty();
+      //msbuildProj.ReevaluateIfNecessary();
+      //msbuildProj.Save();
+      //proj.Save();
+      //proj.Saved = true;
 
       return true;
     }

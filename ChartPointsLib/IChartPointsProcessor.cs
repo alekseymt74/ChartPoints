@@ -16,6 +16,7 @@ namespace ChartPoints
   public interface IChartPointsProcessor
   {
     IChartPointsProcessorData data { get; }
+    bool HasData();
     IProjectChartPoints GetProjectChartPoints(string projName);
     bool AddProjectChartPoints(string projName, out IProjectChartPoints pPnts);
     bool RemoveChartPoints(string projName);

@@ -71,7 +71,7 @@ namespace ChartPointsBuilder
 
     internal void Orchestrate(string fileName)
     {
-      string cpFileName = "__cp__." + fileName;
+      string cpFileName = System.IO.Path.GetTempPath() + "__cp__." + fileName;
       //TaskLogger.Log.LogMessage(MessageImportance.High, "$$$$$$$$$$$$$$$$$$$$$$$$$$$" + Directory.GetCurrentDirectory());
       File.Copy(fileName, cpFileName, true);
       string[] txt = File.ReadAllLines(cpFileName);
@@ -171,6 +171,9 @@ namespace ChartPointsBuilder
 
     public override bool Execute()
     {
+      //string pathEnvVar = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+      //string tempEnvVar = Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.Process);
+      //Environment.SetEnvironmentVariable("PATH", pathEnvVar + ";" + tempEnvVar, EnvironmentVariableTarget.Process);
       TaskLogger.Log = Log;
       NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
       string address = "net.pipe://localhost/ChartPoints/IPCChartPoint"; //!!!!!!!!!! move to vcxproj !!!!!!!!!!!!
@@ -188,7 +191,7 @@ namespace ChartPointsBuilder
           fileCPOrk.AddTransform(tracePos.pos.lineNum - 1, tracePos.pos.linePos - 1, traceVarName + ".trace();");
         }
         fileCPOrk = GetFileOrchestrator(traceVar.defPos.fileName);
-        fileCPOrk.AddTransform(traceVar.defPos.pos.lineNum, traceVar.defPos.pos.linePos,
+        fileCPOrk.AddTransform(traceVar.defPos.pos.lineNum - 1, traceVar.defPos.pos.linePos - 1,
           "cptracer::tracer_elem_impl<" + traceVar.type + "> " + traceVarName + ";");
         if (traceVar.traceVarInitPos.Count == 0 && traceVar.injConstructorPos != null)
         {
@@ -229,7 +232,7 @@ namespace ChartPointsBuilder
         CPFileCodeOrchestrator cpCodeOrk = null;
         if (filesOrchestrator.TryGetValue(item.ItemSpec, out cpCodeOrk))
         {
-          ITaskItem replacedItem = new TaskItem("__cp__." + item.ItemSpec);
+          ITaskItem replacedItem = new TaskItem(System.IO.Path.GetTempPath() + "__cp__." + item.ItemSpec);
           items.Add(replacedItem);
         }
         else
@@ -248,7 +251,7 @@ namespace ChartPointsBuilder
         CPFileCodeOrchestrator cpCodeOrk = null;
         if (filesOrchestrator.TryGetValue(item.ItemSpec, out cpCodeOrk))
         {
-          ITaskItem replacedItem = new TaskItem("__cp__." + item.ItemSpec);
+          ITaskItem replacedItem = new TaskItem(System.IO.Path.GetTempPath() + "__cp__." + item.ItemSpec);
           items.Add(replacedItem);
         }
         else

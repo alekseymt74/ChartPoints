@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace ChartPoints
 {
-  public class ChartPointsProcessorData : IChartPointsProcessorData
+  //[Serializable]
+  public class ChartPointsProcessorData : IChartPointsProcessorData//, ISerializable
   {
     /// <summary>
     /// Container of all chartpoints set in current cpp project
@@ -11,17 +15,62 @@ namespace ChartPoints
     public ISet<IProjectChartPoints> projPoints { get; set; }
       = new SortedSet<IProjectChartPoints>(Comparer<IProjectChartPoints>.Create((lh, rh) => (lh.data.projName.CompareTo(rh.data.projName))));
 
+    public ChartPointsProcessorData() {}
+
+    //private ChartPointsProcessorData(SerializationInfo info, StreamingContext context)
+    //{
+    //  UInt32 Count = info.GetUInt32("projPoints.Count");
+    //  for (uint i = 0; i < Count; ++i)
+    //  {
+    //    IProjectChartPoints projCPs = null;
+    //    projCPs = info.GetValue(Globals.GetTypeName(projCPs), Globals.GetType(projCPs)) as IProjectChartPoints;
+    //  }
+    //}
+
+    //[SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    //public void GetObjectData(SerializationInfo info, StreamingContext context)
+    //{
+    //  info.AddValue("projPoints.Count", (UInt32) projPoints.Count);
+    //  foreach(IProjectChartPoints projCPs in projPoints)
+    //  {
+    //    info.AddValue("projPoints", projCPs, projCPs.GetType());
+    //  }
+    //}
   }
   /// <summary>
   /// Implementation of IChartPointsProcessor
   /// </summary>
-  public class ChartPointsProcessor : IChartPointsProcessor
+  [Serializable]
+  public class ChartPointsProcessor : IChartPointsProcessor, ISerializable
   {
     public IChartPointsProcessorData data { get; set; }
 
     public ChartPointsProcessor()
     {
       data = new ChartPointsProcessorData();
+    }
+
+    private ChartPointsProcessor(SerializationInfo info, StreamingContext context)
+    {
+      //data = info.GetValue(Globals.GetTypeName(data), Globals.GetType(data)) as IChartPointsProcessorData;
+      UInt32 Count = info.GetUInt32("projPoints.Count");
+      for (uint i = 0; i < Count; ++i)
+      {
+        IProjectChartPoints projCPs = null;
+        projCPs = info.GetValue(Globals.GetTypeName(projCPs), Globals.GetType(projCPs)) as IProjectChartPoints;
+        AddProjectChartPoints(projCPs);
+      }
+    }
+
+    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+      info.AddValue(Globals.GetTypeName(data), data, data.GetType());
+      info.AddValue("projPoints.Count", (UInt32)data.projPoints.Count);
+      foreach (IProjectChartPoints projCPs in data.projPoints)
+      {
+        info.AddValue("projPoints", projCPs, projCPs.GetType());
+      }
     }
 
     public IProjectChartPoints GetProjectChartPoints(string projName)
@@ -31,15 +80,30 @@ namespace ChartPoints
       return pPnts;
     }
 
+    public bool HasData()
+    {
+      return (data.projPoints.Count != 0);
+    }
+
+    public bool AddProjectChartPoints(IProjectChartPoints pPnts)
+    {
+      pPnts.addCPFileEvent += AddProjectChartPoints;
+      pPnts.remCPFileEvent += RemoveProjectChartPoints;
+      data.projPoints.Add(pPnts);
+
+      return true;
+    }
+
     public bool AddProjectChartPoints(string projName, out IProjectChartPoints pPnts)
     {
       pPnts = GetProjectChartPoints(projName);
       if (pPnts == null)
       {
         pPnts = ChartPntFactory.Instance.CreateProjectChartPoint(projName);
-        pPnts.addCPFileEvent += AddProjectChartPoints;
-        pPnts.remCPFileEvent += RemoveProjectChartPoints;
-        data.projPoints.Add(pPnts);
+        //pPnts.addCPFileEvent += AddProjectChartPoints;
+        //pPnts.remCPFileEvent += RemoveProjectChartPoints;
+        //data.projPoints.Add(pPnts);
+        AddProjectChartPoints(pPnts);
 
         return true;
       }
