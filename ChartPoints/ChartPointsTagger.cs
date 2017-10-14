@@ -22,6 +22,14 @@ namespace ChartPoints
       linePnt = _linePnt;
     }
   }
+
+  public interface IChartPointsTagger
+  {
+    void RaiseTagsChangedEvent(IFileChartPoints fPnts);
+    void RaiseTagsChangedEvent(ILineChartPoints lPnts);
+    bool GetFileName(out string fn);
+  }
+
   public class ChartPointsTagger : ITagger<ChartPointTag>, IChartPointsTagger
   {
     private ITextView _view;
@@ -118,39 +126,75 @@ namespace ChartPoints
     public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
   }
 
-  public class ChartPointTagUpdater : IChartPointTagUpdater
+  public class FileCPsObserver
   {
-    private SortedDictionary<string, IChartPointsTagger> taggers;
+    public IChartPointsTagger fCPTagger { get; set; }
 
-    public void AddTagger(IChartPointsTagger tagger)
+    public FileCPsObserver(IFileChartPoints fCPs, IChartPointsTagger _fCPTagger)
     {
-      string fn;
-      if (tagger.GetFileName(out fn))
-        taggers[fn] = tagger;
-    }
-    public ChartPointTagUpdater()
-    {
-      taggers = new SortedDictionary<string, IChartPointsTagger>();
-      //var componentModel = (IComponentModel)GetService(typeof(SComponentModel));
-      //var textManager = (IVsTextManager)Package.GetGlobalService(typeof(SVsTextManager));
-      //IVsTextView activeView = null;
-      //ErrorHandler.ThrowOnFailure(textManager.GetActiveView(1, null, out activeView));
-      //var editorAdapter = componentModel.GetService<IVsEditorAdaptersFactoryService>();
-      //IWpfTextView wpfTextView = editorAdapetr.GetWpfTextView(activeView);
-    }
-    public void RaiseChangeTagEvent(IFileChartPoints fPnts)
-    {
-      IChartPointsTagger tagger;
-      if(taggers.TryGetValue(fPnts.data.fileFullName, out tagger))
-        tagger?.RaiseTagsChangedEvent(fPnts);
+      fCPTagger = _fCPTagger;
+      fCPs.addCPLineEvent += OnAddCpLine;
+      fCPs.remCPLineEvent += OnRemCpLine;
     }
 
-    public void RaiseChangeTagEvent(string fname, ILineChartPoints lPnts)
+    private void OnAddCpLine(CPFileEvArgs args)
     {
-      IChartPointsTagger tagger;
-      if (taggers.TryGetValue(fname, out tagger))
-        tagger?.RaiseTagsChangedEvent(lPnts);
+      fCPTagger?.RaiseTagsChangedEvent(args.lineCPs);
+      args.lineCPs.lineCPStatusChangedEvent += OnLineCPStatusChanged;
     }
+
+    private void OnLineCPStatusChanged(LineCPStatusEvArgs args)
+    {
+      fCPTagger?.RaiseTagsChangedEvent(args.lineCPs);
+    }
+
+    private void OnRemCpLine(CPFileEvArgs args)
+    {
+      fCPTagger?.RaiseTagsChangedEvent(args.lineCPs);
+      args.lineCPs.lineCPStatusChangedEvent -= OnLineCPStatusChanged;
+    }
+  }
+
+  public class FileCPTagObserver
+  {
+    public FileCPsObserver fCPObserver { get; set; }
+    public IChartPointsTagger fCPTagger { get; set; }
+    private IFileChartPoints fCPs;
+
+    public FileCPTagObserver(IFileChartPoints fCPs)
+    {
+      CreateObserver(fCPs);
+    }
+
+    public FileCPTagObserver(ITextView view, ITextBuffer buffer)
+    {
+      CreateTagger(view, buffer);
+    }
+
+    public void CreateObserver(IFileChartPoints _fCPs)
+    {
+      if (fCPTagger == null)
+        fCPs = _fCPs;
+      else
+      {
+        if (fCPObserver != null)
+          fCPObserver.fCPTagger = fCPTagger;//fCPObserver = null;
+        else
+          fCPObserver = new FileCPsObserver(fCPs, fCPTagger);
+      }
+    }
+
+    public IChartPointsTagger CreateTagger(ITextView view, ITextBuffer buffer)
+    {
+      if (fCPTagger != null)
+        fCPTagger = null;
+      fCPTagger = new ChartPointsTagger(view, buffer);
+      if (fCPs != null)
+        CreateObserver(fCPs);
+
+      return fCPTagger;
+    }
+
   }
 
   [Export(typeof(IViewTaggerProvider))]
@@ -158,9 +202,24 @@ namespace ChartPoints
   [TagType(typeof(ChartPointTag))]
   class ChartPointsTaggerProvider : IViewTaggerProvider
   {
+    private SortedDictionary<string, FileCPTagObserver> taggers = new SortedDictionary<string, FileCPTagObserver>();
+
     public ChartPointsTaggerProvider()
     {
-      Globals.taggerUpdater = new ChartPointTagUpdater();
+      ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
+      ICPEventService cpEvsService;
+      cpServProv.GetService<ICPEventService>(out cpEvsService);
+      IConstructEvents constrEvents = cpEvsService.GetConstructEvents();
+      constrEvents.createdFileCPsEvent += OnFileCPsCreated;
+    }
+
+    void OnFileCPsCreated(IConstructEventArgs<IFileChartPoints> args)
+    {
+      FileCPTagObserver fCPTagObserver;
+      if (taggers.TryGetValue(args.obj.data.fileFullName, out fCPTagObserver))
+        fCPTagObserver.CreateObserver(args.obj);
+      else
+        taggers.Add(args.obj.data.fileFullName, new FileCPTagObserver(args.obj));
     }
 
     public ITagger<T> CreateTagger<T>(ITextView view, ITextBuffer buffer) where T : ITag
@@ -183,9 +242,17 @@ namespace ChartPoints
       if (dteDoc != null && dteDoc.ProjectItem != null && dteDoc.ProjectItem.ContainingProject != null
         && dteDoc.ProjectItem.ContainingProject.Name != "Miscellaneous Files" && dteDoc.ProjectItem.ContainingProject.UniqueName != "<MiscFiles>")
       {
-        ChartPointsTagger tagger = new ChartPointsTagger(view, buffer);
-        Globals.taggerUpdater.AddTagger(tagger);
-        return tagger as ITagger<T>;
+        FileCPTagObserver fCPTagObserver;
+        string fn = System.IO.Path.GetFullPath(thisTextDoc.FilePath).ToLower();
+        if (taggers.TryGetValue(fn, out fCPTagObserver))
+          fCPTagObserver.CreateTagger(view, buffer);
+        else
+        {
+          fCPTagObserver = new FileCPTagObserver(view, buffer);
+          taggers.Add(fn, fCPTagObserver);
+        }
+
+        return fCPTagObserver.fCPTagger as ITagger<T>;
       }
 
       return null;

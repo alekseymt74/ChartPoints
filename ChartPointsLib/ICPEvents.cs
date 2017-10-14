@@ -34,8 +34,7 @@ namespace ChartPoints
 
   public interface ICPEventService
   {
-    void RegisterConstructEventProvider(ICPEventProvider<IConstructEvents> evProv);
-    bool GetConstructEventProvider( out ICPEventProvider<IConstructEvents> evProv );
+    IConstructEvents GetConstructEvents();
   }
 
   //////////////////////////////////////////////////////////////////////////

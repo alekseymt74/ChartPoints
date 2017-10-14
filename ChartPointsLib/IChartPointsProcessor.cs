@@ -22,17 +22,4 @@ namespace ChartPoints
     bool RemoveChartPoints(string projName);
   }
 
-  public interface IChartPointsTagger
-  {
-    void RaiseTagsChangedEvent(IFileChartPoints fPnts);
-    void RaiseTagsChangedEvent(ILineChartPoints lPnts);
-    bool GetFileName(out string fn);
-  }
-
-  public interface IChartPointTagUpdater
-  {
-    void AddTagger(IChartPointsTagger tagger);
-    void RaiseChangeTagEvent(IFileChartPoints fPnts);
-    void RaiseChangeTagEvent(string fname, ILineChartPoints lPnts);
-  }
 }

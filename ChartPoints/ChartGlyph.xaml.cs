@@ -38,22 +38,7 @@ namespace ChartPoints
     }
     protected override void OnRender(DrawingContext dc)
     {
-      uint mask = 0;
-      foreach (IChartPoint cp in linePnt.chartPoints)
-      {
-        switch (cp.data.status)
-        {
-          case EChartPointStatus.SwitchedOn:
-            mask |= 1;
-            break;
-          case EChartPointStatus.SwitchedOff:
-            mask |= 1 << 1;
-            break;
-          case EChartPointStatus.NotAvailable:
-            mask |= 1 << 2;
-            break;
-        }
-      }
+      uint mask = (uint)linePnt.status;
       uint count = 0;
       for (uint i = 0; i < 3; ++i)
       {

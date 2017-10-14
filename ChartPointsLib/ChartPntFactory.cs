@@ -20,12 +20,10 @@ namespace ChartPoints
     public static IChartPointsProcessor processor { get; set; }
     public static ICPOrchestrator orchestrator { get; set; }
 
-    public static IChartPointTagUpdater taggerUpdater { get; set; }
     public static IVsOutputWindow outputWindow { get; set; }
     public static ICPTracer cpTracer { get; set; }
     public static ITextChangedListener textChangedListener { get; set; }
     public static ICPTrackManager cpTrackManager { get; set; }
-    public static ICPEventService cpEventsService { get; set; }
 
 
     public static Type GetType<T>(T obj)

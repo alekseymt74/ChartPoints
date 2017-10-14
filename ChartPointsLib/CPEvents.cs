@@ -31,18 +31,16 @@ namespace ChartPoints
     protected override ICPEvent<T> Sub(OnCPEvent<T> cb)
     {
       _event -= cb;
+
       return this;
     }
     public override void Fire(T args)
     {
-      if (_event == null)
+      lock (history)
       {
-        lock (history)
-        {
-          history.Add(args);
-        }
+        history.Add(args);
       }
-      else
+      if (_event != null)
         _event.Invoke(args);
     }
 
@@ -62,17 +60,13 @@ namespace ChartPoints
 
   public class CPEventService : ICPEventService
   {
-    private ICPEventProvider<IConstructEvents> evConstrProv;
-    public void RegisterConstructEventProvider(ICPEventProvider<IConstructEvents> evProv)
+    private ConstructEvents constrEvents;
+
+    public IConstructEvents GetConstructEvents()
     {
-      evConstrProv = evProv;
-    }
-    public bool GetConstructEventProvider(out ICPEventProvider<IConstructEvents> evProv)
-    {
-      evProv = evConstrProv;
-      if( evConstrProv != null)
-        return true;
-      return false;
+      if (constrEvents == null)
+        constrEvents = new ConstructEvents();
+      return constrEvents;
     }
   }
 
@@ -95,6 +89,26 @@ namespace ChartPoints
   }
 
   //#####################
+
+  public class CPStatusEvArgs
+  {
+    public IChartPoint cp { get; }
+
+    public CPStatusEvArgs(IChartPoint _cp)
+    {
+      cp = _cp;
+    }
+  }
+
+  public class LineCPStatusEvArgs
+  {
+    public ILineChartPoints lineCPs { get; }
+
+    public LineCPStatusEvArgs(ILineChartPoints _lineCPs)
+    {
+      lineCPs = _lineCPs;
+    }
+  }
 
   public class CPLineEvArgs
   {

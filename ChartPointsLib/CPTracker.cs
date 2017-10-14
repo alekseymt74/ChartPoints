@@ -23,38 +23,38 @@ namespace ChartPoints
     }
   }
 
-  public class LineCPTracker : ICPEntTracker
-  {
-    public ICPEvent<CPEntTrackerArgs> emptyCpEvent { get; set; } = new CPEvent<CPEntTrackerArgs>();
-    private ILineChartPoints lcps;
+  //public class LineCPTracker : ICPEntTracker
+  //{
+  //  public ICPEvent<CPEntTrackerArgs> emptyCpEvent { get; set; } = new CPEvent<CPEntTrackerArgs>();
+  //  private ILineChartPoints lcps;
 
-    public LineCPTracker(ILineChartPoints _lcps)
-    {
-      lcps = _lcps;
-      lcps.addCPEvent += OnAddCp;
-      lcps.remCPEvent += OnRemCp;
-    }
+  //  public LineCPTracker(ILineChartPoints _lcps)
+  //  {
+  //    lcps = _lcps;
+  //    lcps.addCPEvent += OnAddCp;
+  //    lcps.remCPEvent += OnRemCp;
+  //  }
 
-    private void OnRemCp(CPLineEvArgs args)
-    {
-      //if (args.lineCPs.Count == 0) // !!! POTENTIAL STATUS UPDATE
-      {
-        Globals.taggerUpdater.RaiseChangeTagEvent(lcps.data.fileData.fileFullName, lcps);
-        //emptyCpEvent.Fire(new CPEntTrackerArgs(this));
-      }
-    }
+  //  private void OnRemCp(CPLineEvArgs args)
+  //  {
+  //    //if (args.lineCPs.Count == 0) // !!! POTENTIAL STATUS UPDATE
+  //    {
+  //      Globals.taggerUpdater?.RaiseChangeTagEvent(lcps.data.fileData.fileFullName, lcps);
+  //      //emptyCpEvent.Fire(new CPEntTrackerArgs(this));
+  //    }
+  //  }
 
-    private void OnAddCp(CPLineEvArgs args)
-    {
-      //if (args.lineCPs.Count == 1) // !!! POTENTIAL STATUS UPDATE
-        Globals.taggerUpdater.RaiseChangeTagEvent(lcps.data.fileData.fileFullName, lcps);
-    }
+  //  private void OnAddCp(CPLineEvArgs args)
+  //  {
+  //    //if (args.lineCPs.Count == 1) // !!! POTENTIAL STATUS UPDATE
+  //      Globals.taggerUpdater?.RaiseChangeTagEvent(lcps.data.fileData.fileFullName, lcps);
+  //  }
 
-    public void Validate(int lineNum, int linesAdd)
-    {
-      //bool valid = cp.ValidatePosition(lineNum + linesAdd, linePos);
-    }
-  }
+  //  public void Validate(int lineNum, int linesAdd)
+  //  {
+  //    //bool valid = cp.ValidatePosition(lineNum + linesAdd, linePos);
+  //  }
+  //}
 
   public class FileCPTracker : ICPEntTracker
   {
@@ -70,19 +70,10 @@ namespace ChartPoints
 
     private void OnAddCpLine(CPFileEvArgs args)
     {
-      //if (args.lineCPs.Count == 1)
-      if(Globals.taggerUpdater != null)
-        Globals.taggerUpdater.RaiseChangeTagEvent(fcps.data.fileFullName, args.lineCPs);
     }
 
     private void OnRemCpLine(CPFileEvArgs args)
     {
-      //if (args.lineCPs.Count == 0)
-      {
-        Globals.taggerUpdater.RaiseChangeTagEvent(fcps.data.fileFullName, args.lineCPs);
-        if(args.fileCPs.Count == 0)
-          emptyCpEvent.Fire(new CPEntTrackerArgs(this));
-      }
     }
 
     public void Validate(int lineNum, int linesAdd)
@@ -183,13 +174,13 @@ namespace ChartPoints
       //fTracker.Add(cpValidator);
     }
 
-    public void Register(ILineChartPoints lcp)
-    {
-      IFileTracker fTracker = AddFileTracker(lcp.data.fileData.fileFullName);
-      ICPEntTracker cpValidator = new LineCPTracker(lcp);
-      fTracker.Add(cpValidator);
-      addFTrackerEvent.Fire(new FileTrackerArgs(fTracker));
-    }
+    //public void Register(ILineChartPoints lcp)
+    //{
+    //  IFileTracker fTracker = AddFileTracker(lcp.data.fileData.fileFullName);
+    //  ICPEntTracker cpValidator = new LineCPTracker(lcp);
+    //  fTracker.Add(cpValidator);
+    //  addFTrackerEvent.Fire(new FileTrackerArgs(fTracker));
+    //}
 
     public void Register(IFileChartPoints fcp)
     {

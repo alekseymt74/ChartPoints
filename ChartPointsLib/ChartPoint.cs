@@ -56,6 +56,7 @@ namespace ChartPoints
   [Serializable]
   public class ChartPoint : Data<ChartPoint, IChartPointData, ChartPointData>, IChartPoint, ISerializable
   {
+    public ICPEvent<CPStatusEvArgs> cpStatusChangedEvent { get; set; } = new CPEvent<CPStatusEvArgs>();
     private CP.Code.IClassVarElement codeElem;
     protected ChartPoint() { }
 
@@ -98,7 +99,11 @@ namespace ChartPoints
       else
         theData.enabled = true;
       EChartPointStatus curStatus = theData.status;
-      theData.status = newStatus;
+      if (newStatus != curStatus)
+      {
+        theData.status = newStatus;
+        cpStatusChangedEvent.Fire(new CPStatusEvArgs(this));
+      }
 
       return curStatus;
     }
@@ -176,21 +181,21 @@ namespace ChartPoints
     public int lineNum { get; set; }
     public int linePos { get; set; }
 
-    delegate void UpdatePosition(IChartPoint cp, int _lineNum, int _linePos);
+    //delegate void UpdatePosition(IChartPoint cp, int _lineNum, int _linePos);
 
-    private UpdatePosition updPos;
+    //private UpdatePosition updPos;
 
-    public TextPosition(int _lineNum, int _linePos, Action<IChartPoint, int, int> _updPos)
+    public TextPosition(int _lineNum, int _linePos)//, Action<IChartPoint, int, int> _updPos)
     {
       lineNum = _lineNum;
       linePos = _linePos;
-      updPos = new UpdatePosition(_updPos);
+      //updPos = new UpdatePosition(_updPos);
     }
 
-    public void Move(IChartPoint cp, int _lineNum, int _linePos)
-    {
-      updPos(cp, _lineNum, _linePos);
-    }
+    //public void Move(IChartPoint cp, int _lineNum, int _linePos)
+    //{
+    //  updPos(cp, _lineNum, _linePos);
+    //}
 
     [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
     public void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -215,7 +220,36 @@ namespace ChartPoints
   [Serializable]
   public class LineChartPoints : Data<LineChartPoints, ICPLineData, CPLineData>, ILineChartPoints, ISerializable
   {
+    private ELineCPsStatus theStatus = ELineCPsStatus.NotAvailable;
+    public ELineCPsStatus status
+    {
+      get { return theStatus; }
+    }
+
+    private ELineCPsStatus UpdateStatus(IChartPoint cp)
+    {
+      ELineCPsStatus curStatus = theStatus;
+      theStatus = (ELineCPsStatus)((int)theStatus | (int)cp.data.status);
+      if (curStatus != theStatus)
+        lineCPStatusChangedEvent.Fire(new LineCPStatusEvArgs(this));
+
+      return theStatus;
+    }
+
+    private ELineCPsStatus CalcStatus()
+    {
+      ELineCPsStatus curStatus = theStatus;
+      theStatus = ELineCPsStatus.NotAvailable;
+      foreach (IChartPoint cp in chartPoints)
+        theStatus = (ELineCPsStatus)((int)theStatus | (int)cp.data.status);
+      if (curStatus != theStatus)
+        lineCPStatusChangedEvent.Fire(new LineCPStatusEvArgs(this));
+
+      return theStatus;
+    }
+
     private CP.Code.IClassElement codeClass;
+    public ICPEvent<LineCPStatusEvArgs> lineCPStatusChangedEvent { get; set; } = new CPEvent<LineCPStatusEvArgs>();
     public ICPEvent<CPLineEvArgs> addCPEvent { get; set; } = new CPEvent<CPLineEvArgs>();
     public ICPEvent<CPLineEvArgs> remCPEvent { get; set; } = new CPEvent<CPLineEvArgs>();
 
@@ -231,7 +265,7 @@ namespace ChartPoints
     public LineChartPoints(CP.Code.IClassElement _codeClass, int _lineNum, int _linePos, ICPFileData _fileData)
     {
       codeClass = _codeClass;
-      theData = new CPLineData() {pos = new TextPosition(_lineNum, _linePos, MoveChartPoint), fileData = _fileData};
+      theData = new CPLineData() {pos = new TextPosition(_lineNum, _linePos/*, MoveChartPoint*/), fileData = _fileData};
     }
 
     [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
@@ -244,11 +278,11 @@ namespace ChartPoints
         info.AddValue("cp", cp, cp.GetType());
       }
     }
-    public void MoveChartPoint(IChartPoint cp, int _lineNum, int _linePos)
-    {
-      RemoveChartPoint(cp);
-      theData.fileData.Move(this, cp, _lineNum, _linePos);
-    }
+    //public void MoveChartPoint(IChartPoint cp, int _lineNum, int _linePos)
+    //{
+    //  RemoveChartPoint(cp);
+    //  theData.fileData.Move(this, cp, _lineNum, _linePos);
+    //}
 
     public virtual IChartPoint GetChartPoint(string varName)
     {
@@ -261,8 +295,6 @@ namespace ChartPoints
       CP.Code.IClassVarElement codeElem = codeClass.GetVar(varName);
       if (codeElem != null)
         return AddChartPoint(codeElem, out chartPnt, false);
-      else
-        return false;
 
       return false;
     }
@@ -272,6 +304,8 @@ namespace ChartPoints
       if (GetChartPoint(chartPnt.data.uniqueName) == null)
       {
         chartPoints.Add(chartPnt);
+        chartPnt.cpStatusChangedEvent += OnCPStatusChanged;
+        UpdateStatus(chartPnt);
         addCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
         return true;
       }
@@ -279,11 +313,20 @@ namespace ChartPoints
       return false;
     }
 
+    protected void OnCPStatusChanged(CPStatusEvArgs args)
+    {
+      CalcStatus();
+    }
+
     public bool RemoveChartPoint(IChartPoint chartPnt)
     {
       bool ret = chartPoints.Remove(chartPnt);
       if (ret)
+      {
+        chartPnt.cpStatusChangedEvent -= OnCPStatusChanged;
+        CalcStatus();
         remCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
+      }
 
       return ret;
     }
@@ -300,6 +343,8 @@ namespace ChartPoints
       CP.Code.IClassVarElement codeElem = codeClass.GetVar(varName);
       chartPnt = ChartPntFactory.Instance.CreateChartPoint(codeElem, data);
       chartPoints.Add(chartPnt);
+      chartPnt.cpStatusChangedEvent += OnCPStatusChanged;
+      UpdateStatus(chartPnt);
       addCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
 
       return true;
@@ -315,6 +360,8 @@ namespace ChartPoints
       }
       chartPnt = ChartPntFactory.Instance.CreateChartPoint(codeElem, data);
       chartPoints.Add(chartPnt);
+      chartPnt.cpStatusChangedEvent += OnCPStatusChanged;
+      UpdateStatus(chartPnt);
       addCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
 
       return true;
@@ -372,16 +419,16 @@ namespace ChartPoints
     public string fileFullName { get; set; }
     public ICPProjectData projData { get; set; }
 
-    delegate void UpdatePosition(ILineChartPoints lcps, IChartPoint cp, int _lineNum, int _linePos);
+    //delegate void UpdatePosition(ILineChartPoints lcps, IChartPoint cp, int _lineNum, int _linePos);
 
-    private UpdatePosition updPos;
+    //private UpdatePosition updPos;
 
-    public CPFileData(string _fileName, string _fileFullName, ICPProjectData _projData, Action<ILineChartPoints, IChartPoint, int, int> _updPos)
+    public CPFileData(string _fileName, string _fileFullName, ICPProjectData _projData)//, Action<ILineChartPoints, IChartPoint, int, int> _updPos)
     {
       fileName = _fileName;
       fileFullName = _fileFullName.ToLower();
       projData = _projData;
-      updPos = new UpdatePosition(_updPos);
+      //updPos = new UpdatePosition(_updPos);
     }
 
     private CPFileData(SerializationInfo info, StreamingContext context)
@@ -395,10 +442,10 @@ namespace ChartPoints
       info.AddValue("fileName", fileName);
     }
 
-    public void Move(ILineChartPoints lcps ,IChartPoint cp, int _lineNum, int _linePos)
-    {
-      updPos(lcps, cp, _lineNum, _linePos);
-    }
+    //public void Move(ILineChartPoints lcps ,IChartPoint cp, int _lineNum, int _linePos)
+    //{
+    //  updPos(lcps, cp, _lineNum, _linePos);
+    //}
   }
 
   [Serializable]
@@ -424,7 +471,7 @@ namespace ChartPoints
     public FileChartPoints(CP.Code.IFileElem _fileElem, ICPProjectData _projData)
     {
       fileElem = _fileElem;
-      theData = new CPFileData(_fileElem.name, _fileElem.uniqueName, _projData, MoveChartPoint);
+      theData = new CPFileData(_fileElem.name, _fileElem.uniqueName, _projData);//, MoveChartPoint);
     }
 
     private FileChartPoints(SerializationInfo info, StreamingContext context)
@@ -450,11 +497,11 @@ namespace ChartPoints
       }
     }
 
-    public void MoveChartPoint(ILineChartPoints _lcps, IChartPoint cp, int _lineNum, int _linePos)
-    {
-      ILineChartPoints lcps = AddLineChartPoints(_lineNum, _linePos);
-      lcps.AddChartPoint(cp);
-    }
+    //public void MoveChartPoint(ILineChartPoints _lcps, IChartPoint cp, int _lineNum, int _linePos)
+    //{
+    //  ILineChartPoints lcps = AddLineChartPoints(_lineNum, _linePos);
+    //  lcps.AddChartPoint(cp);
+    //}
 
     public ILineChartPoints GetLineChartPoints(int lineNum)
     {
@@ -492,7 +539,6 @@ namespace ChartPoints
       bool ret = linePoints.Remove(linePnts);
       if (ret)
       {
-        Globals.taggerUpdater.RaiseChangeTagEvent(data.fileFullName, linePnts);
         ((TextPosition) ((LineChartPoints) linePnts).theData.pos).lineNum += linesAdd;
         linePoints.Add(linePnts);
         addCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
@@ -569,7 +615,7 @@ namespace ChartPoints
       //      RemoveLineChartPoints(lPnts.Value);
       //    //linePoints.Remove(lPnts.Value);//!!!EVENT!!!
       //    ////if (RemoveLineChartPoints(lPnts.Value))
-      //    //Globals.taggerUpdater.RaiseChangeTagEvent(data.fileFullName, lPnts.Value);
+      //    //Globals.taggerUpdater?.RaiseChangeTagEvent(data.fileFullName, lPnts.Value);
       //  }
       //  //foreach (KeyValuePair<bool, ILineChartPoints> lPnts in changedLines)
       //  //{

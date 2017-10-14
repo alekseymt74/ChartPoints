@@ -6,16 +6,17 @@
   /// </summary>
   public class ChartPntFactoryImpl : ChartPntFactory
   {
-    ConstructEvents constrEvents = new ConstructEvents();
-    private CPEventProvider<IConstructEvents> constrEvsProv;
+    IConstructEvents constrEvents;
     public ChartPntFactoryImpl()
     {
       // check and set singleton factory instance
       // helps to hide the injection of another factory object, eg. factory stub in tests
       if (ChartPntFactory.factory == null)
         ChartPntFactory.factory = this;
-      constrEvsProv = new CPEventProvider<IConstructEvents>( constrEvents );
-      Globals.cpEventsService.RegisterConstructEventProvider( constrEvsProv );
+      var cpServProv = ICPServiceProvider.GetProvider();
+      ICPEventService cpEvsService;
+      cpServProv.GetService<ICPEventService>(out cpEvsService);
+      constrEvents = cpEvsService.GetConstructEvents();
       Globals.cpTrackManager = new CPTrackManager();
     }
 
@@ -31,13 +32,17 @@
 
     public override IProjectChartPoints CreateProjectChartPoint(string _projName)
     {
-      return new ProjectChartPoints(_projName);
+      IProjectChartPoints pcps = new ProjectChartPoints(_projName);
+      constrEvents.createdProjCPsEvent.Fire(new ConstructEventArgs<IProjectChartPoints>(pcps));
+
+      return pcps;
     }
 
     public override IFileChartPoints CreateFileChartPoint(CP.Code.IFileElem _fileElem, ICPProjectData _projData)
     {
       IFileChartPoints fcps = new FileChartPoints(_fileElem, _projData);
       Globals.cpTrackManager.Register(fcps);
+      constrEvents.createdFileCPsEvent.Fire(new ConstructEventArgs<IFileChartPoints>(fcps));
 
       return fcps;
     }
