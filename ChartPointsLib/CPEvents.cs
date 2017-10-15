@@ -75,6 +75,7 @@ namespace ChartPoints
     public ICPEvent<IConstructEventArgs<IChartPoint>> createdCPEvent { get; set; } = new CPEvent<IConstructEventArgs<IChartPoint>>();
     public ICPEvent<IConstructEventArgs<ILineChartPoints>> createdLineCPsEvent { get; set; } = new CPEvent<IConstructEventArgs<ILineChartPoints>>();
     public ICPEvent<IConstructEventArgs<IFileChartPoints>> createdFileCPsEvent { get; set; } = new CPEvent<IConstructEventArgs<IFileChartPoints>>();
+    public ICPEvent<IConstructEventArgs<IFileChartPoints>> deletedFileCPsEvent { get; set; } = new CPEvent<IConstructEventArgs<IFileChartPoints>>();
     public ICPEvent<IConstructEventArgs<IProjectChartPoints>> createdProjCPsEvent { get; set; } = new CPEvent<IConstructEventArgs<IProjectChartPoints>>();
   }
 

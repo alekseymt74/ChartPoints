@@ -20,12 +20,12 @@ namespace ChartPoints
   /// </summary>
   public partial class ChartGlyph : UserControl
   {
-    ILineChartPoints linePnt;
-    public ChartGlyph(ILineChartPoints _linePnt)
+    private uint lineMask;
+    public ChartGlyph(uint _lineMask)
     {
       InitializeComponent();
       object obj = this.Content;
-      linePnt = _linePnt;
+      lineMask = _lineMask;
     }
     private void DrawStatus(DrawingContext dc, double x, double y, double w, double h, Color color)
     {
@@ -38,11 +38,10 @@ namespace ChartPoints
     }
     protected override void OnRender(DrawingContext dc)
     {
-      uint mask = (uint)linePnt.status;
       uint count = 0;
       for (uint i = 0; i < 3; ++i)
       {
-        if ((mask & (1 << (int)i)) != 0)
+        if ((lineMask & (1 << (int)i)) != 0)
           ++count;
       }
       if (count > 0)
@@ -53,7 +52,7 @@ namespace ChartPoints
         double y = 0;
         for (uint i = 0; i < 3; ++i)
         {
-          if ((mask & (1 << (int)i)) != 0)
+          if ((lineMask & (1 << (int)i)) != 0)
           {
             DrawStatus(dc, 0, y, w, h, statusColors[i]);
             y += (h + 1);

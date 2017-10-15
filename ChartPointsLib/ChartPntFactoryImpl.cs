@@ -34,8 +34,14 @@
     {
       IProjectChartPoints pcps = new ProjectChartPoints(_projName);
       constrEvents.createdProjCPsEvent.Fire(new ConstructEventArgs<IProjectChartPoints>(pcps));
+      pcps.remCPFileEvent += OnDelFileCPs;
 
       return pcps;
+    }
+
+    protected void OnDelFileCPs(CPProjEvArgs args)
+    {
+      constrEvents.deletedFileCPsEvent.Fire(new ConstructEventArgs<IFileChartPoints>(args.fileCPs));
     }
 
     public override IFileChartPoints CreateFileChartPoint(CP.Code.IFileElem _fileElem, ICPProjectData _projData)
