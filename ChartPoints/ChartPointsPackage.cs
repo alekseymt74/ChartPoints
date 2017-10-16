@@ -66,42 +66,12 @@ namespace ChartPoints
 
     public int OnAfterLoadProject(IVsHierarchy pStubHierarchy, IVsHierarchy pRealHierarchy)
     {
-      object propItemObj = null;
-      pStubHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
-      pRealHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
-      //foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-      //{
-      //  bool ret = false;
-      //  if (proj.Name != "Miscellaneous Files")
-      //    ret = Globals.orchestrator.LoadProjChartPoints(proj);
-      //}
       return VSConstants.S_OK;
     }
 
     // Somethimes it's not called...
     public int OnAfterOpenProject(IVsHierarchy pHierarchy, int fAdded)
     {
-      object propItemObj = null;
-      pHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int) __VSHPROPID.VSHPROPID_Name, out propItemObj);
-      if (propItemObj != null)
-      {
-        string projName = (string)propItemObj;
-        if (projName != "Miscellaneous Files")
-        {
-          EnvDTE.Project theProj = null;
-          foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-          {
-            if (proj.Name == projName)
-              theProj = proj;
-          }
-          if (theProj != null)
-          {
-            LoadCPProps();//!!! Need to load one project ONLY !!!
-            if (savedProjects.Contains(projName))
-              savedProjects.Remove(projName);
-          }
-        }
-      }
 
       return VSConstants.S_OK;
     }
@@ -135,31 +105,6 @@ namespace ChartPoints
     private ISet<string> savedProjects = new SortedSet<string>();
     public int OnQueryCloseProject(IVsHierarchy pHierarchy, int fRemoving, ref int pfCancel)
     {
-      return VSConstants.S_OK;
-
-      object propItemObj = null;
-      pHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
-      if (propItemObj != null)
-      {
-        string projName = (string)propItemObj;
-        if (projName != "Miscellaneous Files")
-        {
-          EnvDTE.Project theProj = null;
-          foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-          {
-            if (proj.Name == projName)
-              theProj = proj;
-          }
-          if (theProj != null && !savedProjects.Contains(projName))
-          {
-            //Globals.orchestrator.SaveProjChartPoints(theProj);//!!! SAVE TO STREAM FOR FUTURE ChartPointsPackage::IVsPersistSolutionOpts::WriteUserOptions
-            Globals.orchestrator.UnloadProject(theProj);
-            savedProjects.Add(projName);
-          }
-          pfCancel = 0;
-        }
-      }
-
       return VSConstants.S_OK;
     }
 
@@ -206,74 +151,44 @@ namespace ChartPoints
   }
 
 
-  internal class RunningDocTableEvents : IVsRunningDocTableEvents3
-  {
-    private RunningDocumentTable rdt;
+  //internal class RunningDocTableEvents : IVsRunningDocTableEvents3
+  //{
+  //  private RunningDocumentTable rdt;
 
-    public RunningDocTableEvents(RunningDocumentTable _rdt)
-    {
-      rdt = _rdt;
-    }
-    public int OnBeforeSave(uint docCookie)
-    {
-      //RunningDocumentInfo rdInfo = rdt.GetDocumentInfo(docCookie);
-      //if (rdInfo.Moniker.EndsWith(".vcxproj"))
-      //{
-      //  EnvDTE.Project theProj = null;
-      //  foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-      //  {
-      //    if (proj.FullName == rdInfo.Moniker)
-      //    {
-      //      theProj = proj;
-      //      break;
-      //    }
-      //  }
-      //  if (theProj != null)
-      //    Globals.orchestrator.SaveProjChartPoints(theProj);
-      //}
-      return VSConstants.S_OK;
-    }
+  //  public RunningDocTableEvents(RunningDocumentTable _rdt)
+  //  {
+  //    rdt = _rdt;
+  //  }
+  //  public int OnBeforeSave(uint docCookie)
+  //  {
+  //    return VSConstants.S_OK;
+  //  }
 
-    public int OnAfterAttributeChange(uint docCookie, uint grfAttribs) { return VSConstants.S_OK; }
-    public int OnAfterAttributeChangeEx(uint docCookie, uint grfAttribs, IVsHierarchy pHierOld,
-                                        uint itemidOld, string pszMkDocumentOld, IVsHierarchy pHierNew,
-                                        uint itemidNew, string pszMkDocumentNew)
-    {
-      return VSConstants.S_OK;
-    }
+  //  public int OnAfterAttributeChange(uint docCookie, uint grfAttribs) { return VSConstants.S_OK; }
+  //  public int OnAfterAttributeChangeEx(uint docCookie, uint grfAttribs, IVsHierarchy pHierOld,
+  //                                      uint itemidOld, string pszMkDocumentOld, IVsHierarchy pHierNew,
+  //                                      uint itemidNew, string pszMkDocumentNew)
+  //  {
+  //    return VSConstants.S_OK;
+  //  }
 
-    public int OnAfterDocumentWindowHide(uint docCookie, IVsWindowFrame pFrame) { return VSConstants.S_OK; }
-    public int OnAfterFirstDocumentLock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining)
-    {
-      return VSConstants.S_OK;
-    }
+  //  public int OnAfterDocumentWindowHide(uint docCookie, IVsWindowFrame pFrame) { return VSConstants.S_OK; }
+  //  public int OnAfterFirstDocumentLock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining)
+  //  {
+  //    return VSConstants.S_OK;
+  //  }
 
-    public int OnAfterSave(uint docCookie)
-    {
-      //RunningDocumentInfo rdInfo = rdt.GetDocumentInfo(docCookie);
-      //if (rdInfo.Moniker.EndsWith(".vcxproj"))
-      //{
-      //  EnvDTE.Project theProj = null;
-      //  foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-      //  {
-      //    if (proj.FullName == rdInfo.Moniker)
-      //    {
-      //      theProj = proj;
-      //      break;
-      //    }
-      //  }
-      //  if (theProj != null)
-      //    Globals.orchestrator.SaveProjChartPoints(theProj);
-      //}
-      return VSConstants.S_OK;
-    }
-    public int OnBeforeDocumentWindowShow(uint docCookie, int fFirstShow, IVsWindowFrame pFrame) { return VSConstants.S_OK; }
+  //  public int OnAfterSave(uint docCookie)
+  //  {
+  //    return VSConstants.S_OK;
+  //  }
+  //  public int OnBeforeDocumentWindowShow(uint docCookie, int fFirstShow, IVsWindowFrame pFrame) { return VSConstants.S_OK; }
 
-    public int OnBeforeLastDocumentUnlock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining)
-    {
-      return VSConstants.S_OK;
-    }
-  }
+  //  public int OnBeforeLastDocumentUnlock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining)
+  //  {
+  //    return VSConstants.S_OK;
+  //  }
+  //}
 
   //#####################################################################
 
@@ -488,11 +403,11 @@ namespace ChartPoints
       uint solUpdateEvsCookie;
       buildManager3.AdviseUpdateSolutionEvents3(solUpdateEvents, out solUpdateEvsCookie);
       //EnvDTE.DebuggerEvents debugEvents = _applicationObject.Events.DebuggerEvents;
-      cmdEvents = Globals.dte.Events.CommandEvents;
-      cmdEvents.BeforeExecute += CmdEvents_BeforeExecute;
+      //cmdEvents = Globals.dte.Events.CommandEvents;
+      //cmdEvents.BeforeExecute += CmdEvents_BeforeExecute;
 
-      rdt = new RunningDocumentTable(this);
-      rdt.Advise(new RunningDocTableEvents(rdt));
+      //rdt = new RunningDocumentTable(this);
+      //rdt.Advise(new RunningDocTableEvents(rdt));
 
       ChartPntToggleCmd.Initialize(this);
       ChartPointsViewTWCommand.Initialize(this);
@@ -504,31 +419,31 @@ namespace ChartPoints
       //IVsSolutionBuildManager vsSolBuildMgr = GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager;
     }
 
-    private void CmdEvents_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
-    {
-      Command objCommand = Globals.dte.Commands.Item(Guid, ID);
-      Debug.WriteLine("CmdEvents_BeforeExecute: " + objCommand.Name);
-      if (objCommand.Name == "Debug.Start" || objCommand.Name == "Build.BuildSolution")
-      {
-        Debug.WriteLine("Debug.Start");
-        foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-        {
-          if (proj.Name != "Miscellaneous Files")
-          {
-            //Globals.orchestrator.SaveProjChartPoints(proj);
-            //proj.Save();
-            //Globals.orchestrator.Orchestrate(proj);
-            //proj.Saved = false;
-            //if (proj.Globals.get_VariableExists("CPS"))
-            //{
-            //  proj.Globals.set_VariablePersists("CPS", false);
-            //}
-            //proj.Globals["CPS"] = "cps_val";
-            //proj.Globals.set_VariablePersists("CPS", true);
-          }
-        }
-      }
-    }
+    //private void CmdEvents_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
+    //{
+    //  Command objCommand = Globals.dte.Commands.Item(Guid, ID);
+    //  Debug.WriteLine("CmdEvents_BeforeExecute: " + objCommand.Name);
+    //  if (objCommand.Name == "Debug.Start" || objCommand.Name == "Build.BuildSolution")
+    //  {
+    //    Debug.WriteLine("Debug.Start");
+    //    foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+    //    {
+    //      if (proj.Name != "Miscellaneous Files")
+    //      {
+    //        //Globals.orchestrator.SaveProjChartPoints(proj);
+    //        //proj.Save();
+    //        //Globals.orchestrator.Orchestrate(proj);
+    //        //proj.Saved = false;
+    //        //if (proj.Globals.get_VariableExists("CPS"))
+    //        //{
+    //        //  proj.Globals.set_VariablePersists("CPS", false);
+    //        //}
+    //        //proj.Globals["CPS"] = "cps_val";
+    //        //proj.Globals.set_VariablePersists("CPS", true);
+    //      }
+    //    }
+    //  }
+    //}
 
     public static void StartEvents(DTE dte)
     {
