@@ -30,13 +30,6 @@ namespace ChartPoints
 
     public void SetPropsStream(Microsoft.VisualStudio.OLE.Interop.IStream _propsStream)
     {
-      //_propsStream.Clone(out propsStream);
-      //DataStreamFromComStream pStream = new DataStreamFromComStream(propsStream);
-      //ULARGE_INTEGER cb = new ULARGE_INTEGER();
-      //cb.QuadPart = (ulong) pStream.Length;
-      //ULARGE_INTEGER[] pcbRead = new ULARGE_INTEGER[1];
-      //ULARGE_INTEGER[] pcbWritten = new ULARGE_INTEGER[1];
-      //_propsStream.CopyTo(propsStream, cb, pcbRead, pcbWritten);
       DataStreamFromComStream pStream = new DataStreamFromComStream(_propsStream);
       if (propsStream == null)
         propsStream = new MemoryStream();
@@ -45,29 +38,23 @@ namespace ChartPoints
 
     private bool LoadCPProps()
     {
-      //!!! try catch !!!
-      //if (propsStream == null)
-      //  return false;
-      //DataStreamFromComStream pStream = new DataStreamFromComStream(propsStream);
-      //if (pStream == null)
-      //  return false;
       if (propsStream == null || propsStream.Length == 0)
         return false;
       BinaryFormatter formatter = new BinaryFormatter();
       formatter.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
       formatter.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;//!!! while develop !!!
       propsStream.Position = 0;
-      //CPPropsDeSerializator cpPropsDeser;
-      //Func<CPPropsDeSerializator> desearalize = () => (CPPropsDeSerializator)formatter.Deserialize(propsStream);
-      //if (SynchronizationContext.Current != null)
-      //{
-      //  /*cpPropsDeser = *//*await */System.Threading.Tasks.Task.Run(desearalize);//.ConfigureAwait(false);
-      //}
-      //else
-      //{
-      //  cpPropsDeser = desearalize();
-      //}
-      CPPropsDeSerializator cpPropsDeser = (CPPropsDeSerializator)formatter.Deserialize(propsStream/*pStream*/);
+      CPPropsDeSerializator cpPropsDeser;
+      Func<CPPropsDeSerializator> desearalize = () => (CPPropsDeSerializator)formatter.Deserialize(propsStream);
+      if (SynchronizationContext.Current != null)
+      {
+        System.Threading.Tasks.Task.Run(desearalize);
+      }
+      else
+      {
+        cpPropsDeser = desearalize();
+      }
+      //CPPropsDeSerializator cpPropsDeser = (CPPropsDeSerializator)formatter.Deserialize(propsStream/*pStream*/);
 
       return true;
     }
@@ -109,23 +96,12 @@ namespace ChartPoints
           }
           if (theProj != null)
           {
-            //Globals.orchestrator.LoadProjChartPoints(theProj);
-            //System.Threading.Thread.Sleep(5000);
-            LoadCPProps();
+            LoadCPProps();//!!! Need to load one project ONLY !!!
             if (savedProjects.Contains(projName))
               savedProjects.Remove(projName);
           }
         }
       }
-      //if (fAdded == 1)
-      //{
-      //  foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-      //  {
-      //    bool ret = false;
-      //    if (proj.Name != "Miscellaneous Files")
-      //      ret = Globals.orchestrator.LoadProjChartPoints(proj);
-      //  }
-      //}
 
       return VSConstants.S_OK;
     }
@@ -136,40 +112,13 @@ namespace ChartPoints
       string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
       if (activeConfig.Contains(" [ChartPoints]"))
         ChartPointsViewTWCommand.Instance.Enable(true);
-      foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-      {
-        if (proj.Name != "Miscellaneous Files")
-        {
-          //Globals.orchestrator.LoadProjChartPoints(proj);
-          LoadCPProps();
-        }
-      }
+      LoadCPProps();
 
       return VSConstants.S_OK;
     }
 
     public int OnBeforeCloseProject(IVsHierarchy pHierarchy, int fRemoved)
     {
-      //object propItemObj = null;
-      //pHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
-      //if (propItemObj != null)
-      //{
-      //  string projName = (string)propItemObj;
-      //  if (projName != "Miscellaneous Files")
-      //  {
-      //    EnvDTE.Project theProj = null;
-      //    foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-      //    {
-      //      if (proj.Name == projName)
-      //        theProj = proj;
-      //    }
-      //    if (theProj != null)
-      //    {
-      //      Globals.orchestrator.SaveProjChartPoints(theProj);
-      //      Globals.orchestrator.UnloadProject(theProj);
-      //    }
-      //  }
-      //}
       return VSConstants.S_OK;
     }
 
@@ -203,26 +152,13 @@ namespace ChartPoints
           }
           if (theProj != null && !savedProjects.Contains(projName))
           {
-            Globals.orchestrator.SaveProjChartPoints(theProj);
+            //Globals.orchestrator.SaveProjChartPoints(theProj);//!!! SAVE TO STREAM FOR FUTURE ChartPointsPackage::IVsPersistSolutionOpts::WriteUserOptions
             Globals.orchestrator.UnloadProject(theProj);
             savedProjects.Add(projName);
           }
           pfCancel = 0;
         }
       }
-      //foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-      //{
-      //  if (proj.Name != "Miscellaneous Files")
-      //  {
-      //    if (!savedProjects.Contains(proj.Name))
-      //    {
-      //      Globals.orchestrator.SaveProjChartPoints(proj);
-      //      savedProjects.Add(proj.Name);//!!!!!!! update savedProjects where needed !!!!!!!
-      //      Globals.orchestrator.UnloadProject(proj);
-      //      pfCancel = 0;
-      //    }
-      //  }
-      //}
 
       return VSConstants.S_OK;
     }
@@ -656,19 +592,7 @@ namespace ChartPoints
       {
         if (pOptionsStream == null)
           return VSConstants.S_OK;
-        //DataStreamFromComStream pStream = new DataStreamFromComStream(pOptionsStream);
-        //if (pStream == null)
-        //  return VSConstants.S_OK;
-        //BinaryFormatter formatter = new BinaryFormatter();
-        //formatter.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
-        //formatter.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;//!!! while develop !!!
-        ////Globals.processor = (IChartPointsProcessor) formatter.Deserialize(pStream);
-        ////Globals.processor.DeserializeProps(pOptionsStream);
-        //if (pStream.Length > 0)
-        //{
         this.solEvents.SetPropsStream(pOptionsStream);
-        //  CPPropsDeSerializator cpPropsDeser = (CPPropsDeSerializator)formatter.Deserialize(pStream);
-        //}
       }
 
       return VSConstants.S_OK;
@@ -685,7 +609,6 @@ namespace ChartPoints
       if (guidProjectType == cppProjGuid)
       {
         Microsoft.Build.Evaluation.Project msbuildProj = Globals.orchestrator.Orchestrate(pszFileName);
-        msbuildProj.Save();
       }
 
       return VSConstants.S_OK;

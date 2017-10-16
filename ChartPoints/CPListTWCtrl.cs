@@ -138,7 +138,7 @@ namespace ChartPoints
       }
     }
 
-    private void OnAddCpEvent(CPLineEvArgs args)
+    private void AddChartPoint(CPLineEvArgs args)
     {
       int i = list.Rows.Add();
       DataGridViewRow row = list.Rows[i];
@@ -147,6 +147,24 @@ namespace ChartPoints
       row.Cells[1].Value = args.cp.data.uniqueName;
       row.Cells[2].Value = args.cp.data.type;
       //list.AutoResizeColumns();
+    }
+
+    private void OnAddCpEvent(CPLineEvArgs args)
+    {
+      if (InvokeRequired)
+      {
+        if (IsHandleCreated)
+        {
+          BeginInvoke((MethodInvoker)(() =>
+          {
+            AddChartPoint(args);
+          }));
+        }
+        else
+          Console.WriteLine("");
+      }
+      else
+        AddChartPoint(args);
     }
   }
 }
