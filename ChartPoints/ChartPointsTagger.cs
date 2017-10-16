@@ -262,6 +262,9 @@ namespace ChartPoints
       //provide highlighting only on the top-level buffer
       if (view.TextBuffer != buffer)
         return null;
+      //int height = view.Properties.Item("ActualHeight");
+      //Type _t = typeof(T);
+      bool b = (typeof(T) == typeof(ChartPointTag));
 
       //!!! IGNORE NON-PROJECT FILES !!!
       ITextDocument thisTextDoc;
