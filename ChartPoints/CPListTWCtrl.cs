@@ -19,9 +19,11 @@ namespace ChartPoints
       this.list.KeyDown += OnListOnKeyDown;
       this.list.CellValueChanged += OnCellValueChanged;
       this.list.CellMouseUp += OnCellMouseUp;
-      ICPEventProvider<IConstructEvents> evConstrProv;
-      if (Globals.cpEventsService.GetConstructEventProvider(out evConstrProv))
-        evConstrProv.prov.createdLineCPsEvent += OnCreatedLineCPsEvent;
+      ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
+      ICPEventService cpEvsService;
+      cpServProv.GetService<ICPEventService>(out cpEvsService);
+      IConstructEvents constrEvents = cpEvsService.GetConstructEvents();
+      constrEvents.createdLineCPsEvent += OnCreatedLineCPsEvent;
     }
 
     private void OnCellMouseUp(object sender, DataGridViewCellMouseEventArgs e)
@@ -36,13 +38,7 @@ namespace ChartPoints
       {
         DataGridViewRow row = list.Rows[e.RowIndex];
         Tuple<ILineChartPoints, IChartPoint> tagData = (Tuple<ILineChartPoints, IChartPoint>)row.Tag;
-        //switch(tagData.Item2.data.status)
-        //{
-        //  case EChartPointStatus.SwitchedOff
-        //}
         tagData.Item2.SetStatus(((bool)row.Cells[0].Value) ? EChartPointStatus.SwitchedOn : EChartPointStatus.SwitchedOff);
-        if(Globals.taggerUpdater != null)
-          Globals.taggerUpdater.RaiseChangeTagEvent(tagData.Item1.data.fileData.fileFullName, tagData.Item1);
       }
     }
 
@@ -107,8 +103,6 @@ namespace ChartPoints
             cpIgnore = tagData.Item2;
             if (tagData.Item1.RemoveChartPoint(tagData.Item2))
             {
-              if (Globals.taggerUpdater != null)
-                Globals.taggerUpdater.RaiseChangeTagEvent(tagData.Item1.data.fileData.fileFullName, tagData.Item1);
             }
             //list.Rows.RemoveAt( row.Index );
           }

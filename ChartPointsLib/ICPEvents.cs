@@ -34,8 +34,7 @@ namespace ChartPoints
 
   public interface ICPEventService
   {
-    void RegisterConstructEventProvider(ICPEventProvider<IConstructEvents> evProv);
-    bool GetConstructEventProvider( out ICPEventProvider<IConstructEvents> evProv );
+    IConstructEvents GetConstructEvents();
   }
 
   //////////////////////////////////////////////////////////////////////////
@@ -45,6 +44,7 @@ namespace ChartPoints
     ICPEvent<IConstructEventArgs<IChartPoint>> createdCPEvent { get; set; }
     ICPEvent<IConstructEventArgs<ILineChartPoints>> createdLineCPsEvent { get; set; }
     ICPEvent<IConstructEventArgs<IFileChartPoints>> createdFileCPsEvent { get; set; }
+    ICPEvent<IConstructEventArgs<IFileChartPoints>> deletedFileCPsEvent { get; set; }
     ICPEvent<IConstructEventArgs<IProjectChartPoints>> createdProjCPsEvent { get; set; }
   }
 

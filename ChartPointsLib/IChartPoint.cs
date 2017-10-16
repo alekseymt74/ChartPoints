@@ -9,9 +9,9 @@ namespace ChartPoints
   public enum EChartPointStatus
   {
     Available       /// ready set chartpoint at specified position
-    , NotAvailable  /// can't set chartpoint at specified position
-    , SwitchedOn     /// chartpoint already exists and is active
-    , SwitchedOff    /// chartpoint already exists and is inactive
+    , NotAvailable = 4 /// can't set chartpoint at specified position
+    , SwitchedOn   = 1  /// chartpoint already exists and is active
+    , SwitchedOff  = 2  /// chartpoint already exists and is inactive
   }
 
   public interface IChartPointData
@@ -34,6 +34,7 @@ namespace ChartPoints
   /// </summary>
   public interface IChartPoint : IData<IChartPointData>
   {
+    ICPEvent<CPStatusEvArgs> cpStatusChangedEvent { get; set; }
     EChartPointStatus SetStatus(EChartPointStatus newStatus);
     CPTraceVar CalcInjectionPoints(CPClassLayout cpInjPoints, string className, out bool needDeclare);
 
@@ -44,15 +45,15 @@ namespace ChartPoints
   {
     int lineNum { get; }
     int linePos { get; }
-    void Move(IChartPoint cp, int _lineNum, int _linePos);
+    //void Move(IChartPoint cp, int _lineNum, int _linePos);
   }
 
-  public enum ELineCPsStatus//!!!
+  public enum ELineCPsStatus
   {
-    Available       /// ready set chartpoint at specified position
-    , NotAvailable  /// can't set chartpoint at specified position
-    , SwitchedOn     /// chartpoint already exists and is active
-    , SwitchedOff    /// chartpoint already exists and is inactive
+    NotAvailable = 0
+    , Avail = EChartPointStatus.NotAvailable
+    , AvailOn = EChartPointStatus.NotAvailable | EChartPointStatus.SwitchedOn
+    , AvailOnOff = EChartPointStatus.NotAvailable | EChartPointStatus.SwitchedOn | EChartPointStatus.SwitchedOff
   }
 
   public interface ICPLineData
@@ -63,6 +64,8 @@ namespace ChartPoints
 
   public interface ILineChartPoints : IData<ICPLineData>
   {
+    ELineCPsStatus status { get; }
+    ICPEvent<LineCPStatusEvArgs> lineCPStatusChangedEvent { get; set; }
     ICPEvent<CPLineEvArgs> addCPEvent { get; set; }
     ICPEvent<CPLineEvArgs> remCPEvent { get; set; }
     ISet<IChartPoint> chartPoints { get; }
@@ -82,7 +85,7 @@ namespace ChartPoints
     string fileName { get; }
     string fileFullName { get; }
     ICPProjectData projData { get; }
-    void Move(ILineChartPoints lcps, IChartPoint cp, int _lineNum, int _linePos);
+    //void Move(ILineChartPoints lcps, IChartPoint cp, int _lineNum, int _linePos);
   }
 
   public interface IFileChartPoints : IData<ICPFileData>

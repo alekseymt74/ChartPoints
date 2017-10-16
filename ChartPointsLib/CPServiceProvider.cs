@@ -3,10 +3,6 @@
 //[assembly: InternalsVisibleTo("ChartPointsLib")]
 namespace ChartPoints
 {
-  interface ICPEventsService
-  {
-
-  }
   namespace impl
   {
     public abstract partial class ICPServiceProvider
@@ -22,18 +18,18 @@ namespace ChartPoints
 
     internal class ServiceProvider : ChartPoints.ICPServiceProvider
     {
-      //private IServ01 _serv01;
+      private ICPEventService cpEventsService;
       public override bool GetService<T>(out T obj)
       {
         obj = null;
-        //if (typeof(T) == typeof(IServ01))
-        //{
-        //  if (_serv01 == null)
-        //    _serv01 = new Serv01();
-        //  obj = _serv01 as T;
+        if (typeof(T) == typeof(ICPEventService))
+        {
+          if (cpEventsService == null)
+            cpEventsService = new CPEventService();
+          obj = cpEventsService as T;
 
-        //  return true;
-        //}
+          return true;
+        }
 
         return false;
       }

@@ -18,6 +18,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization;
 using System.Reflection;
 using System.IO;
+using System.Threading;
 
 namespace ChartPoints
 {
@@ -56,6 +57,16 @@ namespace ChartPoints
       formatter.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
       formatter.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;//!!! while develop !!!
       propsStream.Position = 0;
+      //CPPropsDeSerializator cpPropsDeser;
+      //Func<CPPropsDeSerializator> desearalize = () => (CPPropsDeSerializator)formatter.Deserialize(propsStream);
+      //if (SynchronizationContext.Current != null)
+      //{
+      //  /*cpPropsDeser = *//*await */System.Threading.Tasks.Task.Run(desearalize);//.ConfigureAwait(false);
+      //}
+      //else
+      //{
+      //  cpPropsDeser = desearalize();
+      //}
       CPPropsDeSerializator cpPropsDeser = (CPPropsDeSerializator)formatter.Deserialize(propsStream/*pStream*/);
 
       return true;
@@ -523,7 +534,7 @@ namespace ChartPoints
     {
       base.Initialize();
       Globals.dte = (DTE)GetService(typeof(DTE));
-      Globals.cpEventsService = new CPEventService();
+      //Globals.cpEventsService = new CPEventService();
       factory = new ChartPntFactoryImpl();
       if(Globals.processor == null)
         Globals.processor = factory.CreateProcessor();

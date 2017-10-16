@@ -27,7 +27,7 @@ namespace ChartPoints
     ICPEvent<FileTrackerArgs> remFTrackerEvent { get; set; }
     IFileTracker GetFileTracker(string fileFullName);
     void Register(IChartPoint cp);
-    void Register(ILineChartPoints lcp);
+    //void Register(ILineChartPoints lcp);
     void Register(IFileChartPoints fcp);
   }
 
