@@ -12,6 +12,8 @@ namespace ChartPoints
 {
   public partial class CPListTWCtrl : UserControl
   {
+    private bool ignoreCellValEvents = false;
+
     public CPListTWCtrl()
     {
       InitializeComponent();
@@ -34,6 +36,8 @@ namespace ChartPoints
 
     private void OnCellValueChanged(object sender, DataGridViewCellEventArgs e)
     {
+      if (ignoreCellValEvents)
+        return;
       if (e.ColumnIndex == 0 && e.RowIndex != -1)
       {
         //##########################################################
@@ -143,6 +147,7 @@ namespace ChartPoints
 
     private void AddChartPoint(CPLineEvArgs args)
     {
+      ignoreCellValEvents = true;
       int i = list.Rows.Add();
       DataGridViewRow row = list.Rows[i];
       row.Tag = new Tuple<ILineChartPoints, IChartPoint>(args.lineCPs, args.cp);
@@ -150,6 +155,7 @@ namespace ChartPoints
       row.Cells[1].Value = args.cp.data.uniqueName;
       row.Cells[2].Value = args.cp.data.type;
       //list.AutoResizeColumns();
+      ignoreCellValEvents = false;
     }
 
     private void OnAddCpEvent(CPLineEvArgs args)
