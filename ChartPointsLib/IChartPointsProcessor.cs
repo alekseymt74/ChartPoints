@@ -20,6 +20,7 @@ namespace ChartPoints
     IProjectChartPoints GetProjectChartPoints(string projName);
     bool AddProjectChartPoints(string projName, out IProjectChartPoints pPnts);
     bool RemoveChartPoints(string projName);
+    void Validate();
   }
 
 }

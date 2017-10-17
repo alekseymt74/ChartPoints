@@ -52,9 +52,9 @@
 
       return fcps;
     }
-    public override ILineChartPoints CreateLineChartPoint(CP.Code.IClassElement _classElem, int _lineNum, int _linePos, ICPFileData _fileData)
+    public override ILineChartPoints CreateLineChartPoint(CP.Code.IClassMethodElement _classMethodElem, int _lineNum, int _linePos, ICPFileData _fileData)
     {
-      ILineChartPoints lcps = new LineChartPoints(_classElem, _lineNum, _linePos, _fileData);
+      ILineChartPoints lcps = new LineChartPoints(_classMethodElem, _lineNum, _linePos, _fileData);
       //Globals.cpTrackManager.Register(lcps);
       constrEvents.createdLineCPsEvent.Fire( new ConstructEventArgs<ILineChartPoints>( lcps ) );
 

@@ -248,33 +248,36 @@ namespace ChartPoints
           string projName = info.GetString("projName_" + p.ToString());
           Globals.processor.RemoveChartPoints(projName);
           //Globals.processor.AddProjectChartPoints(projName, out projCPs);
-          IProjectChartPoints projCPs = Globals.processor.GetProjectChartPoints(projName);
-          if (projCPs == null)
-            Globals.processor.AddProjectChartPoints(projName, out projCPs);
           UInt32 filesCount = info.GetUInt32("filePoints.Count_" + p.ToString());
-          for (uint f = 0; f < filesCount; ++f)
+          if (filesCount > 0)
           {
-            string fileName = info.GetString("fileName_" + p.ToString() + f.ToString());
-            IFileChartPoints fPnts = projCPs.AddFileChartPoints(fileName);
-            if (fPnts != null)
+            IProjectChartPoints projCPs = Globals.processor.GetProjectChartPoints(projName);
+            if (projCPs == null)
+              Globals.processor.AddProjectChartPoints(projName, out projCPs);
+            for (uint f = 0; f < filesCount; ++f)
             {
-              UInt32 linesCount = info.GetUInt32("linePoints.Count_" + p.ToString() + f.ToString());
-              for (uint l = 0; l < linesCount; ++l)
+              string fileName = info.GetString("fileName_" + p.ToString() + f.ToString());
+              IFileChartPoints fPnts = projCPs.AddFileChartPoints(fileName);
+              if (fPnts != null)
               {
-                //ITextPosition pos = (ITextPosition)info.GetValue("pos_" + p.ToString() + f.ToString() + l.ToString(), typeof(ITextPosition));
-                UInt32 lineNum = info.GetUInt32("lineNum_" + p.ToString() + f.ToString() + l.ToString());
-                UInt32 linePos = info.GetUInt32("linePos_" + p.ToString() + f.ToString() + l.ToString());
-                ILineChartPoints lPnts = fPnts.AddLineChartPoints(/*pos.*/(int)lineNum, /*pos.*/(int)linePos);
-                if (lPnts != null)
+                UInt32 linesCount = info.GetUInt32("linePoints.Count_" + p.ToString() + f.ToString());
+                for (uint l = 0; l < linesCount; ++l)
                 {
-                  UInt32 cpsCount = info.GetUInt32("cpsPoints.Count_" + p.ToString() + f.ToString() + l.ToString());
-                  for (uint cp = 0; cp < cpsCount; ++cp)
+                  //ITextPosition pos = (ITextPosition)info.GetValue("pos_" + p.ToString() + f.ToString() + l.ToString(), typeof(ITextPosition));
+                  UInt32 lineNum = info.GetUInt32("lineNum_" + p.ToString() + f.ToString() + l.ToString());
+                  UInt32 linePos = info.GetUInt32("linePos_" + p.ToString() + f.ToString() + l.ToString());
+                  ILineChartPoints lPnts = fPnts.AddLineChartPoints(/*pos.*/(int)lineNum, /*pos.*/(int)linePos);
+                  if (lPnts != null)
                   {
-                    IChartPoint chartPnt = null;
-                    string uniqueName = info.GetString("uniqueName_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
-                    bool enabled = info.GetBoolean("enabled_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
-                    if (lPnts.AddChartPoint(uniqueName, out chartPnt))
-                      chartPnt.SetStatus(enabled ? EChartPointStatus.SwitchedOn : EChartPointStatus.SwitchedOff);
+                    UInt32 cpsCount = info.GetUInt32("cpsPoints.Count_" + p.ToString() + f.ToString() + l.ToString());
+                    for (uint cp = 0; cp < cpsCount; ++cp)
+                    {
+                      IChartPoint chartPnt = null;
+                      string uniqueName = info.GetString("uniqueName_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
+                      bool enabled = info.GetBoolean("enabled_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
+                      if (lPnts.AddChartPoint(uniqueName, out chartPnt))
+                        chartPnt.SetStatus(enabled ? EChartPointStatus.SwitchedOn : EChartPointStatus.SwitchedOff);
+                    }
                   }
                 }
               }
@@ -426,22 +429,6 @@ namespace ChartPoints
     //  if (objCommand.Name == "Debug.Start" || objCommand.Name == "Build.BuildSolution")
     //  {
     //    Debug.WriteLine("Debug.Start");
-    //    foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-    //    {
-    //      if (proj.Name != "Miscellaneous Files")
-    //      {
-    //        //Globals.orchestrator.SaveProjChartPoints(proj);
-    //        //proj.Save();
-    //        //Globals.orchestrator.Orchestrate(proj);
-    //        //proj.Saved = false;
-    //        //if (proj.Globals.get_VariableExists("CPS"))
-    //        //{
-    //        //  proj.Globals.set_VariablePersists("CPS", false);
-    //        //}
-    //        //proj.Globals["CPS"] = "cps_val";
-    //        //proj.Globals.set_VariablePersists("CPS", true);
-    //      }
-    //    }
     //  }
     //}
 

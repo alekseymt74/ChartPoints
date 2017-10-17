@@ -29,13 +29,16 @@ namespace ChartPoints
       if (solConfig.Contains(" [ChartPoints]"))
       {
         EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
-        //SaveProjChartPoints(proj);//.FullName);
-        //Orchestrate(proj);//.FullName);
-        string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
-        serviceHost = new ServiceHost(typeof(IPCChartPoint));
-        NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
-        serviceHost.AddServiceEndpoint(typeof(IIPCChartPoint), binding, address);
-        serviceHost.Open();
+        IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(proj.Name);
+        if (pPnts != null)
+        {
+          pPnts.Validate();
+          string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
+          serviceHost = new ServiceHost(typeof(IPCChartPoint));
+          NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
+          serviceHost.AddServiceEndpoint(typeof(IIPCChartPoint), binding, address);
+          serviceHost.Open();
+        }
       }
     }
 
@@ -44,8 +47,11 @@ namespace ChartPoints
     {
       if (solConfig.Contains(" [ChartPoints]"))
       {
-        serviceHost.Close();
-        serviceHost = null;
+        if (serviceHost != null)
+        {
+          serviceHost.Close();
+          serviceHost = null;
+        }
       }
     }
 

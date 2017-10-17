@@ -17,22 +17,46 @@ namespace CP
       CPTraceVar CalcInjectionPoints(CPClassLayout cpClassLayout, string className, string _fname, ITextPosition pos, out bool needDeclare);
       ICPEvent<ClassVarElemTrackerArgs> classVarChangedEvent { get; set; }
       ICPEvent<ClassVarElemTrackerArgs> classVarDeletedEvent { get; set; }
-    }
-
-    public interface IClassMethodElement : ICodeEelement
-    {
+      bool Validate(string name);
     }
 
     public interface IClassElement : ICodeEelement
     {
-      ICollection<IClassVarElement> variables { get; }
       IClassVarElement GetVar(string name);
       void CalcInjectionPoints(CPClassLayout cpClassLayout, CPTraceVar traceVar, bool needDeclare);
+      //bool Validate();
     }
+
+    public interface IClassMethodElement : ICodeEelement
+    {
+      IClassElement GetClass();
+      bool Validate(ITextPosition pos);
+    }
+
+    public interface IFileElem : ICodeEelement
+    {
+      void Synchronize();
+      IClassMethodElement GetMethodFromFilePos(int lineNum, int linePos);
+      bool Validate(string fileName);
+    }
+
+    public interface IModel
+    {
+      void StoreClass(IClassElement classElem);
+      IFileElem GetFile(string fileName);
+      ICheckCPPoint CheckCursorPos();
+      void CalcInjectionPoints(CPClassLayout cpInjPoints, CPTraceVar traceVar);
+      bool Validate();
+    }
+
+//############################################################################
 
     public interface ICheckElem
     {
-      IClassVarElement var { get; }
+      //IClassVarElement var { get; }
+      string name { get; }
+      string uniqueName { get; }
+      string type { get; }
       bool exists { get; }
       void Toggle(bool val);
       bool HasChanged();
@@ -42,20 +66,6 @@ namespace CP
     {
       ICollection<ICheckElem> elems { get; }
       bool Synchronize();
-    }
-
-    public interface IFileElem : ICodeEelement
-    {
-      void Synchronize();
-      IClassElement GetClassFromFilePos(int lineNum, int linePos);
-    }
-
-    public interface IModel
-    {
-      IFileElem GetFile(string fileName);
-      //IClassElement GetClass(string name);
-      ICheckCPPoint CheckCursorPos();
-      void CalcInjectionPoints(CPClassLayout cpInjPoints, CPTraceVar traceVar);
     }
 
   } // namespace CodeModel

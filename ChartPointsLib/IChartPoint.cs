@@ -39,6 +39,8 @@ namespace ChartPoints
     CPTraceVar CalcInjectionPoints(CPClassLayout cpInjPoints, string className, out bool needDeclare);
 
     bool ValidatePosition(int lineNum, int linePos);
+    void Invalidate();
+    bool Validate();
   }
 
   public interface ITextPosition
@@ -78,6 +80,8 @@ namespace ChartPoints
     bool SyncChartPoint(ICheckElem checkElem);//, IClassElement ownerClass);
     bool ValidatePosition(int linesAdd);
     void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model);
+    void Invalidate();
+    bool Validate();
   }
 
   public interface ICPFileData
@@ -98,6 +102,8 @@ namespace ChartPoints
     ILineChartPoints AddLineChartPoints(int lineNum, int linePos);
     bool ValidatePosition(int lineNum, int linesAdd);
     void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model);
+    void Invalidate();
+    bool Validate();
   }
 
   public interface ICPProjectData
@@ -116,6 +122,8 @@ namespace ChartPoints
     IFileChartPoints AddFileChartPoints(string fileName);
     ICheckCPPoint CheckCursorPos();
     void CalcInjectionPoints(CPClassLayout cpInjPoints);
+    void Invalidate();
+    bool Validate();
   }
 
 }

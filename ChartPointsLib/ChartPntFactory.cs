@@ -71,7 +71,7 @@ namespace ChartPoints
     public virtual ICPOrchestrator CreateOrchestrator() { return null; }
     public virtual IProjectChartPoints CreateProjectChartPoint(string _projName) { return null; }
     public virtual IFileChartPoints CreateFileChartPoint(CP.Code.IFileElem _fileElem, ICPProjectData _projData) { return null; }
-    public virtual ILineChartPoints CreateLineChartPoint(CP.Code.IClassElement _classElem, int _lineNum, int _linePos, ICPFileData _fileData) { return null; }
+    public virtual ILineChartPoints CreateLineChartPoint(CP.Code.IClassMethodElement _classMethodElem, int _lineNum, int _linePos, ICPFileData _fileData) { return null; }
     public virtual IChartPoint CreateChartPoint(CP.Code.IClassVarElement codeElem, ICPLineData _lineData) { return null; }
   }
 }
