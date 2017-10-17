@@ -173,6 +173,15 @@ namespace ChartPoints
       //////}
       return false;
     }
+    public void Invalidate()
+    {
+      SetStatus(EChartPointStatus.NotAvailable);
+    }
+
+    public bool Validate()
+    {
+      return codeElem.Validate(data.uniqueName);
+    }
   }
 
   [Serializable]
@@ -248,7 +257,7 @@ namespace ChartPoints
       return theStatus;
     }
 
-    private CP.Code.IClassElement codeClass;
+    private CP.Code.IClassMethodElement codeClassMethod;
     public ICPEvent<LineCPStatusEvArgs> lineCPStatusChangedEvent { get; set; } = new CPEvent<LineCPStatusEvArgs>();
     public ICPEvent<CPLineEvArgs> addCPEvent { get; set; } = new CPEvent<CPLineEvArgs>();
     public ICPEvent<CPLineEvArgs> remCPEvent { get; set; } = new CPEvent<CPLineEvArgs>();
@@ -262,9 +271,9 @@ namespace ChartPoints
       get { return chartPoints.Count; }
     }
 
-    public LineChartPoints(CP.Code.IClassElement _codeClass, int _lineNum, int _linePos, ICPFileData _fileData)
+    public LineChartPoints(CP.Code.IClassMethodElement _classMethodElem, int _lineNum, int _linePos, ICPFileData _fileData)
     {
-      codeClass = _codeClass;
+      codeClassMethod = _classMethodElem;
       theData = new CPLineData() {pos = new TextPosition(_lineNum, _linePos/*, MoveChartPoint*/), fileData = _fileData};
     }
 
@@ -292,6 +301,7 @@ namespace ChartPoints
     public bool AddChartPoint(string varName, out IChartPoint chartPnt)
     {
       chartPnt = null;
+      IClassElement codeClass = codeClassMethod.GetClass();
       CP.Code.IClassVarElement codeElem = codeClass.GetVar(varName);
       if (codeElem != null)
         return AddChartPoint(codeElem, out chartPnt, false);
@@ -367,16 +377,16 @@ namespace ChartPoints
       return true;
     }
 
-    public bool SyncChartPoint(ICheckElem checkElem)//, IClassElement ownerClass)
+    public bool SyncChartPoint(ICheckElem checkElem)
     {
       if (checkElem.exists)
       {
         IChartPoint chartPnt = null;
-        AddChartPoint(checkElem.var, out chartPnt, false);
+        AddChartPoint(checkElem.uniqueName, codeClassMethod.GetClass(), out chartPnt, false);
       }
       else
       {
-        IChartPoint cp = chartPoints.FirstOrDefault((lp) => (lp.data.uniqueName == checkElem.var.uniqueName));
+        IChartPoint cp = chartPoints.FirstOrDefault((lp) => (lp.data.uniqueName == checkElem.uniqueName));
         if (cp != null)
           RemoveChartPoint(cp);
       }
@@ -403,11 +413,37 @@ namespace ChartPoints
         bool needDeclare = false;
         if (cp.data.enabled)
         {
-          CPTraceVar traceVar = cp.CalcInjectionPoints(cpInjPoints, this.codeClass.name, out needDeclare);
+          IClassElement codeClass = codeClassMethod.GetClass();
+          CPTraceVar traceVar = cp.CalcInjectionPoints(cpInjPoints, codeClass.name, out needDeclare);
           codeClass.CalcInjectionPoints(cpInjPoints, traceVar, needDeclare);
           model.CalcInjectionPoints(cpInjPoints, traceVar);
         }
       }
+    }
+
+    public void Invalidate()
+    {
+      foreach (IChartPoint cp in chartPoints)
+        cp.Invalidate();
+    }
+
+    public bool Validate()
+    {
+      if(!codeClassMethod.Validate(data.pos))
+      {
+        Invalidate();
+
+        return false;
+      }
+      foreach (IChartPoint cp in chartPoints)
+      {
+        if (!cp.Validate())
+          cp.Invalidate();
+        else if (cp.data.status == EChartPointStatus.NotAvailable)
+          cp.SetStatus(EChartPointStatus.SwitchedOff);
+      }
+
+      return true;
     }
 
   }
@@ -539,7 +575,7 @@ namespace ChartPoints
       bool ret = linePoints.Remove(linePnts);
       if (ret)
       {
-        ((TextPosition) ((LineChartPoints) linePnts).theData.pos).lineNum += linesAdd;
+        ((TextPosition)((LineChartPoints)linePnts).theData.pos).lineNum += linesAdd;
         linePoints.Add(linePnts);
         addCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
       }
@@ -552,10 +588,10 @@ namespace ChartPoints
       ILineChartPoints lPnts = GetLineChartPoints(lineNum);
       if (lPnts == null)
       {
-        CP.Code.IClassElement classElem = fileElem.GetClassFromFilePos(lineNum, linePos);
-        if (classElem != null)
+        CP.Code.IClassMethodElement classMethodElem = fileElem.GetMethodFromFilePos(lineNum, linePos);
+        if (classMethodElem != null)
         {
-          lPnts = ChartPntFactory.Instance.CreateLineChartPoint(classElem, lineNum, linePos, data);
+          lPnts = ChartPntFactory.Instance.CreateLineChartPoint(classMethodElem, lineNum, linePos, data);
           AddLineChartPoints(lPnts);
         }
         else
@@ -638,6 +674,27 @@ namespace ChartPoints
       foreach (var lPnts in linePoints)
         lPnts.CalcInjectionPoints(cpInjPoints, model);
     }
+
+    public void Invalidate()
+    {
+      foreach (var lPnts in linePoints)
+        lPnts.Invalidate();
+    }
+
+    public bool Validate()
+    {
+      if(!fileElem.Validate(data.fileName))
+      {
+        Invalidate();
+
+        return false;
+      }
+      foreach (var lPnts in linePoints)
+        lPnts.Validate();
+
+      return true;
+    }
+
   }
 
   [Serializable]
@@ -778,6 +835,26 @@ namespace ChartPoints
     {
       foreach (IFileChartPoints fPnts in filePoints)
         fPnts.CalcInjectionPoints(cpInjPoints, cpCodeModel);
+    }
+
+    public void Invalidate()
+    {
+      foreach (IFileChartPoints fPnts in filePoints)
+        fPnts.Invalidate();
+    }
+
+    public bool Validate()
+    {
+      if (!cpCodeModel.Validate())
+      {
+        Invalidate();
+
+        return false;
+      }
+      foreach (IFileChartPoints fPnts in filePoints)
+        fPnts.Validate();
+
+      return true;
     }
 
   }

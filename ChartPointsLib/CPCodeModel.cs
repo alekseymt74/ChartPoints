@@ -36,13 +36,18 @@ namespace CP
       public new string name { get { return ent.Name; } }
       public new string uniqueName { get { return ent.FullName; } }
       public string type { get { return ent.TypeString; } }
+      private ClassElement classElem;
       public ICPEvent<ClassVarElemTrackerArgs> classVarChangedEvent { get; set; } = new CPEvent<ClassVarElemTrackerArgs>();
       public ICPEvent<ClassVarElemTrackerArgs> classVarDeletedEvent { get; set; } = new CPEvent<ClassVarElemTrackerArgs>();
 
-      public ClassVarElement(CodeElement _codeElem) : base(_codeElem)
-      {}
-      public ClassVarElement(VCCodeVariable _codeElem) : base(_codeElem)
-      {}
+      public ClassVarElement(CodeElement _codeElem, ClassElement _classElem) : base(_codeElem)
+      {
+        classElem = _classElem;
+      }
+      public ClassVarElement(VCCodeVariable _codeElem, ClassElement _classElem) : base(_codeElem)
+      {
+        classElem = _classElem;
+      }
       public CPTraceVar CalcInjectionPoints(CPClassLayout cpClassLayout, string className, string _fname, ITextPosition pos, out bool needDeclare)
       {
         CPTraceVar traceVar = null;
@@ -77,64 +82,61 @@ namespace CP
 
         return traceVar;
       }
-    }
 
-    public class ClassMethodElement : CodeModelEnt<VCCodeFunction>, IClassMethodElement
-    {
-      public new string name { get { return ent.Name; } }
-      public new string uniqueName { get { return ent.FullName; } }
-      public ClassMethodElement(CodeElement _codeElem) : base(_codeElem)
-      { }
-      public ClassMethodElement(VCCodeFunction _codeElem) : base(_codeElem)
-      { }
+      public bool Validate(string uniqueName)
+      {
+        //if (ent.IsZombie)
+        ent = classElem.GetCodeVar(uniqueName);
+        if (ent == null)
+          return false;
+
+        return true;
+      }
+
     }
 
     public class ClassElement : CodeModelEnt<VCCodeClass>, IClassElement
     {
       public new string name { get { return ent.Name; } }
       public new string uniqueName { get { return ent.FullName; } }
-      protected ISet<IClassVarElement> theVars;
-
-      public ICollection<IClassVarElement> variables
+      private ClassMethodElement classCodeElem;
+      public ClassElement(CodeElement _codeElem, ClassMethodElement _classCodeElem) : base(_codeElem)
       {
-        get
+        classCodeElem = _classCodeElem;
+      }
+      public ClassElement(VCCodeClass _codeElem, ClassMethodElement _classCodeElem) : base(_codeElem)
+      {
+        classCodeElem = _classCodeElem;
+      }
+
+      public VCCodeVariable GetCodeVar(string uniqueName)
+      {
+        foreach (CodeElement _elem in ent.Variables)
         {
-          if (theVars == null)
+          VCCodeVariable varElem = (VCCodeVariable)_elem;
+          if (varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefBool
+              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefByte
+              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefChar
+              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefDecimal
+              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefDouble
+              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefFloat
+              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefInt
+              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefLong
+              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefShort)// !!! CHECK OTHER SUITABLE TYPES !!!
           {
-            theVars = new SortedSet<IClassVarElement>(Comparer<IClassVarElement>.Create((lh, rh) => (String.Compare(lh.name, rh.name, StringComparison.Ordinal))));
-            foreach (CodeElement _elem in ent.Variables)
-            {
-              VCCodeVariable varElem = (VCCodeVariable)_elem;
-              if (varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefBool
-                  || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefByte
-                  || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefChar
-                  || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefDecimal
-                  || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefDouble
-                  || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefFloat
-                  || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefInt
-                  || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefLong
-                  || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefShort)// !!! CHECK OTHER SUITABLE TYPES !!!
-              {
-                theVars.Add(new ClassVarElement(varElem));
-              }
-            }
+            if (varElem.FullName == uniqueName)
+              return varElem;
           }
-          return theVars;
         }
 
+        return null;
       }
-      public ClassElement(CodeElement _codeElem) : base(_codeElem)
-      {}
-      public ClassElement(VCCodeClass _codeElem) : base(_codeElem)
-      {}
 
       public IClassVarElement GetVar(string uniqueName)
       {
-        foreach (CodeElement _var in ent.Variables)
-        {
-          if (_var.FullName == uniqueName)
-            return new ClassVarElement(_var);
-        }
+        VCCodeVariable varElem = GetCodeVar(uniqueName);
+        if (varElem != null)
+          return (new ClassVarElement(varElem, this));
 
         return null;
       }
@@ -146,7 +148,7 @@ namespace CP
           // find all places, where this file included
           CodeElement theFunc = null;
           // find & store all constructors init points of this class
-          foreach (CodeElement _func in /*vcClass*/ent.Functions)
+          foreach (CodeElement _func in ent.Functions)
           {
             if (_func.Name == ent.Name)
             {
@@ -176,103 +178,71 @@ namespace CP
           }
         }
       }
+
+      public bool Validate(VCCodeClass targetClass)
+      {
+        ent = targetClass;
+
+        return true;
+      }
+
     }
 
-    public class CheckElem : ICheckElem
+    public class ClassMethodElement : CodeModelEnt<VCCodeFunction>, IClassMethodElement
     {
-      public IClassVarElement var { get; }
-      public bool exists { get; set; }
-      private readonly bool existsOrig;
+      public new string name { get { return ent.Name; } }
+      public new string uniqueName { get { return ent.FullName; } }
+      protected ClassElement classElem;
+      private FileElem fileElem;
 
-      public CheckElem(IClassVarElement _var, bool _exists)
+      public ClassMethodElement(CodeElement _codeElem, FileElem _fileElem) : base(_codeElem)
       {
-        var = _var;
-        existsOrig = exists = _exists;
+        classElem = GetClassImpl();
+        fileElem = _fileElem;
       }
 
-      public void Toggle(bool val)
+      public ClassMethodElement(VCCodeFunction _codeElem, FileElem _fileElem) : base(_codeElem)
       {
-        exists = val;
+        classElem = GetClassImpl();
+        fileElem = _fileElem;
       }
 
-      public bool HasChanged()
+      private VCCodeClass GetClassCodeElem()
       {
-        return (exists != existsOrig);
+        VCCodeElement targetClassElem = (VCCodeElement)ent.Parent;
+        if (targetClassElem != null && targetClassElem.Kind == vsCMElement.vsCMElementClass)
+          return (VCCodeClass) targetClassElem;
+
+        return null;
       }
-    }
 
-    public class CheckCPPoint : ICheckCPPoint
-    {
-      private List<ICheckElem> theElems;
-      private string projName;
-      private string fileName;
-      private string fileFullName;
-      private int lineNum;
-      private int linePos;
-      private IClassElement classElem;
-      private IClassMethodElement methodElem;
-      private IProjectChartPoints pPnts;
-      private IFileChartPoints fPnts;
-      private ILineChartPoints lPnts;
-
-      public ICollection<ICheckElem> elems
+      private ClassElement GetClassImpl()
       {
-        get
+        if (classElem == null)
         {
-          if (theElems == null)
-          {
-            theElems = new List<ICheckElem>();
-            ICollection<IClassVarElement> vcElems = classElem.variables;
-            if (vcElems.Count > 0)
-            {
-              pPnts = ChartPoints.Globals.processor.GetProjectChartPoints(projName);
-              fPnts = pPnts?.GetFileChartPoints(fileName);
-              lPnts = fPnts?.GetLineChartPoints(lineNum);
-              foreach (IClassVarElement var in vcElems)
-              {
-                bool exists = false;
-                if (lPnts != null)
-                {
-                  if (lPnts.GetChartPoint(var.uniqueName) != null)
-                    exists = true;
-                }
-                theElems.Add(new CheckElem(var, exists));
-              }
-            }
-          }
-          return theElems;
-        }
-      }
-
-      public CheckCPPoint(IClassElement _classElem, IClassMethodElement _methodElem, string _projName, string _fileName, string _fileFullName, int _lineNum, int _linePos)
-      {
-        classElem = _classElem;
-        methodElem = _methodElem;
-        projName = _projName;
-        fileName = _fileName;
-        fileFullName = _fileFullName;
-        lineNum = _lineNum;
-        linePos = _linePos;
-      }
-
-      public bool Synchronize()
-      {
-        bool changed = false;
-        foreach (ICheckElem _elem in elems)
-        {
-          if (_elem.HasChanged())
-          {
-            if(pPnts == null)
-              ChartPoints.Globals.processor.AddProjectChartPoints(projName, out pPnts);
-            if(fPnts == null)
-              fPnts = pPnts.AddFileChartPoints(fileName);//, System.IO.Path.GetFullPath(fileFullName).ToLower());
-            if(lPnts == null)
-              lPnts = fPnts.AddLineChartPoints(lineNum, linePos);
-            changed = lPnts.SyncChartPoint(_elem);//, classElem);
-          }
+          VCCodeClass targetClassElem = GetClassCodeElem();
+          if (targetClassElem != null)
+            classElem = new ClassElement(targetClassElem, this);
         }
 
-        return changed;
+        return classElem;
+      }
+
+      public IClassElement GetClass()
+      {
+        return GetClassImpl();
+      }
+
+      public bool Validate(ITextPosition pos)
+      {
+        ent = fileElem.GetMethodCodeElemFromFilePos(pos);
+        if (ent == null)
+          return false;
+        VCCodeClass targetClass = GetClassCodeElem();
+        if (targetClass != null && !classElem.Validate(targetClass))
+          return false;
+
+        return true;
       }
     }
 
@@ -281,10 +251,12 @@ namespace CP
       public string name { get { return projItem.Name; } }
       public string uniqueName { get; }
       private EnvDTE.ProjectItem projItem;
+      private Model codeModel;
 
-      public FileElem(EnvDTE.ProjectItem _projItem)
+      public FileElem(EnvDTE.ProjectItem _projItem, Model _codeModel)
       {
         projItem = _projItem;
+        codeModel = _codeModel;
         uniqueName = System.IO.Path.GetFullPath(projItem.FileNames[0]).ToLower();
       }
       public void Synchronize()
@@ -292,7 +264,7 @@ namespace CP
         ;
       }
 
-      private ClassElement GetTraceVarClassElem(CodeElement codeElem, int lineNum, int linePos)
+      private VCCodeFunction GetMethodFromFilePos(CodeElement codeElem, int lineNum, int linePos)
       {
         if (codeElem.Kind == vsCMElement.vsCMElementFunction)
         {
@@ -302,71 +274,100 @@ namespace CP
           {
             VCCodeFunction targetFunc = (VCCodeFunction)codeElem;
             if (targetFunc != null)
-            {
-              VCCodeElement targetClassElem = (VCCodeElement)targetFunc.Parent;
-              if (targetClassElem != null && targetClassElem.Kind == vsCMElement.vsCMElementClass)
-                return new ClassElement((VCCodeClass) targetClassElem);
-            }
+              return targetFunc;
           }
         }
         else
         {
           foreach (CodeElement classCodeElem in codeElem.Children)
           {
-            ClassElement theClass = GetTraceVarClassElem(classCodeElem, lineNum, linePos);
-            if (theClass != null)
-              return theClass;
+            VCCodeFunction theMethod = GetMethodFromFilePos(classCodeElem, lineNum, linePos);
+            if (theMethod != null)
+              return theMethod;
           }
         }
 
         return null;
       }
 
-      private ClassElement GetTraceVarClassElem(FileCodeModel fcm, int lineNum, int linePos)
+      private VCCodeFunction GetMethodFromFilePos(FileCodeModel fcm, int lineNum, int linePos)
       {
         if (fcm == null)
           return null;
         foreach (CodeElement codeElem in fcm.CodeElements)
         {
-          ClassElement theClass = GetTraceVarClassElem(codeElem, lineNum, linePos);
-          if (theClass != null)
-            return theClass;//!!! NOTIFY MODEL !!!
+          VCCodeFunction theMethod = GetMethodFromFilePos(codeElem, lineNum, linePos);
+          if (theMethod != null)
+            return theMethod;
         }
 
         return null;
       }
 
-      public IClassElement GetClassFromFilePos(int lineNum, int linePos)
+      public IClassMethodElement GetMethodFromFilePos(int lineNum, int linePos)
       {
-        return GetTraceVarClassElem(projItem.FileCodeModel, lineNum, linePos);
+        VCCodeFunction targetFunc = GetMethodFromFilePos(projItem.FileCodeModel, lineNum, linePos);
+        if (targetFunc != null)
+        {
+          ClassMethodElement method = new ClassMethodElement(targetFunc, this);
+          return method;
+        }
+
+        return null;
       }
+
+      public VCCodeFunction GetMethodCodeElemFromFilePos(ITextPosition pos)
+      {
+        return GetMethodFromFilePos(projItem.FileCodeModel, pos.lineNum, pos.linePos);
+      }
+
+      public bool Validate(string fileName)
+      {
+        projItem = codeModel.GetProjectItem(fileName);
+        if (projItem != null)
+          return true;
+
+        return false;
+      }
+
     }
 
     public class Model : IModel
     {
+      public ISet<IFileElem> fileElems { get; } = new SortedSet<IFileElem>(Comparer<IFileElem>.Create((lh, rh) => (String.Compare(lh.uniqueName, rh.uniqueName, StringComparison.Ordinal))));
       protected VCCodeModel vcCodeModel;
       protected EnvDTE.Project proj;
       protected static Events2 evs2;
       protected static CodeModelEvents cmEvs;
-      protected ISet<IClassElement> classes = new SortedSet<IClassElement>(Comparer<IClassElement>.Create((lh, rh) => (String.Compare(lh.name, rh.name, StringComparison.Ordinal))));
+      private string projName;
+      protected ISet<IClassElement> classes = new SortedSet<IClassElement>(Comparer<IClassElement>.Create((lh, rh) => (String.Compare(lh.uniqueName, rh.uniqueName, StringComparison.Ordinal))));
 
-      public Model(string projName, Events2 _evs2)
+      public Model(string _projName, Events2 _evs2)
       {
-        foreach (Project _proj in ChartPoints.Globals.dte.Solution.Projects)
-        {
-          if (_proj.Name == projName)
-          {
-            proj = _proj;
-            break;
-          }
-        }
-        if(proj != null)
+        projName = _projName;
+        proj = GetProject(projName);
+        if (proj != null)
           vcCodeModel = (VCCodeModel)proj.CodeModel;
         evs2 = _evs2;
         cmEvs = evs2.CodeModelEvents;
         //cmEvs.ElementChanged += OnElementChanged;
         //cmEvs.ElementDeleted += OnElementDeleted;
         //cmEvs.ElementAdded += OnElementAdded;
+      }
+
+      protected EnvDTE.Project GetProject(string projName)
+      {
+        EnvDTE.Project theProj = null;
+        foreach (Project _proj in ChartPoints.Globals.dte.Solution.Projects)
+        {
+          if (_proj.Name == projName)
+          {
+            theProj = _proj;
+            break;
+          }
+        }
+
+        return theProj;
       }
 
       public void OnElementAdded(CodeElement element)
@@ -399,32 +400,32 @@ namespace CP
 
         return null;
       }
-      public IFileElem GetFile(string fileName)
+
+      public void StoreClass(IClassElement classElem)
       {
-        EnvDTE.ProjectItem theProjItem = GetProjItem(proj.ProjectItems, fileName);
-        if(theProjItem != null)
-          return new FileElem(theProjItem);
-        return null;
+        classes.Add(classElem);
       }
 
-      //public IClassElement GetClass(string name)
-      //{
-      //  IClassElement cpClass = classes.FirstOrDefault((v) => (v.name == name));
-      //  if (cpClass == null)
-      //  {
-      //    foreach (CodeElement _class in vcCodeModel.Classes)
-      //    {
-      //      if (_class.Name == name)
-      //      {
-      //        cpClass = new ClassElement(_class);
-      //        classes.Add(cpClass);
-      //        return cpClass;
-      //      }
-      //    }
-      //  }
+      public EnvDTE.ProjectItem GetProjectItem(string fileName)
+      {
+        return GetProjItem(proj.ProjectItems, fileName);
+      }
 
-      //  return cpClass;
-      //}
+      public IFileElem GetFile(string fileName)
+      {
+        string fUniqueName = System.IO.Path.GetFullPath(fileName).ToLower();
+        IFileElem fElem = fileElems.FirstOrDefault((v) => (v.uniqueName == fUniqueName));
+        if (fElem != null)
+          return fElem;
+        EnvDTE.ProjectItem theProjItem = GetProjItem(proj.ProjectItems, fileName);
+        if (theProjItem != null)
+        {
+          fElem = new FileElem(theProjItem, this);
+          fileElems.Add(fElem);
+          return fElem;
+        }
+        return null;
+      }
 
       public ICheckCPPoint CheckCursorPos()
       {
@@ -488,7 +489,7 @@ namespace CP
           {
             // Oh, oh you're in the body, now.. (c)
             int linePos = (caretPnt.Line == startPnt.Line ? startPnt.LineCharOffset + 1 : 1/*0*/);
-            checkPnt = new CheckCPPoint(new ClassElement(ownerClass), new ClassMethodElement(targetFunc), projName, activeDoc.Name, System.IO.Path.GetFullPath(activeDoc.FullName).ToLower(), caretPnt.Line, linePos);
+            checkPnt = new CheckCPPoint(ownerClass, projName, activeDoc.Name, System.IO.Path.GetFullPath(activeDoc.FullName).ToLower(), caretPnt.Line, linePos);
 
             return checkPnt;
           }
@@ -527,7 +528,126 @@ namespace CP
           }
         }
       }
+
+      public bool Validate()
+      {
+        proj = GetProject(projName);
+        if (proj == null)
+          return false;
+        if (proj.CodeModel == null)
+          return false;
+        vcCodeModel = (VCCodeModel)proj.CodeModel;
+        if (vcCodeModel == null)
+          return false;
+        vcCodeModel.Synchronize();
+        vcCodeModel.SynchronizeFiles();
+
+        return true;
+      }
+
     }
+
+    //########################################################################
+
+    public class CheckElem : ICheckElem
+    {
+      public string name { get { return var.Name; } }
+      public string uniqueName { get { return var.FullName; } }
+      public string type { get { return var.TypeString; } }
+      public bool exists { get; set; }
+      private VCCodeVariable var { get; }
+      private readonly bool existsOrig;
+
+      public CheckElem(VCCodeVariable _var, bool _exists)
+      {
+        var = _var;
+        existsOrig = exists = _exists;
+      }
+
+      public void Toggle(bool val)
+      {
+        exists = val;
+      }
+
+      public bool HasChanged()
+      {
+        return (exists != existsOrig);
+      }
+    }
+
+    public class CheckCPPoint : ICheckCPPoint
+    {
+      private List<ICheckElem> theElems;
+      private string projName;
+      private string fileName;
+      private string fileFullName;
+      private int lineNum;
+      private int linePos;
+      private VCCodeClass ownerClass;
+      private IProjectChartPoints pPnts;
+      private IFileChartPoints fPnts;
+      private ILineChartPoints lPnts;
+
+      public ICollection<ICheckElem> elems
+      {
+        get
+        {
+          if (theElems == null)
+          {
+            theElems = new List<ICheckElem>();
+            if(ownerClass.Variables.Count != 0)
+            {
+              pPnts = ChartPoints.Globals.processor.GetProjectChartPoints(projName);
+              fPnts = pPnts?.GetFileChartPoints(fileName);
+              lPnts = fPnts?.GetLineChartPoints(lineNum);
+              foreach (CodeElement var in ownerClass.Variables)
+              {
+                VCCodeVariable vcVar = (VCCodeVariable)var;
+                bool exists = false;
+                if (lPnts != null)
+                {
+                  if (lPnts.GetChartPoint(vcVar.FullName) != null)
+                    exists = true;
+                }
+                theElems.Add(new CheckElem(vcVar, exists));
+              }
+            }
+          }
+          return theElems;
+        }
+      }
+
+      public CheckCPPoint(VCCodeClass _ownerClass, string _projName, string _fileName, string _fileFullName, int _lineNum, int _linePos)
+      {
+        ownerClass = _ownerClass;
+        projName = _projName;
+        fileName = _fileName;
+        fileFullName = _fileFullName;
+        lineNum = _lineNum;
+        linePos = _linePos;
+      }
+
+      public bool Synchronize()
+      {
+        bool changed = false;
+        foreach (ICheckElem _elem in elems)
+        {
+          if (_elem.HasChanged())
+          {
+            if (pPnts == null)
+              ChartPoints.Globals.processor.AddProjectChartPoints(projName, out pPnts);
+            if (fPnts == null)
+              fPnts = pPnts.AddFileChartPoints(fileName);
+            if (lPnts == null)
+              lPnts = fPnts.AddLineChartPoints(lineNum, linePos);
+            changed = lPnts.SyncChartPoint(_elem);
+          }
+        }
+
+        return changed;
+      }
+    }
+
 
   } // namespace CodeModel
 } // namespace CP

@@ -114,7 +114,7 @@ namespace ChartPoints
     public bool RemoveChartPoints(string projName)
     {
       IProjectChartPoints pcp = GetProjectChartPoints(projName);
-      if(pcp != null)
+      if (pcp != null)
         data.projPoints.Remove(pcp);
       return true;
     }
@@ -136,6 +136,14 @@ namespace ChartPoints
       if (args.projCPs.Count == 0)
         data.projPoints.Remove(args.projCPs);
       //return data.projPoints.Remove(projPnts);
+    }
+
+    public void Validate()
+    {
+      foreach (IProjectChartPoints projCPs in data.projPoints)
+      {
+        bool ret = projCPs.Validate();
+      }
     }
 
   }

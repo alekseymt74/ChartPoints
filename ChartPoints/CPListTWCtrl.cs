@@ -36,6 +36,9 @@ namespace ChartPoints
     {
       if (e.ColumnIndex == 0 && e.RowIndex != -1)
       {
+        //##########################################################
+        //Globals.processor.Validate();
+        //##########################################################
         DataGridViewRow row = list.Rows[e.RowIndex];
         Tuple<ILineChartPoints, IChartPoint> tagData = (Tuple<ILineChartPoints, IChartPoint>)row.Tag;
         tagData.Item2.SetStatus(((bool)row.Cells[0].Value) ? EChartPointStatus.SwitchedOn : EChartPointStatus.SwitchedOff);
