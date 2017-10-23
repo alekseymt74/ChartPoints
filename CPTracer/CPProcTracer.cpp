@@ -123,20 +123,43 @@ void CCPProcTracer::cons_proc()
         //SafeArrayUnaccessData( psaStudent );
         //Fire_OnTrace(psaStudent);
 
-        CComSafeArray<ULONGLONG> *ids = new CComSafeArray<ULONGLONG>(data.out_ptr->size());
-        CComSafeArray<DOUBLE> *vars = new CComSafeArray<DOUBLE>(data.out_ptr->size());
-        int i = 0;
-        while (data.out_ptr->size())
+        //////CComSafeArray<ULONGLONG> *ids = new CComSafeArray<ULONGLONG>(data.out_ptr->size());
+        //////CComSafeArray<DOUBLE> *vars = new CComSafeArray<DOUBLE>(data.out_ptr->size());
+        //////int i = 0;
+        //////while (data.out_ptr->size())
+        //////{
+        //////  val = data.out_ptr->front();
+        //////  data.out_ptr->pop();
+        //////  //TraceEnt ent;
+        //////  //ent.id = val.first;
+        //////  //ent.val = val.second;
+        //////  (*ids)[i] = val.first;
+        //////  (*vars)[i++] = val.second;
+        //////}
+        //////Fire_OnTrace(*ids, *vars);
+        //####################################################
+        GUID GUID_TraceEnt_struct = __uuidof( TraceEnt );
+        HRESULT hr;
+        CComPtr<IRecordInfo> pRecInfo;
+        hr = GetRecordInfoFromGuids( LIBID_CPTracerLib, 1, 0, 0,
+          GUID_TraceEnt_struct, &pRecInfo );
+        const int iLBound = 0;
+        const int iUBound = data.out_ptr->size();
+        SAFEARRAYBOUND rgbounds = { data.out_ptr->size(), 0 };
+        LPSAFEARRAY psaTraceEnt = SafeArrayCreateEx( VT_RECORD, 1, &rgbounds, pRecInfo );
+        TraceEnt *pTraceEntStruct = NULL;
+        hr = SafeArrayAccessData( psaTraceEnt, ( void** ) &pTraceEntStruct );
+        for( int i = 0; i < iUBound; i++ )
         {
           val = data.out_ptr->front();
           data.out_ptr->pop();
-          //TraceEnt ent;
-          //ent.id = val.first;
-          //ent.val = val.second;
-          (*ids)[i] = val.first;
-          (*vars)[i++] = val.second;
+          pTraceEntStruct[ i ].id = val.first;
+          pTraceEntStruct[ i ].val = val.second;
         }
-        Fire_OnTrace(*ids, *vars);
+        hr = SafeArrayUnaccessData( psaTraceEnt );
+        Fire_OnTrace( psaTraceEnt );
+        SafeArrayDestroy( psaTraceEnt );
+        //####################################################
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
