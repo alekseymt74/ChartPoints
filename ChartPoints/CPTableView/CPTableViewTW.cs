@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// <copyright file="ChartPointsViewTW.cs" company="Company">
+// <copyright file="CPTableView.cs" company="Company">
 //     Copyright (c) Company.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
@@ -9,6 +9,7 @@ namespace ChartPoints
   using System;
   using System.Runtime.InteropServices;
   using Microsoft.VisualStudio.Shell;
+  using System.Windows.Forms;
 
   /// <summary>
   /// This class implements the tool window exposed by this package and hosts a user control.
@@ -21,35 +22,45 @@ namespace ChartPoints
   /// implementation of the IVsUIElementPane interface.
   /// </para>
   /// </remarks>
-  [Guid("c6119b45-b5a9-4b8c-89d1-6af00ca9fd90")]
-  public class ChartPointsViewTW : ToolWindowPane
+  [Guid("b6e764c8-c1d6-4f02-a17c-f2690ef0f8ec")]
+  public class CPTableViewTW : ToolWindowPane
   {
+    private CPTableView control;
+
     /// <summary>
-    /// Initializes a new instance of the <see cref="ChartPointsViewTW"/> class.
+    /// Initializes a new instance of the <see cref="CPTableView"/> class.
     /// </summary>
-    public ChartPointsViewTW() : base(null)
+    public CPTableViewTW() : base(null)
     {
-      this.Caption = "ChartPointsViewTW";
+      this.Caption = "CPTableViewTW";
 
       // This is the user control hosted by the tool window; Note that, even if this class implements IDisposable,
       // we are not calling Dispose on this object. This is because ToolWindowPane calls Dispose on
       // the object returned by the Content property.
-      this.Content = new ChartPointsViewTWControl();
+      control = new CPTableView();
+    }
+
+    override public IWin32Window Window
+    {
+      get
+      {
+        return (IWin32Window)control;
+      }
     }
 
     public void Clear()
     {
-      ((ChartPointsViewTWControl) this.Content).Clear();
+      control?.Clear();
     }
 
-    public void UpdateView()
+    public void Trace(ulong id, double val)
     {
-      ((ChartPointsViewTWControl)this.Content).UpdateView();
+      control?.Trace(id, val);
     }
 
-    public ICPTracerDelegate CreateTracer(string varName)
+    public CPTableView GetTraceConsumer()
     {
-      return ((ChartPointsViewTWControl)this.Content).CreateTracer(varName);
+      return control;
     }
 
   }

@@ -81,7 +81,7 @@ namespace ChartPoints
       Globals.orchestrator.InitSolutionConfigurations();
       string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
       if (activeConfig.Contains(" [ChartPoints]"))
-        ChartPointsViewTWCommand.Instance.Enable(true);
+        CPChartViewTWCmd.Instance.Enable(true);
       LoadCPProps();
 
       return VSConstants.S_OK;
@@ -127,7 +127,8 @@ namespace ChartPoints
       pNewActiveSlnCfg.get_DisplayName(out newConfName);
       if (newConfName.Contains(" [ChartPoints]"))
       {
-        ChartPointsViewTWCommand.Instance.Enable(true);
+        CPChartViewTWCmd.Instance.Enable(true);
+        CPTableViewTWCmd.Instance.Enable(true);
         CPListTWCommand.Instance.Enable(true);
       }
       else
@@ -136,7 +137,8 @@ namespace ChartPoints
         pOldActiveSlnCfg.get_DisplayName(out prevConfName);
         if (prevConfName.Contains(" [ChartPoints]"))
         {
-          ChartPointsViewTWCommand.Instance.Enable(false);
+          CPChartViewTWCmd.Instance.Enable(false);
+          CPTableViewTWCmd.Instance.Enable(false);
           CPListTWCommand.Instance.Enable(false);
         }
       }
@@ -353,10 +355,12 @@ namespace ChartPoints
   //[ProvideAutoLoad(UIContextGuids80.SolutionExists)]
   [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string)]
   [ProvideMenuResource("Menus.ctmenu", 1)]
-  [ProvideToolWindow(typeof(ChartPointsViewTW))]
-  [ProvideToolWindowVisibility(typeof(ChartPointsViewTW), VSConstants.UICONTEXT.SolutionExists_string)]
+  [ProvideToolWindow(typeof(CPChartViewTW))]
+  [ProvideToolWindowVisibility(typeof(CPChartViewTW), VSConstants.UICONTEXT.SolutionExists_string)]
   [ProvideToolWindow(typeof(CPListTW))]
   [ProvideToolWindowVisibility(typeof(CPListTW), VSConstants.UICONTEXT.SolutionExists_string)]
+  [ProvideToolWindow(typeof(CPTableViewTW))]
+  [ProvideToolWindowVisibility(typeof(CPTableViewTW), VSConstants.UICONTEXT.SolutionExists_string)]
   public sealed class ChartPointsPackage : Package, IVsPersistSolutionOpts, IVsSolutionLoadManager
   {
     private ChartPntFactory factory;
@@ -413,7 +417,8 @@ namespace ChartPoints
       //rdt.Advise(new RunningDocTableEvents(rdt));
 
       ChartPntToggleCmd.Initialize(this);
-      ChartPointsViewTWCommand.Initialize(this);
+      CPTableViewTWCmd.Initialize(this);
+      CPChartViewTWCmd.Initialize(this);
       //Globals.cpTracer = ChartPointsViewTWCommand.Instance;
       CPListTWCommand.Initialize(this);
 

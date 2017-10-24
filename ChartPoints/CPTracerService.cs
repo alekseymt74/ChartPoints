@@ -8,22 +8,31 @@ namespace ChartPoints
 {
   public class CPTracerService : ICPTracerService
   {
-    ChartPointsViewTWCommand cpViewTW;
+    CPChartViewTWCmd cpViewTW;
+    CPTableViewTWCmd cpTableTW;
 
     public CPTracerService()
     {
-      cpViewTW = ChartPointsViewTWCommand.Instance;
+      cpViewTW = CPChartViewTWCmd.Instance;
+      cpTableTW = CPTableViewTWCmd.Instance;
     }
+
     public ICPTracerDelegate RegTraceEnt(ulong id, string name)
     {
-      return cpViewTW.CreateTracer(name);
+      return cpViewTW.CreateTracer(id, name);
     }
 
     public void Trace(ulong id, double val)
     {
-      ;
+      cpViewTW.Trace(id, val);
     }
 
+    public void Activate()
+    {
+      cpViewTW.Activate();
+      cpTableTW.Activate();
+      cpViewTW.SetTraceConsumer(cpTableTW.GetTraceConsumer());
+    }
   }
 
 }

@@ -31,7 +31,7 @@ namespace ChartPoints
     {
       outputWindowPane.OutputString("[RegElem]; name: " + name + "\tid: " + id + "\ttypeID: " + typeID + "\n");
       ICPTracerDelegate cpDelegate = traceServ.RegTraceEnt(id, name);// Globals.cpTracer.CreateTracer(name);
-      traceConsumers.Add(id, cpDelegate);
+      //traceConsumers.Add(id, cpDelegate);
     }
 
     //private void Trace(/*UInt64 id, */[MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_RECORD)]System.Array/*object*/ vals)
@@ -40,20 +40,21 @@ namespace ChartPoints
       //for (int i = 0; i < /*vals*/traceEnts.Length; ++i)
       foreach(TraceEnt te in traceEnts)
       {
-        //outputWindowPane.OutputString("[Trace]; id: " + ids.GetValue(i) + "\t: " + vals.GetValue(i) + "\n");
-        //foreach(var v in vals)
-        //  outputWindowPane.OutputString("[Trace]; id: " + ((TraceEnt)v).id + "\t: " + ((TraceEnt)v).val + "\n");
-        ICPTracerDelegate cpDelegate = null;
-        if (traceConsumers.TryGetValue(/*Convert.ToUInt64(ids.GetValue(i))*/te.id, out cpDelegate))
-        {
-          //foreach (var v in vals)
-            cpDelegate.Trace(/*Convert.ToDouble(vals.GetValue(i))*/te.val);
-        }
+        traceServ.Trace(te.id, te.val);
+        ////outputWindowPane.OutputString("[Trace]; id: " + ids.GetValue(i) + "\t: " + vals.GetValue(i) + "\n");
+        ////foreach(var v in vals)
+        ////  outputWindowPane.OutputString("[Trace]; id: " + ((TraceEnt)v).id + "\t: " + ((TraceEnt)v).val + "\n");
+        //ICPTracerDelegate cpDelegate = null;
+        //if (traceConsumers.TryGetValue(/*Convert.ToUInt64(ids.GetValue(i))*/te.id, out cpDelegate))
+        //{
+        //  //foreach (var v in vals)
+        //    cpDelegate.Trace(/*Convert.ToDouble(vals.GetValue(i))*/te.val);
+        //}
       }
-      foreach (KeyValuePair<ulong, ICPTracerDelegate> cpDelegate in traceConsumers)
-      {
-        cpDelegate.Value.UpdateView();
-      }
+      //foreach (KeyValuePair<ulong, ICPTracerDelegate> cpDelegate in traceConsumers)
+      //{
+      //  cpDelegate.Value.UpdateView();
+      //}
       //Globals.cpTracer.UpdateView();
     }
 
@@ -63,6 +64,7 @@ namespace ChartPoints
       ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
       cpServProv.GetService<ICPTracerService>(out traceServ);
       //      Globals.cpTracer.Activate();
+      traceServ.Activate();
       traceConsumers = new SortedDictionary<ulong, ICPTracerDelegate>();
 
       Globals.outputWindow.GetPane(Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.DebugPane_guid, out outputWindowPane);

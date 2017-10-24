@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// <copyright file="CPListTW.cs" company="Company">
+// <copyright file="ChartPointsViewTW.cs" company="Company">
 //     Copyright (c) Company.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
@@ -22,23 +22,32 @@ namespace ChartPoints
   /// implementation of the IVsUIElementPane interface.
   /// </para>
   /// </remarks>
-  [Guid("4b5a33a1-7bd0-4c99-980d-32360eb36779")]
-  public class CPListTW : ToolWindowPane
+  [Guid("c6119b45-b5a9-4b8c-89d1-6af00ca9fd90")]
+  public class CPChartViewTW : ToolWindowPane
   {
-    private CPListTWCtrl control;
+    private CPChartView control;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CPListTW"/> class.
+    /// Initializes a new instance of the <see cref="ChartPointsViewTW"/> class.
     /// </summary>
-    public CPListTW() : base(null)
+    public CPChartViewTW() : base(null)
     {
-      this.Caption = "CPListTW";
+      this.Caption = "ChartPointsViewTW";
 
       // This is the user control hosted by the tool window; Note that, even if this class implements IDisposable,
       // we are not calling Dispose on this object. This is because ToolWindowPane calls Dispose on
       // the object returned by the Content property.
-      //this.Content = new CPListTWControl();
-      control = new CPListTWCtrl();
+      control = new CPChartView();
+    }
+
+    public void SetTraceConsumer(CPTableView _traceConsumer)
+    {
+      control.SetTraceConsumer(_traceConsumer);
+    }
+
+    public ICPTracerDelegate CreateTracer(ulong id, string varName)
+    {
+      return control.CreateTracer(id, varName);
     }
 
     override public IWin32Window Window
@@ -48,5 +57,25 @@ namespace ChartPoints
         return (IWin32Window)control;
       }
     }
+
+    public void Clear()
+    {
+      control?.Clear();
+    }
+
+    public void Trace(ulong id, double val)
+    {
+      control?.Trace(id, val);
+    }
+    //public void UpdateView()
+    //{
+    //  ((CPChartView)this.Content).UpdateView();
+    //}
+
+    //public ICPTracerDelegate CreateTracer(string varName)
+    //{
+    //  return ((CPChartView)this.Content).CreateTracer(varName);
+    //}
+
   }
 }
