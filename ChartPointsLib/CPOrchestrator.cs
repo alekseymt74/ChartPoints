@@ -113,7 +113,7 @@ namespace ChartPoints
         traceHandler.Dispose();
         //int gen = GC.GetGeneration(traceHandler);
         traceHandler = null;
-        Globals.cpTracer.Show();
+//        Globals.cpTracer.Show();
         //GC.Collect(gen, GCCollectionMode.Forced);
       }
     }

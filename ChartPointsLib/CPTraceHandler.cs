@@ -13,7 +13,7 @@ namespace ChartPoints
     private ICPTracerFactory test_srv;
     private CPProcTracer procTracer;
     private IVsOutputWindowPane outputWindowPane;
-    //private ICPTracer tracer;
+    private ICPTracerService traceServ;
     private IDictionary<UInt64, ICPTracerDelegate> traceConsumers;
 
     [DllImport("ole32.dll",EntryPoint = "CoInitialize",CallingConvention = CallingConvention.StdCall)]
@@ -30,7 +30,7 @@ namespace ChartPoints
     private void RegElem(string name, UInt64 id, UInt16 typeID)
     {
       outputWindowPane.OutputString("[RegElem]; name: " + name + "\tid: " + id + "\ttypeID: " + typeID + "\n");
-      ICPTracerDelegate cpDelegate = Globals.cpTracer.CreateTracer(name);
+      ICPTracerDelegate cpDelegate = traceServ.RegTraceEnt(id, name);// Globals.cpTracer.CreateTracer(name);
       traceConsumers.Add(id, cpDelegate);
     }
 
@@ -60,7 +60,9 @@ namespace ChartPoints
     public CPTraceHandler()
     {
       //tracer = _tracer;
-      Globals.cpTracer.Activate();
+      ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
+      cpServProv.GetService<ICPTracerService>(out traceServ);
+      //      Globals.cpTracer.Activate();
       traceConsumers = new SortedDictionary<ulong, ICPTracerDelegate>();
 
       Globals.outputWindow.GetPane(Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.DebugPane_guid, out outputWindowPane);

@@ -363,8 +363,8 @@ namespace ChartPoints
 
     private IVsSolutionBuildManager3 buildManager3;
     private VsSolutionEvents solEvents;
-    private CommandEvents cmdEvents;
-    private RunningDocumentTable rdt;
+    //private CommandEvents cmdEvents;
+    //private RunningDocumentTable rdt;
 
     /// <summary>
     /// ChartPointsPackage GUID string.
@@ -414,8 +414,11 @@ namespace ChartPoints
 
       ChartPntToggleCmd.Initialize(this);
       ChartPointsViewTWCommand.Initialize(this);
-      Globals.cpTracer = ChartPointsViewTWCommand.Instance;
+      //Globals.cpTracer = ChartPointsViewTWCommand.Instance;
       CPListTWCommand.Initialize(this);
+
+      ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
+      cpServProv.RegisterService<ICPTracerService>(new CPTracerService());
 
       //IVsMSBuildTaskFileManager
       //IVsBuildManagerAccessor3 vsBuildMgrAcc = GetService(typeof(SVsBuildManagerAccessor)) as IVsBuildManagerAccessor3;
