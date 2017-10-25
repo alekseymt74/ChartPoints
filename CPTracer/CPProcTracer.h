@@ -22,7 +22,17 @@ using namespace ATL;
 class data_queue
 {
 public:
-  typedef std::pair< uint64_t, double > data_ent;
+  struct trace_ent
+  {
+    uint64_t id;
+    uint64_t tm;
+    double val;
+    trace_ent() {}
+    trace_ent( uint64_t _id, uint64_t _tm, double _val )
+      : id(_id), tm(_tm), val(_val)
+    {}
+  };
+  typedef trace_ent data_ent;
   typedef std::queue< data_ent > data_cont;
 private:
   data_cont data_1;
@@ -53,10 +63,9 @@ class ATL_NO_VTABLE CCPProcTracer :
   std::atomic_bool active;
   std::thread *consumer_thr;
   std::mutex mtx;
-  //typedef std::queue<double> data_cont;
-  //data_cont data;
   data_queue data;
   void cons_proc();
+  static std::chrono::system_clock::time_point tm_start;
 public:
   CCPProcTracer();
   ~CCPProcTracer();

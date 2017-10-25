@@ -93,9 +93,9 @@ namespace ChartPoints
       return window.CreateTracer(id, varName);
     }
 
-    public void Trace(ulong id, double val)
+    public void Trace(ulong id, System.Array traceEnts)
     {
-      window.Trace(id, val);
+      window.Trace(id, traceEnts);
     }
 
     //public void EnableItem(ulong id, bool flag)

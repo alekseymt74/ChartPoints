@@ -53,9 +53,9 @@ namespace ChartPoints
       control?.Clear();
     }
 
-    public void Trace(ulong id, double val)
+    public void Trace(ulong id, System.Array traceEnts)
     {
-      control?.Trace(id, val);
+      control?.Trace(id, traceEnts);
     }
 
     public CPTableView GetTraceConsumer()

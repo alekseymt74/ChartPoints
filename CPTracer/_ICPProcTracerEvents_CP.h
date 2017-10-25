@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 const IID TraceEnt_IID = { 0x26E0450F,
 0x7D1D,
 0x4189,{
@@ -29,93 +31,93 @@ const IID TraceEnt_IID = { 0x26E0450F,
 
 template<class T>
 class CProxy_ICPProcTracerEvents :
-	public ATL::IConnectionPointImpl<T, &__uuidof(_ICPProcTracerEvents)>
+  public ATL::IConnectionPointImpl<T, &__uuidof( _ICPProcTracerEvents )>
 {
 public:
-	HRESULT Fire_OnRegElem(BSTR name, ULONGLONG id, USHORT typeID)
-	{
-		HRESULT hr = S_OK;
-		T * pThis = static_cast<T *>(this);
-		int cConnections = m_vec.GetSize();
+  HRESULT Fire_OnRegElem( BSTR name, ULONGLONG id, USHORT typeID )
+  {
+    HRESULT hr = S_OK;
+    T * pThis = static_cast< T * >( this );
+    int cConnections = m_vec.GetSize();
 
-		for (int iConnection = 0; iConnection < cConnections; iConnection++)
-		{
-			pThis->Lock();
-			CComPtr<IUnknown> punkConnection = m_vec.GetAt(iConnection);
-			pThis->Unlock();
+    for( int iConnection = 0; iConnection < cConnections; iConnection++ )
+    {
+      pThis->Lock();
+      CComPtr<IUnknown> punkConnection = m_vec.GetAt( iConnection );
+      pThis->Unlock();
 
-			IDispatch * pConnection = static_cast<IDispatch *>(punkConnection.p);
+      IDispatch * pConnection = static_cast< IDispatch * >( punkConnection.p );
 
-			if (pConnection)
-			{
-				CComVariant avarParams[3];
-				avarParams[2] = name;
-				avarParams[2].vt = VT_BSTR;
-				avarParams[1] = id;
-				avarParams[1].vt = VT_UI8;
-				avarParams[0] = typeID;
-				avarParams[0].vt = VT_UI2;
-				CComVariant varResult;
+      if( pConnection )
+      {
+        CComVariant avarParams[ 3 ];
+        avarParams[ 2 ] = name;
+        avarParams[ 2 ].vt = VT_BSTR;
+        avarParams[ 1 ] = id;
+        avarParams[ 1 ].vt = VT_UI8;
+        avarParams[ 0 ] = typeID;
+        avarParams[ 0 ].vt = VT_UI2;
+        CComVariant varResult;
 
-				DISPPARAMS params = { avarParams, NULL, 3, 0 };
-				hr = pConnection->Invoke(1, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &params, &varResult, NULL, NULL);
-			}
-		}
-		return hr;
-	}
-//	HRESULT Fire_OnTrace(SAFEARRAY *pVars)
-//	{
-//		HRESULT hr = S_OK;
-//		T * pThis = static_cast<T *>(this);
-//		int cConnections = m_vec.GetSize();
-//
-//		for (int iConnection = 0; iConnection < cConnections; iConnection++)
-//		{
-//			pThis->Lock();
-//			CComPtr<IUnknown> punkConnection = m_vec.GetAt(iConnection);
-//			pThis->Unlock();
-//
-//			IDispatch * pConnection = static_cast<IDispatch *>(punkConnection.p);
-//
-//			if (pConnection)
-//			{
-//        CComVariant varResult;
-//        //VariantClear(&varResult);
-//        CComVariant avarParams;//[ 1 ];
-//        VARIANT var;
-//
-//        //VariantInit(&var);
-//        //V_VT(&var) = VT_ARRAY | VT_RECORD;
-//        //V_ARRAY(&var) = pVars;
-//        avarParams/*[0]*/.vt = /*VT_VARIANT | VT_BYREF;//*/VT_ARRAY /*| VT_BYREF */| VT_RECORD;
-//        avarParams/*[0]*/./*pvarVal*//*pvRecord*/parray = /*&var;//*/pVars;
-/////////////////////////
-//        //IRecordInfo* pRecInfo = NULL;
-//        //HRESULT hr1 = ::GetRecordInfoFromGuids(LIBID_CPTracerLib,
-//        //  1, 0,
-//        //  0,
-//        //  TraceEnt_IID,
-//        //  &pRecInfo);
-//        //avarParams.pRecInfo = pRecInfo;
-/////////////////////////
-//        DISPPARAMS params = { &avarParams, NULL, 1, 0 };
-//        EXCEPINFO  pExcepInfo;
-//        UINT       puArgErr;
-//        hr = pConnection->Invoke(2, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &params, &varResult, &pExcepInfo, &puArgErr);
-//				//CComVariant avarParams[2];
-//				//avarParams[1] = id;
-//				//avarParams[1].vt = VT_UI8;
-//				//avarParams[0] = vals;
-//    //    avarParams[ 0 ].vt = VT_ARRAY | VT_R8;// VT_R8;
-//				//CComVariant varResult;
-//
-//				//DISPPARAMS params = { avarParams, NULL, 2, 0 };
-//				//hr = pConnection->Invoke(2, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &params, &varResult, NULL, NULL);
-//			}
-//		}
-//		return hr;
-//	}
-  HRESULT Fire_OnTrace( SAFEARRAY *psaTraceEnt )//SAFEARRAY *ids, SAFEARRAY *vars)
+        DISPPARAMS params = { avarParams, NULL, 3, 0 };
+        hr = pConnection->Invoke( 1, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &params, &varResult, NULL, NULL );
+      }
+    }
+    return hr;
+  }
+  //	HRESULT Fire_OnTrace(SAFEARRAY *pVars)
+  //	{
+  //		HRESULT hr = S_OK;
+  //		T * pThis = static_cast<T *>(this);
+  //		int cConnections = m_vec.GetSize();
+  //
+  //		for (int iConnection = 0; iConnection < cConnections; iConnection++)
+  //		{
+  //			pThis->Lock();
+  //			CComPtr<IUnknown> punkConnection = m_vec.GetAt(iConnection);
+  //			pThis->Unlock();
+  //
+  //			IDispatch * pConnection = static_cast<IDispatch *>(punkConnection.p);
+  //
+  //			if (pConnection)
+  //			{
+  //        CComVariant varResult;
+  //        //VariantClear(&varResult);
+  //        CComVariant avarParams;//[ 1 ];
+  //        VARIANT var;
+  //
+  //        //VariantInit(&var);
+  //        //V_VT(&var) = VT_ARRAY | VT_RECORD;
+  //        //V_ARRAY(&var) = pVars;
+  //        avarParams/*[0]*/.vt = /*VT_VARIANT | VT_BYREF;//*/VT_ARRAY /*| VT_BYREF */| VT_RECORD;
+  //        avarParams/*[0]*/./*pvarVal*//*pvRecord*/parray = /*&var;//*/pVars;
+  /////////////////////////
+  //        //IRecordInfo* pRecInfo = NULL;
+  //        //HRESULT hr1 = ::GetRecordInfoFromGuids(LIBID_CPTracerLib,
+  //        //  1, 0,
+  //        //  0,
+  //        //  TraceEnt_IID,
+  //        //  &pRecInfo);
+  //        //avarParams.pRecInfo = pRecInfo;
+  /////////////////////////
+  //        DISPPARAMS params = { &avarParams, NULL, 1, 0 };
+  //        EXCEPINFO  pExcepInfo;
+  //        UINT       puArgErr;
+  //        hr = pConnection->Invoke(2, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &params, &varResult, &pExcepInfo, &puArgErr);
+  //				//CComVariant avarParams[2];
+  //				//avarParams[1] = id;
+  //				//avarParams[1].vt = VT_UI8;
+  //				//avarParams[0] = vals;
+  //    //    avarParams[ 0 ].vt = VT_ARRAY | VT_R8;// VT_R8;
+  //				//CComVariant varResult;
+  //
+  //				//DISPPARAMS params = { avarParams, NULL, 2, 0 };
+  //				//hr = pConnection->Invoke(2, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &params, &varResult, NULL, NULL);
+  //			}
+  //		}
+  //		return hr;
+  //	}
+  HRESULT Fire_OnTrace( uint64_t id, SAFEARRAY *psaTraceEnt )//SAFEARRAY *ids, SAFEARRAY *vars)
   {
     //HRESULT hr = S_OK;
     //T * pThis = static_cast<T *>(this);
@@ -143,42 +145,35 @@ public:
     //  }
     //}
     //return hr;
-      HRESULT hr = S_OK;
-      T * pThis = static_cast< T * >( this );
-      int cConnections = m_vec.GetSize();
+    HRESULT hr = S_OK;
+    T * pThis = static_cast< T * >( this );
+    int cConnections = m_vec.GetSize();
 
-      for( int iConnection = 0; iConnection < cConnections; iConnection++ )
+    for( int iConnection = 0; iConnection < cConnections; iConnection++ )
+    {
+      pThis->Lock();
+      CComPtr<IUnknown> punkConnection = m_vec.GetAt( iConnection );
+      pThis->Unlock();
+
+      IDispatch * pConnection = static_cast< IDispatch * >( punkConnection.p );
+
+      if( pConnection )
       {
-        pThis->Lock();
-        CComPtr<IUnknown> punkConnection = m_vec.GetAt( iConnection );
-        pThis->Unlock();
+        CComVariant avarParams[ 2 ];
+        avarParams[ 1 ] = id;
+        avarParams[ 1 ].vt = VT_UI8;
+        avarParams[ 0 ] = psaTraceEnt;
+        avarParams[ 0 ].vt = VT_ARRAY | VT_RECORD;
+        CComVariant varResult;
 
-        IDispatch * pConnection = static_cast< IDispatch * >( punkConnection.p );
-
-        if( pConnection )
-        {
-          CComVariant avarParams[ 1 ];
-          IRecordInfo* pRecInfo = NULL;
-          HRESULT hr1 = ::GetRecordInfoFromGuids( LIBID_CPTracerLib,
-            1, 0,
-            0,
-            TraceEnt_IID,
-            &pRecInfo );
-          //avarParams[ 0 ].pRecInfo = pRecInfo;
-          //avarParams[ 0 ].pvRecord = psaTraceEnt;
-          avarParams[ 0 ] = psaTraceEnt;
-          //avarParams[ 0 ].parray = psaTraceEnt;
-          avarParams[ 0 ].vt = VT_ARRAY | VT_RECORD;
-          CComVariant varResult;
-
-          DISPPARAMS params = { avarParams, NULL, 1, 0 };
-          EXCEPINFO  pExcepInfo;
-          UINT       puArgErr;
-          hr = pConnection->Invoke( 2, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &params, &varResult, &pExcepInfo, &puArgErr );
-        }
+        DISPPARAMS params = { avarParams, NULL, 2, 0 };
+        EXCEPINFO  pExcepInfo;
+        UINT       puArgErr;
+        hr = pConnection->Invoke( 2, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &params, &varResult, &pExcepInfo, &puArgErr );
       }
-
-      return hr;
     }
+
+    return hr;
+  }
 };
 

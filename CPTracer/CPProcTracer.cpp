@@ -4,172 +4,121 @@
 #include "CPProcTracer.h"
 #include <intsafe.h>
 #include <atlsafe.h>
-
-//const IID TraceEnt_IID = { 0x26E0450F,
-//  0x7D1D,
-//  0x4189,{
-//    0x87,
-//    0x35,
-//    0xC0,
-//    0xE8,
-//    0x7B,
-//    0x3A,
-//    0x5E,
-//    0xCD
-//  }
-//  
-////  0xC21871A0,
-////0x33EB,
-////0x11D4,{
-////  0xA1,
-////  0x3A,
-////  0xBE,
-////  0x25,
-////  0x73,
-////  0xA1,
-////  0x12,
-////  0x0F
-////}
-//};
+#include <map>
 
 // CCPProcTracer
 
+std::chrono::system_clock::time_point CCPProcTracer::tm_start;
+
 CCPProcTracer::CCPProcTracer()
-  : consumer_thr(nullptr)
-  , active(false)
+  : consumer_thr( nullptr )
+  , active( false )
 {
+  tm_start = std::chrono::system_clock::now();
 }
 
 
-STDMETHODIMP CCPProcTracer::RegElem(BSTR name, ULONGLONG id, USHORT typeID)
+STDMETHODIMP CCPProcTracer::RegElem( BSTR name, ULONGLONG id, USHORT typeID )
 {
-  if (!consumer_thr)
+  if( !consumer_thr )
   {
     active = true;
-    consumer_thr = new std::thread(std::bind(&CCPProcTracer::cons_proc, this));
+    consumer_thr = new std::thread( std::bind( &CCPProcTracer::cons_proc, this ) );
   }
-  Fire_OnRegElem(name, id, typeID);
+  Fire_OnRegElem( name, id, typeID );
 
   return S_OK;
 }
 
 
-STDMETHODIMP CCPProcTracer::Trace(ULONGLONG id, DOUBLE val)
+STDMETHODIMP CCPProcTracer::Trace( ULONGLONG id, DOUBLE val )
 {
-  std::lock_guard< std::mutex > lock(mtx);
-  data.in_ptr->push(std::make_pair(id, val));
+  std::lock_guard< std::mutex > lock( mtx );
+  std::chrono::system_clock::rep tm_ellapsed = std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::system_clock::now() - tm_start ).count();
+  data.in_ptr->push( data_queue::data_ent( id, tm_ellapsed, val ) );
 
   return S_OK;
 }
 
 void CCPProcTracer::cons_proc()
 {
-  CoInitializeEx(NULL, COINIT_MULTITHREADED);
+  CoInitializeEx( NULL, COINIT_MULTITHREADED );
   data_queue::data_ent val;
-  while (active)
+  while( active )
   {
     {
-      std::lock_guard< std::mutex > lock(mtx);
+      std::lock_guard< std::mutex > lock( mtx );
       data.swap();
     }
+    GUID GUID_TraceEnt_struct = __uuidof( TraceEnt );
+    HRESULT hr;
+    CComPtr<IRecordInfo> pRecInfo;//!!!!!!!!!!!!!! MOVE TO CLASS MEMBER !!!!!!!!!!!!
+    hr = GetRecordInfoFromGuids( LIBID_CPTracerLib, 1, 0, 0, GUID_TraceEnt_struct, &pRecInfo );
+    typedef std::vector<TraceEnt> te_data;
+    typedef std::map<uint64_t, te_data *> tes_data_cont;
+    typedef tes_data_cont::iterator it_tes;
+    tes_data_cont tes;
+    while( data.out_ptr->size() )
     {
-      if (data.out_ptr->size())
+      val = data.out_ptr->front();
+      data.out_ptr->pop();
+      it_tes it = tes.find( val.id );
+      if( it == tes.end() )
       {
-        //LPTYPEINFO pTypeInfo = NULL;
-        //LPTYPELIB pTypelib = NULL;
-        //LPSAFEARRAY psaStudent = NULL;
-        //SAFEARRAYBOUND rgbounds = { data.out_ptr->size(), 0 };
-        //TraceEnt *pStudentStruct = NULL;
-        //IRecordInfo* pRecInfo = NULL;
-
-        ////// Fetch the IRecordInfo interface describing the UDT
-        ////HRESULT hr = LoadRegTypeLib(LIBID_CPTracerLib, 1, 0, GetUserDefaultLCID(), &pTypelib);
-        ////_ASSERT(SUCCEEDED(hr) && pTypelib);
-
-        ////hr = pTypelib->GetTypeInfoOfGuid(TraceEnt_IID, &pTypeInfo);
-        ////_ASSERT(SUCCEEDED(hr) && pTypeInfo);
-        ////hr = GetRecordInfoFromTypeInfo(pTypeInfo, &pRecInfo);
-        ////_ASSERT(SUCCEEDED(hr) && pRecInfo);
-        //////RELEASEINTERFACE(pTypeInfo);
-        ////pTypeInfo->Release();
-        //////RELEASEINTERFACE(pTypelib);
-        ////pTypelib->Release();
-        //HRESULT hr = ::GetRecordInfoFromGuids(LIBID_CPTracerLib,
-        //  1, 0,
-        //  0,
-        //  TraceEnt_IID,
-        //  &pRecInfo);
-        //if (FAILED(hr)) {
-        //  HRESULT hr2 = Error(_T("Can not create RecordInfo interface for UDTVariable"));
-        //  //return( hr2 );
-        //}
-        //psaStudent = SafeArrayCreateEx(VT_RECORD, 1, &rgbounds, pRecInfo);
-        ////RELEASEINTERFACE(pRecInfo);
-        //pRecInfo->Release();
-        //_ASSERT(psaStudent);
-        //hr = SafeArrayAccessData(psaStudent, reinterpret_cast<PVOID*>(&pStudentStruct));
-        //_ASSERT(SUCCEEDED(hr) && pStudentStruct);
-        //int i = 0;
-        //while( data.out_ptr->size() )
-        //{
-        //  val = data.out_ptr->front();
-        //  data.out_ptr->pop();
-        //  TraceEnt ent;
-        //  ent.id = val.first;
-        //  ent.val = val.second;
-        //  pStudentStruct[ i ].id = val.first;
-        //  pStudentStruct[ i++ ].val = val.second;
-        //}
-        //SafeArrayUnaccessData( psaStudent );
-        //Fire_OnTrace(psaStudent);
-
-        //////CComSafeArray<ULONGLONG> *ids = new CComSafeArray<ULONGLONG>(data.out_ptr->size());
-        //////CComSafeArray<DOUBLE> *vars = new CComSafeArray<DOUBLE>(data.out_ptr->size());
-        //////int i = 0;
-        //////while (data.out_ptr->size())
-        //////{
-        //////  val = data.out_ptr->front();
-        //////  data.out_ptr->pop();
-        //////  //TraceEnt ent;
-        //////  //ent.id = val.first;
-        //////  //ent.val = val.second;
-        //////  (*ids)[i] = val.first;
-        //////  (*vars)[i++] = val.second;
-        //////}
-        //////Fire_OnTrace(*ids, *vars);
-        //####################################################
-        GUID GUID_TraceEnt_struct = __uuidof( TraceEnt );
-        HRESULT hr;
-        CComPtr<IRecordInfo> pRecInfo;
-        hr = GetRecordInfoFromGuids( LIBID_CPTracerLib, 1, 0, 0,
-          GUID_TraceEnt_struct, &pRecInfo );
-        const int iLBound = 0;
-        const int iUBound = data.out_ptr->size();
-        SAFEARRAYBOUND rgbounds = { data.out_ptr->size(), 0 };
-        LPSAFEARRAY psaTraceEnt = SafeArrayCreateEx( VT_RECORD, 1, &rgbounds, pRecInfo );
-        TraceEnt *pTraceEntStruct = NULL;
-        hr = SafeArrayAccessData( psaTraceEnt, ( void** ) &pTraceEntStruct );
-        for( int i = 0; i < iUBound; i++ )
-        {
-          val = data.out_ptr->front();
-          data.out_ptr->pop();
-          pTraceEntStruct[ i ].id = val.first;
-          pTraceEntStruct[ i ].val = val.second;
-        }
-        hr = SafeArrayUnaccessData( psaTraceEnt );
-        Fire_OnTrace( psaTraceEnt );
-        SafeArrayDestroy( psaTraceEnt );
-        //####################################################
+        std::pair<it_tes, bool> it_ins = tes.insert( std::make_pair( val.id, new te_data() ) );
+        it = it_ins.first;
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      TraceEnt trace_ent;
+      trace_ent.tm = val.tm;
+      trace_ent.val = val.val;
+      it->second->push_back( trace_ent );
     }
+    for( it_tes it = tes.begin(); it != tes.end(); ++it )
+    {
+      SAFEARRAYBOUND rgbounds = { it->second->size(), 0 };
+      LPSAFEARRAY psaTraceEnt = SafeArrayCreateEx( VT_RECORD, 1, &rgbounds, pRecInfo );
+      TraceEnt *pTraceEntStruct = NULL;
+      hr = SafeArrayAccessData( psaTraceEnt, ( void** ) &pTraceEntStruct );
+      memcpy( pTraceEntStruct, it->second->data(), sizeof( TraceEnt ) * it->second->size() );
+      //int i = 0;
+      //for( te_data::iterator it_te = it->second->begin(); it_te != it->second->end(); ++it_te )
+      //{
+      //  pTraceEntStruct[ i ].tm = it_te->tm;
+      //  pTraceEntStruct[ i ].val = it_te->val;
+      //  ++i;
+      //}
+      hr = SafeArrayUnaccessData( psaTraceEnt );
+      Fire_OnTrace( it->first, psaTraceEnt );
+      SafeArrayDestroy( psaTraceEnt );
+    }
+    //if( data.out_ptr->size() )
+    //{
+    //  const int iLBound = 0;
+    //  const int iUBound = data.out_ptr->size();
+    //  SAFEARRAYBOUND rgbounds = { data.out_ptr->size(), 0 };
+    //  LPSAFEARRAY psaTraceEnt = SafeArrayCreateEx( VT_RECORD, 1, &rgbounds, pRecInfo );
+    //  TraceEnt *pTraceEntStruct = NULL;
+    //  hr = SafeArrayAccessData( psaTraceEnt, ( void** ) &pTraceEntStruct );
+    //  for( int i = 0; i < iUBound; i++ )
+    //  {
+    //    val = data.out_ptr->front();
+    //    data.out_ptr->pop();
+    //    pTraceEntStruct[ i ].tm = val.tm;
+    //    pTraceEntStruct[ i ].val = val.val;
+    //  }
+    //  hr = SafeArrayUnaccessData( psaTraceEnt );
+    //  Fire_OnTrace( psaTraceEnt );
+    //  SafeArrayDestroy( psaTraceEnt );
+    //}
+    std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
   }
+
   CoUninitialize();
 }
 
 CCPProcTracer::~CCPProcTracer()
 {
-  if (consumer_thr)
+  if( consumer_thr )
   {
     active = false;
     consumer_thr->join();
