@@ -35,27 +35,9 @@ namespace ChartPoints
     }
 
     //private void Trace(/*UInt64 id, */[MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_RECORD)]System.Array/*object*/ vals)
-    private void Trace(System.Array traceEnts)//System.Array ids, System.Array vals)
+    private void Trace(ulong id, System.Array tms, System.Array vals)
     {
-      //for (int i = 0; i < /*vals*/traceEnts.Length; ++i)
-      foreach(TraceEnt te in traceEnts)
-      {
-        traceServ.Trace(te.id, te.val);
-        ////outputWindowPane.OutputString("[Trace]; id: " + ids.GetValue(i) + "\t: " + vals.GetValue(i) + "\n");
-        ////foreach(var v in vals)
-        ////  outputWindowPane.OutputString("[Trace]; id: " + ((TraceEnt)v).id + "\t: " + ((TraceEnt)v).val + "\n");
-        //ICPTracerDelegate cpDelegate = null;
-        //if (traceConsumers.TryGetValue(/*Convert.ToUInt64(ids.GetValue(i))*/te.id, out cpDelegate))
-        //{
-        //  //foreach (var v in vals)
-        //    cpDelegate.Trace(/*Convert.ToDouble(vals.GetValue(i))*/te.val);
-        //}
-      }
-      //foreach (KeyValuePair<ulong, ICPTracerDelegate> cpDelegate in traceConsumers)
-      //{
-      //  cpDelegate.Value.UpdateView();
-      //}
-      //Globals.cpTracer.UpdateView();
+      traceServ.Trace(id, tms, vals);
     }
 
     public CPTraceHandler()

@@ -22,9 +22,9 @@ namespace ChartPoints
       return cpViewTW.CreateTracer(id, name);
     }
 
-    public void Trace(ulong id, double val)
+    public void Trace(ulong id, System.Array tms, System.Array vals)
     {
-      cpViewTW.Trace(id, val);
+      cpViewTW.Trace(id, tms, vals);
     }
 
     public void Activate()

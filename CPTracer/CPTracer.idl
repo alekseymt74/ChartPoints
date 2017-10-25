@@ -45,7 +45,7 @@ library CPTracerLib
   ]
   struct TraceEnt
   {
-    [helpstring( "id" )] ULONGLONG id;
+    [helpstring( "tm" )] ULONGLONG tm;
     [helpstring( "val" )] DOUBLE val;
   };
 
@@ -74,7 +74,8 @@ library CPTracerLib
 		methods:
       [id( 1 )] HRESULT OnRegElem( BSTR name, ULONGLONG id, USHORT typeID );
       //[id( 2 )] HRESULT OnTrace(SAFEARRAY(ULONGLONG) id, SAFEARRAY(DOUBLE) val );
-      [id( 2 )] HRESULT OnTrace([in] SAFEARRAY(struct TraceEnt) ents);//ULONGLONG id, SAFEARRAY(DOUBLE) val );
+      [id( 2 )] HRESULT OnTrace( ULONGLONG id, SAFEARRAY( ULONGLONG ) tms, SAFEARRAY( DOUBLE ) vals );
+      //[id( 2 )] HRESULT OnTrace( ULONGLONG id, [in] SAFEARRAY(struct TraceEnt) ents);//ULONGLONG id, SAFEARRAY(DOUBLE) val );
       //[id( 2 )] HRESULT OnTrace( VARIANT ents);//ULONGLONG id, SAFEARRAY(DOUBLE) val );
   };
 	[

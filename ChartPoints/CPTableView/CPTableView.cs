@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
+//using CPTracerLib;
 
 namespace ChartPoints
 {
@@ -56,11 +57,13 @@ namespace ChartPoints
       ignoreCellValEvents = false;
     }
 
-    public void Trace(ulong id, double val)
+    public void Trace(ulong id, System.Array tms, System.Array vals)
     {
       ICPTracerDelegate deleg = null;
       if (rowDelegates.TryGetValue(id, out deleg))
-        deleg.Trace(val);
+      {
+          deleg.Trace(tms, vals);
+      }
     }
 
     //public void EnableItem(ulong id, bool flag)

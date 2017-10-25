@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using CPTracerLib;
 
 namespace ChartPoints
 {
@@ -26,9 +27,14 @@ namespace ChartPoints
       cons = _cons;
     }
 
-    public void Trace(double val)
+    public void Trace(System.Array tms, System.Array vals)
     {
-      cons.Trace(/*(int)*/val);
+      cons.Trace(tms, vals);
+    }
+
+    public void Trace(ulong tm, double val)
+    {
+      cons.Trace(tm, val);
     }
 
     public void UpdateView()
@@ -51,7 +57,7 @@ namespace ChartPoints
   {
     private Series series;
     private Control ctrl;
-    private int tm = 0;
+    //private int tm = 0;
     private IList<double> tms_1 = new List<double>();
     private IList<double> vals_1 = new List<double>();
     private IList<double> tms_2 = new List<double>();
@@ -73,14 +79,35 @@ namespace ChartPoints
     public void SetProperty(string key, object value)
     {}
 
-    public void Trace(double val)
+    public void Trace(System.Array tms, System.Array vals)
     {
       lock (tms_in)
       {
-        tms_in.Add(tm++);
+        for (int i = 0; i < tms.Length; ++i)
+        {
+          tms_in.Add((ulong)tms.GetValue(i));
+          vals_in.Add((double)vals.GetValue(i));
+        }
+      }
+    }
+
+    public void Trace(ulong tm, double val)
+    {
+      lock (tms_in)
+      {
+        tms_in.Add(tm);
         vals_in.Add(val);
       }
     }
+
+    //public void Trace(TraceEnt traceEnt)
+    //{
+    //  lock (tms_in)
+    //  {
+    //    tms_in.Add(traceEnt.tm);
+    //    vals_in.Add(traceEnt.val);
+    //  }
+    //}
 
     public void UpdateView()
     {
@@ -131,10 +158,20 @@ namespace ChartPoints
       row = _row;
     }
 
-    public void Trace(double val)
+    public void Trace(System.Array tms, System.Array vals)
+    {
+      curVal = (double)vals.GetValue( vals.Length - 1 );
+    }
+
+    public void Trace(ulong tm, double val)
     {
       curVal = val;
     }
+
+    //public void Trace(TraceEnt traceEnt)
+    //{
+    //  curVal = traceEnt.val;
+    //}
 
     public void UpdateView()
     {

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Diagnostics;
+using CPTracerLib;
 
 namespace ChartPoints
 {
@@ -142,7 +143,12 @@ namespace ChartPoints
               //Debug.WriteLine(curPnt.YValues[0].ToString());
               ICPTracerDelegate deleg = null;
               if (depDelegates.TryGetValue(serInd, out deleg))
-                deleg.Trace(curPnt.YValues[0]);
+              {
+                TraceEnt te = new TraceEnt();
+                te.tm = (ulong)curPnt.XValue;
+                te.val = curPnt.YValues[0];
+                deleg.Trace(te.tm, te.val);
+              }
             }
           }
           ++serInd;
@@ -162,13 +168,13 @@ namespace ChartPoints
       }
     }
 
-    public void Trace(ulong id, double val)
+    public void Trace(ulong id, System.Array tms, System.Array vals)
     {
       Tuple<ICPTracerDelegate, Series> deleg = null;
       if (serDelegates.TryGetValue(id, out deleg))
-        deleg.Item1.Trace(val);
+        deleg.Item1.Trace(tms, vals);
       if ((mode & EChartViewMode.Spy) != EChartViewMode.Spy)
-        traceConsumer.Trace(id, val);
+        traceConsumer.Trace(id, tms, vals);
     }
 
     public void EnableItem(ulong id, bool flag)
