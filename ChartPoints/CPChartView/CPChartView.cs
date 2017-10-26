@@ -236,6 +236,7 @@ namespace ChartPoints
         updateTimer.Stop();
         updateTimer = null;
       }
+      FitToView(null, null);
     }
 
     public ICPTracerDelegate CreateTracer(ulong id, string varName)
