@@ -33,6 +33,12 @@ namespace ChartPoints
       cpTableTW.Activate();
       cpViewTW.SetTraceConsumer(cpTableTW.GetTraceConsumer());
     }
+
+    public void Show()
+    {
+      cpViewTW.Show();
+      cpTableTW.Show();
+    }
   }
 
 }

@@ -23,6 +23,7 @@ namespace ChartPoints
     ICPTracerDelegate RegTraceEnt(ulong id, string name);
     void Trace(ulong id, System.Array tms, System.Array vals);
     void Activate();
+    void Show();
   }
 
   public interface ICPTraceConsumer

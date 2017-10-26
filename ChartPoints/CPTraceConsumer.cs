@@ -123,6 +123,8 @@ namespace ChartPoints
       for (int i = 0; i < tms_out.Count; ++i)
       {
         TimeSpan tmSpan = TimeSpan.FromMilliseconds(tms_out[i]);
+        if (series.Points.Count != 0)
+          series.Points.AddXY(tmSpan.TotalHours, series.Points.ElementAt(series.Points.Count - 1).YValues[0]);
         series.Points.AddXY(tmSpan.TotalHours, vals_out[i]);
       }
       tms_out.Clear();

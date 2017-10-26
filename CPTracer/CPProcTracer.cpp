@@ -4,7 +4,6 @@
 #include "CPProcTracer.h"
 #include <intsafe.h>
 #include <atlsafe.h>
-#include <map>
 
 // CCPProcTracer
 
@@ -24,6 +23,12 @@ STDMETHODIMP CCPProcTracer::RegElem( BSTR name, ULONGLONG id, USHORT typeID )
   {
     active = true;
     consumer_thr = new std::thread( std::bind( &CCPProcTracer::cons_proc, this ) );
+  }
+  it_tes it = tes.find( id );
+  if( it == tes.end() )
+  {
+    std::pair<it_tes, bool> it_ins = tes.insert( std::make_pair( id, std::make_shared<te_data>() ) );
+    it = it_ins.first;
   }
   Fire_OnRegElem( name, id, typeID );
 
@@ -50,58 +55,42 @@ void CCPProcTracer::cons_proc()
       std::lock_guard< std::mutex > lock( mtx );
       data.swap();
     }
-    HRESULT hr;
-    typedef std::vector<TraceEnt> te_data;
-    typedef std::map<uint64_t, te_data *> tes_data_cont;
-    typedef tes_data_cont::iterator it_tes;
-    tes_data_cont tes;
+    //tes_data_cont tes;
     while( data.out_ptr->size() )
     {
       val = data.out_ptr->front();
       data.out_ptr->pop();
       it_tes it = tes.find( val.id );
-      if( it == tes.end() )
+      //if( it == tes.end() )
+      //{
+      //  std::pair<it_tes, bool> it_ins = tes.insert( std::make_pair( val.id, std::make_shared<te_data>() ) );
+      //  it = it_ins.first;
+      //}
+      if( it != tes.end() )
       {
-        std::pair<it_tes, bool> it_ins = tes.insert( std::make_pair( val.id, new te_data() ) );
-        it = it_ins.first;
+        TraceEnt trace_ent;
+        trace_ent.tm = val.tm;
+        trace_ent.val = val.val;
+        it->second->push_back( trace_ent );
       }
-      TraceEnt trace_ent;
-      trace_ent.tm = val.tm;
-      trace_ent.val = val.val;
-      it->second->push_back( trace_ent );
     }
     for( it_tes it = tes.begin(); it != tes.end(); ++it )
     {
-      CComSafeArray<ULONGLONG> *tms = new CComSafeArray<ULONGLONG>( it->second->size() );
-      CComSafeArray<DOUBLE> *vals = new CComSafeArray<DOUBLE>( it->second->size() );
-      int i = 0;
-      for( te_data::iterator it_te = it->second->begin(); it_te != it->second->end(); ++it_te )
+      if( it->second->size() )
       {
-        ( *tms )[ i ] = it_te->tm;
-        ( *vals )[ i ] = it_te->val;
-        ++i;
+        CComSafeArray<ULONGLONG> *tms = new CComSafeArray<ULONGLONG>( it->second->size() );
+        CComSafeArray<DOUBLE> *vals = new CComSafeArray<DOUBLE>( it->second->size() );
+        int i = 0;
+        for( te_data::iterator it_te = it->second->begin(); it_te != it->second->end(); ++it_te )
+        {
+          ( *tms )[ i ] = it_te->tm;
+          ( *vals )[ i ] = it_te->val;
+          ++i;
+        }
+        it->second->clear();
+        Fire_OnTrace( it->first, *tms, *vals );
       }
-      Fire_OnTrace( it->first, *tms, *vals );
     }
-    //if( data.out_ptr->size() )
-    //{
-    //  const int iLBound = 0;
-    //  const int iUBound = data.out_ptr->size();
-    //  SAFEARRAYBOUND rgbounds = { data.out_ptr->size(), 0 };
-    //  LPSAFEARRAY psaTraceEnt = SafeArrayCreateEx( VT_RECORD, 1, &rgbounds, pRecInfo );
-    //  TraceEnt *pTraceEntStruct = NULL;
-    //  hr = SafeArrayAccessData( psaTraceEnt, ( void** ) &pTraceEntStruct );
-    //  for( int i = 0; i < iUBound; i++ )
-    //  {
-    //    val = data.out_ptr->front();
-    //    data.out_ptr->pop();
-    //    pTraceEntStruct[ i ].tm = val.tm;
-    //    pTraceEntStruct[ i ].val = val.val;
-    //  }
-    //  hr = SafeArrayUnaccessData( psaTraceEnt );
-    //  Fire_OnTrace( psaTraceEnt );
-    //  SafeArrayDestroy( psaTraceEnt );
-    //}
     std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
   }
 

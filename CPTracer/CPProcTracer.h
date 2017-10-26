@@ -12,6 +12,7 @@
 #include <atomic>
 #include <queue>
 #include <mutex>
+#include <map>
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
@@ -29,7 +30,7 @@ public:
     double val;
     trace_ent() {}
     trace_ent( uint64_t _id, uint64_t _tm, double _val )
-      : id(_id), tm(_tm), val(_val)
+      : id( _id ), tm( _tm ), val( _val )
     {}
   };
   typedef trace_ent data_ent;
@@ -64,6 +65,11 @@ class ATL_NO_VTABLE CCPProcTracer :
   std::thread *consumer_thr;
   std::mutex mtx;
   data_queue data;
+  typedef std::vector<TraceEnt> te_data;
+  typedef std::shared_ptr< te_data > te_data_ptr;
+  typedef std::map<uint64_t, te_data_ptr > tes_data_cont;
+  typedef tes_data_cont::iterator it_tes;
+  tes_data_cont tes;
   void cons_proc();
   static std::chrono::system_clock::time_point tm_start;
 public:
