@@ -194,102 +194,112 @@ namespace ChartPointsBuilder
 
     public override bool Execute()
     {
-      //string pathEnvVar = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
-      //string tempEnvVar = Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.Process);
-      //Environment.SetEnvironmentVariable("PATH", pathEnvVar + ";" + tempEnvVar, EnvironmentVariableTarget.Process);
-      TaskLogger.Log = Log;
-      NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
-      string address = "net.pipe://localhost/ChartPoints/IPCChartPoint"; //!!!!!!!!!! move to vcxproj !!!!!!!!!!!!
-      EndpointAddress ep = new EndpointAddress(address);
-      ipcChartPnt = ChannelFactory<IIPCChartPoint>.CreateChannel(binding, ep);
-      CPClassLayout cpClassLayout = ipcChartPnt.GetInjectionData(ProjectName);
-      filesOrchestrator = new SortedDictionary<string, CPFileCodeOrchestrator>();
-      CPFileCodeOrchestrator fileCPOrk = null;
-      foreach (CPTraceVar traceVar in cpClassLayout.traceVarPos.Values)
+      try
       {
-        string traceVarName = "__cp_trace_" + traceVar.name;
-        foreach (var tracePos in traceVar.traceVarTracePos)
+        TaskLogger.Log = Log;
+        NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
+        string address = "net.pipe://localhost/ChartPoints/IPCChartPoint"; //!!!!!!!!!! move to vcxproj !!!!!!!!!!!!
+        EndpointAddress ep = new EndpointAddress(address);
+        ipcChartPnt = ChannelFactory<IIPCChartPoint>.CreateChannel(binding, ep);
+        CPClassLayout cpClassLayout = ipcChartPnt.GetInjectionData(ProjectName);
+        if (cpClassLayout == null)
         {
-          fileCPOrk = GetFileOrchestrator(tracePos.fileName);
-          fileCPOrk.AddTransform(tracePos.pos.lineNum - 1, tracePos.pos.linePos - 1, traceVarName + ".trace();");
+          //!!! Add log message
+          return true;
         }
-        fileCPOrk = GetFileOrchestrator(traceVar.defPos.fileName);
-        fileCPOrk.AddTransform(traceVar.defPos.pos.lineNum - 1, traceVar.defPos.pos.linePos - 1,
-          "cptracer::tracer_elem_impl<" + traceVar.type + "> " + traceVarName + ";");
-        if (traceVar.traceVarInitPos.Count == 0 && traceVar.injConstructorPos != null)
+        filesOrchestrator = new SortedDictionary<string, CPFileCodeOrchestrator>();
+        CPFileCodeOrchestrator fileCPOrk = null;
+        foreach (CPTraceVar traceVar in cpClassLayout.traceVarPos.Values)
         {
-          CPFileCodeOrchestrator fileConstrOrk = GetFileOrchestrator(traceVar.injConstructorPos.fileName);
-          fileConstrOrk.AddTransform(traceVar.injConstructorPos.pos.lineNum, traceVar.injConstructorPos.pos.linePos
-            ,
-            "public:\n" + traceVar.className + "(){\n" + traceVarName + ".reg((uint64_t) &" + traceVar.name + ", \"" +
-            traceVar.uniqueName + "\", cptracer::type_id<" + traceVar.type + ">::id);\n" + "}");
-        }
-        else
-        {
-          foreach (var varInitPos in traceVar.traceVarInitPos)
+          string traceVarName = "__cp_trace_" + traceVar.name;
+          foreach (var tracePos in traceVar.traceVarTracePos)
           {
-            fileCPOrk = GetFileOrchestrator(varInitPos.fileName);
-            fileCPOrk.AddTransform(varInitPos.pos.lineNum, varInitPos.pos.linePos
+            fileCPOrk = GetFileOrchestrator(tracePos.fileName);
+            fileCPOrk.AddTransform(tracePos.pos.lineNum - 1, tracePos.pos.linePos - 1, traceVarName + ".trace();");
+          }
+          fileCPOrk = GetFileOrchestrator(traceVar.defPos.fileName);
+          fileCPOrk.AddTransform(traceVar.defPos.pos.lineNum - 1, traceVar.defPos.pos.linePos - 1,
+            "cptracer::tracer_elem_impl<" + traceVar.type + "> " + traceVarName + ";");
+          if (traceVar.traceVarInitPos.Count == 0 && traceVar.injConstructorPos != null)
+          {
+            CPFileCodeOrchestrator fileConstrOrk = GetFileOrchestrator(traceVar.injConstructorPos.fileName);
+            fileConstrOrk.AddTransform(traceVar.injConstructorPos.pos.lineNum, traceVar.injConstructorPos.pos.linePos
               ,
-              traceVarName + ".reg((uint64_t) &" + traceVar.name + ", \"" + traceVar.uniqueName + "\", cptracer::type_id<" +
-              traceVar.type + ">::id);");
+              "public:\n" + traceVar.className + "(){\n" + traceVarName + ".reg((uint64_t) &" + traceVar.name + ", \"" +
+              traceVar.uniqueName + "\", cptracer::type_id<" + traceVar.type + ">::id);\n" + "}");
+          }
+          else
+          {
+            foreach (var varInitPos in traceVar.traceVarInitPos)
+            {
+              fileCPOrk = GetFileOrchestrator(varInitPos.fileName);
+              fileCPOrk.AddTransform(varInitPos.pos.lineNum, varInitPos.pos.linePos
+                ,
+                traceVarName + ".reg((uint64_t) &" + traceVar.name + ", \"" + traceVar.uniqueName + "\", cptracer::type_id<" +
+                traceVar.type + ">::id);");
+            }
           }
         }
-      }
-      // resource files
-      string tempPath = System.IO.Path.GetTempPath();
-      bool res = CreateFileFromResource("CPInstrBuildTask.Resources.CPTracer_i.h", "__cp__.CPTracer_i.h");
-      res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.h", "__cp__.tracer.h");
-      res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.cpp", "__cp__.tracer.cpp");
-      //
-      foreach (var traceInclPos in cpClassLayout.traceInclPos)
-      {
-        fileCPOrk = GetFileOrchestrator(traceInclPos.Key);
-        fileCPOrk.AddTransform(traceInclPos.Value.lineNum, traceInclPos.Value.linePos, "#include \"__cp__.tracer.h\"");// "#include \"..\\tracer\\tracer.h\"");
-      }
-      foreach (var inclFilePos in cpClassLayout.includesPos)
-      {
-        fileCPOrk = GetFileOrchestrator(inclFilePos.Value.pos.fileName);
-        ITextTransform inclTrans = new TextTransformReplace(inclFilePos.Value.inclOrig, inclFilePos.Value.inclReplace);
-        fileCPOrk.AddTransform(inclFilePos.Value.pos.pos.lineNum, inclFilePos.Value.pos.pos.linePos, inclTrans);
-      }
-      foreach (var fileOrk in filesOrchestrator)
-        fileOrk.Value.Orchestrate(fileOrk.Key);
-      ArrayList items = new ArrayList();
-      foreach (ITaskItem item in InputSrcFiles)
-      {
-        CPFileCodeOrchestrator cpCodeOrk = null;
-        if (filesOrchestrator.TryGetValue(item.ItemSpec, out cpCodeOrk))
+        // resource files
+        string tempPath = System.IO.Path.GetTempPath();
+        bool res = CreateFileFromResource("CPInstrBuildTask.Resources.CPTracer_i.h", "__cp__.CPTracer_i.h");
+        res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.h", "__cp__.tracer.h");
+        res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.cpp", "__cp__.tracer.cpp");
+        //
+        foreach (var traceInclPos in cpClassLayout.traceInclPos)
         {
-          ITaskItem replacedItem = new TaskItem(System.IO.Path.GetTempPath() + "__cp__." + item.ItemSpec);
-          items.Add(replacedItem);
+          fileCPOrk = GetFileOrchestrator(traceInclPos.Key);
+          fileCPOrk.AddTransform(traceInclPos.Value.lineNum, traceInclPos.Value.linePos, "#include \"__cp__.tracer.h\"");// "#include \"..\\tracer\\tracer.h\"");
         }
-        else
-          items.Add(item);
-      }
-      ITaskItem tracerItem = new TaskItem("__cp__.tracer.cpp");// "..\\tracer\\tracer.cpp");
-      items.Add(tracerItem);
-      if (items.Count > 0)
-      {
-        OutputSrcFiles = (ITaskItem[]) items.ToArray(typeof(ITaskItem));
-        SrcFilesChanged = true;
-      }
-      items.Clear();
-      foreach (ITaskItem item in InputHeaderFiles)
-      {
-        CPFileCodeOrchestrator cpCodeOrk = null;
-        if (filesOrchestrator.TryGetValue(item.ItemSpec, out cpCodeOrk))
+        foreach (var inclFilePos in cpClassLayout.includesPos)
         {
-          ITaskItem replacedItem = new TaskItem(System.IO.Path.GetTempPath() + "__cp__." + item.ItemSpec);
-          items.Add(replacedItem);
+          fileCPOrk = GetFileOrchestrator(inclFilePos.Value.pos.fileName);
+          ITextTransform inclTrans = new TextTransformReplace(inclFilePos.Value.inclOrig, inclFilePos.Value.inclReplace);
+          fileCPOrk.AddTransform(inclFilePos.Value.pos.pos.lineNum, inclFilePos.Value.pos.pos.linePos, inclTrans);
         }
-        else
-          items.Add(item);
+        foreach (var fileOrk in filesOrchestrator)
+          fileOrk.Value.Orchestrate(fileOrk.Key);
+        ArrayList items = new ArrayList();
+        foreach (ITaskItem item in InputSrcFiles)
+        {
+          CPFileCodeOrchestrator cpCodeOrk = null;
+          if (filesOrchestrator.TryGetValue(item.ItemSpec, out cpCodeOrk))
+          {
+            ITaskItem replacedItem = new TaskItem(System.IO.Path.GetTempPath() + "__cp__." + item.ItemSpec);
+            items.Add(replacedItem);
+          }
+          else
+            items.Add(item);
+        }
+        ITaskItem tracerItem = new TaskItem("__cp__.tracer.cpp");// "..\\tracer\\tracer.cpp");
+        items.Add(tracerItem);
+        if (items.Count > 0)
+        {
+          OutputSrcFiles = (ITaskItem[])items.ToArray(typeof(ITaskItem));
+          SrcFilesChanged = true;
+        }
+        items.Clear();
+        foreach (ITaskItem item in InputHeaderFiles)
+        {
+          CPFileCodeOrchestrator cpCodeOrk = null;
+          if (filesOrchestrator.TryGetValue(item.ItemSpec, out cpCodeOrk))
+          {
+            ITaskItem replacedItem = new TaskItem(System.IO.Path.GetTempPath() + "__cp__." + item.ItemSpec);
+            items.Add(replacedItem);
+          }
+          else
+            items.Add(item);
+        }
+        if (items.Count > 0)
+        {
+          OutputHeaderFiles = (ITaskItem[])items.ToArray(typeof(ITaskItem));
+          HeaderFilesChanged = true;
+        }
       }
-      if (items.Count > 0)
+      catch(Exception ex)
       {
-        OutputHeaderFiles = (ITaskItem[]) items.ToArray(typeof(ITaskItem));
-        HeaderFilesChanged = true;
+        SrcFilesChanged = false;
+        HeaderFilesChanged = false;
       }
 
       return true;
