@@ -17,7 +17,7 @@ import "ocidl.idl";
 interface ICPProcTracer : IDispatch
 {
   [id( 1 )] HRESULT RegElem( BSTR name, ULONGLONG id, USHORT typeID );
-  [id( 2 )] HRESULT Trace( ULONGLONG id, DOUBLE val );
+  [id( 2 )] HRESULT Trace( ULONGLONG id, ULONGLONG tm, DOUBLE val );
 };
 
 [

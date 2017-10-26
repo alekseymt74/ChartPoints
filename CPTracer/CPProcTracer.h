@@ -71,7 +71,7 @@ class ATL_NO_VTABLE CCPProcTracer :
   typedef tes_data_cont::iterator it_tes;
   tes_data_cont tes;
   void cons_proc();
-  static std::chrono::system_clock::time_point tm_start;
+  //static std::chrono::system_clock::time_point tm_start;
 public:
   CCPProcTracer();
   ~CCPProcTracer();
@@ -106,7 +106,7 @@ public:
 
 
   STDMETHOD( RegElem )( BSTR name, ULONGLONG id, USHORT typeID );
-  STDMETHOD( Trace )( ULONGLONG id, DOUBLE val );
+  STDMETHOD( Trace )( ULONGLONG id, ULONGLONG tm, DOUBLE val );
 };
 
 OBJECT_ENTRY_AUTO( __uuidof( CPProcTracer ), CCPProcTracer )

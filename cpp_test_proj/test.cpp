@@ -10,6 +10,8 @@
 #include <thread>
 #include <conio.h>
 
+#define TM_WAIT_MS 1
+
 int main()
 {
 
@@ -23,7 +25,7 @@ std::chrono::system_clock::time_point tm_start = std::chrono::system_clock::now(
 			tst.f3();
 			//tst.f1(i);
 			//tst_01.func_01();
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			std::this_thread::sleep_for(std::chrono::milliseconds(TM_WAIT_MS));
 		}
 	});
 	std::thread thr2([&]()
@@ -33,7 +35,7 @@ std::chrono::system_clock::time_point tm_start = std::chrono::system_clock::now(
 			//tst.f3();
 			tst.f1(i);
 			//tst_01.func_01();
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			std::this_thread::sleep_for(std::chrono::milliseconds(TM_WAIT_MS));
 		}
 	});
 	for(int i = 0; i < 3000; ++i)
@@ -41,7 +43,7 @@ std::chrono::system_clock::time_point tm_start = std::chrono::system_clock::now(
 		//tst.f3();
 		//tst.f1(i);
         tst_01.func_01();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		std::this_thread::sleep_for(std::chrono::milliseconds(TM_WAIT_MS));
 	}
 	thr1.join();
 	thr2.join();

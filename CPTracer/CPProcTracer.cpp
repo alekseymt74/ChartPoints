@@ -7,13 +7,13 @@
 
 // CCPProcTracer
 
-std::chrono::system_clock::time_point CCPProcTracer::tm_start;
+//std::chrono::system_clock::time_point CCPProcTracer::tm_start;
 
 CCPProcTracer::CCPProcTracer()
   : consumer_thr( nullptr )
   , active( false )
 {
-  tm_start = std::chrono::system_clock::now();
+  //tm_start = std::chrono::system_clock::now();
 }
 
 
@@ -36,11 +36,11 @@ STDMETHODIMP CCPProcTracer::RegElem( BSTR name, ULONGLONG id, USHORT typeID )
 }
 
 
-STDMETHODIMP CCPProcTracer::Trace( ULONGLONG id, DOUBLE val )
+STDMETHODIMP CCPProcTracer::Trace( ULONGLONG id, ULONGLONG tm, DOUBLE val )
 {
   std::lock_guard< std::mutex > lock( mtx );
-  std::chrono::system_clock::rep tm_ellapsed = std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::system_clock::now() - tm_start ).count();
-  data.in_ptr->push( data_queue::data_ent( id, tm_ellapsed, val ) );
+  //std::chrono::system_clock::rep tm_ellapsed = std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::system_clock::now() - tm_start ).count();
+  data.in_ptr->push( data_queue::data_ent( id, tm/*tm_ellapsed*/, val ) );
 
   return S_OK;
 }

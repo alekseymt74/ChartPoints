@@ -1,5 +1,6 @@
 #include "tracer.h"
 #include <iostream>
+#include <chrono>
 #include "../CPTracer/CPTracer_i.h"
 #include <atlcomcli.h>
 
@@ -19,6 +20,7 @@ namespace cptracer
   {
     CComPtr< ICPTracerFactory > trace_cons;
     CComPtr< ICPProcTracer > trace_elem_cons;
+    static std::chrono::high_resolution_clock::time_point tm_start;
   public:
     typedef std::shared_ptr<tracer> tracer_ptr;
     tracer();
@@ -28,6 +30,8 @@ namespace cptracer
     void trace( uint64_t id, double val ) const;
   };
 
+  std::chrono::high_resolution_clock::time_point tracer::tm_start;
+
   tracer::tracer()
     : trace_elem_cons( nullptr )
   {
@@ -35,6 +39,7 @@ namespace cptracer
     hr = trace_cons.CoCreateInstance( CLSID_CPTracerFactory, NULL, CLSCTX_LOCAL_SERVER );
     if( hr == S_OK )
       hr = trace_cons->GetProcTracer( &trace_elem_cons, 1 );
+    tm_start = std::chrono::high_resolution_clock::now();
   }
 
   tracer::~tracer()
@@ -65,7 +70,10 @@ namespace cptracer
   {
     // std::cout << id << ": " << val << std::endl;
     if( trace_elem_cons )
-      trace_elem_cons->Trace( id, val );
+    {
+      std::chrono::high_resolution_clock::rep tm_ellapsed = std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::high_resolution_clock::now() - tm_start ).count();
+      trace_elem_cons->Trace( id, tm_ellapsed, val );
+    }
   }
 
 
