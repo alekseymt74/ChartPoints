@@ -110,20 +110,30 @@ namespace CP
         classCodeElem = _classCodeElem;
       }
 
+      static public bool IsTypeSupported(VCCodeVariable varElem)
+      {
+        if (varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefBool
+            || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefByte
+            || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefChar
+            || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefDecimal
+            || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefDouble
+            || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefFloat
+            || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefInt
+            || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefLong
+            || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefShort)// !!! CHECK OTHER SUITABLE TYPES !!!
+        {
+          return true;
+        }
+
+        return false;
+      }
+
       public VCCodeVariable GetCodeVar(string uniqueName)
       {
         foreach (CodeElement _elem in ent.Variables)
         {
           VCCodeVariable varElem = (VCCodeVariable)_elem;
-          if (varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefBool
-              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefByte
-              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefChar
-              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefDecimal
-              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefDouble
-              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefFloat
-              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefInt
-              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefLong
-              || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefShort)// !!! CHECK OTHER SUITABLE TYPES !!!
+          if (IsTypeSupported(varElem))
           {
             if (varElem.FullName == uniqueName)
               return varElem;
@@ -604,13 +614,16 @@ namespace CP
               foreach (CodeElement var in ownerClass.Variables)
               {
                 VCCodeVariable vcVar = (VCCodeVariable)var;
-                bool exists = false;
-                if (lPnts != null)
+                if (ClassElement.IsTypeSupported(vcVar))
                 {
-                  if (lPnts.GetChartPoint(vcVar.FullName) != null)
-                    exists = true;
+                  bool exists = false;
+                  if (lPnts != null)
+                  {
+                    if (lPnts.GetChartPoint(vcVar.FullName) != null)
+                      exists = true;
+                  }
+                  theElems.Add(new CheckElem(vcVar, exists));
                 }
-                theElems.Add(new CheckElem(vcVar, exists));
               }
             }
           }
