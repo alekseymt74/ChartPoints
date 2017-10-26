@@ -31,14 +31,12 @@ namespace ChartPoints
         EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
         IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(proj.Name);
         if (pPnts != null)
-        {
           pPnts.Validate();
-          string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
-          serviceHost = new ServiceHost(typeof(IPCChartPoint));
-          NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
-          serviceHost.AddServiceEndpoint(typeof(IIPCChartPoint), binding, address);
-          serviceHost.Open();
-        }
+        string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
+        serviceHost = new ServiceHost(typeof(IPCChartPoint));
+        NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
+        serviceHost.AddServiceEndpoint(typeof(IIPCChartPoint), binding, address);
+        serviceHost.Open();
       }
     }
 
