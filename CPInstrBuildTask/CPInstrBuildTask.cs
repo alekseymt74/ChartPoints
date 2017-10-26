@@ -242,9 +242,9 @@ namespace ChartPointsBuilder
         }
         // resource files
         string tempPath = System.IO.Path.GetTempPath();
-        bool res = CreateFileFromResource("CPInstrBuildTask.Resources.CPTracer_i.h", "__cp__.CPTracer_i.h");
-        res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.h", "__cp__.tracer.h");
-        res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.cpp", "__cp__.tracer.cpp");
+        bool res = CreateFileFromResource("CPInstrBuildTask.Resources.CPTracer_i.h", tempPath + "__cp__.CPTracer_i.h");
+        res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.h", tempPath + "__cp__.tracer.h");
+        res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.cpp", tempPath + "__cp__.tracer.cpp");
         //
         foreach (var traceInclPos in cpClassLayout.traceInclPos)
         {
