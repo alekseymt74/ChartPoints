@@ -58,6 +58,7 @@ namespace CP
           traceVar = new CPTraceVar()
           {
             name = name,
+            uniqueName = uniqueName,
             type = type,
             className = className
           };

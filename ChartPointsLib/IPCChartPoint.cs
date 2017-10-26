@@ -78,6 +78,8 @@ namespace ChartPoints
     [DataMember]
     public string name { get; set; }
     [DataMember]
+    public string uniqueName { get; set; }
+    [DataMember]
     public string type { get; set; }
     [DataMember]
     public string className { get; set; }

@@ -199,7 +199,7 @@ namespace ChartPointsBuilder
           fileConstrOrk.AddTransform(traceVar.injConstructorPos.pos.lineNum, traceVar.injConstructorPos.pos.linePos
             ,
             "public:\n" + traceVar.className + "(){\n" + traceVarName + ".reg((uint64_t) &" + traceVar.name + ", \"" +
-            traceVar.name + "\", cptracer::type_id<" + traceVar.type + ">::id);\n" + "}");
+            traceVar.uniqueName + "\", cptracer::type_id<" + traceVar.type + ">::id);\n" + "}");
         }
         else
         {
@@ -208,7 +208,7 @@ namespace ChartPointsBuilder
             fileCPOrk = GetFileOrchestrator(varInitPos.fileName);
             fileCPOrk.AddTransform(varInitPos.pos.lineNum, varInitPos.pos.linePos
               ,
-              traceVarName + ".reg((uint64_t) &" + traceVar.name + ", \"" + traceVar.name + "\", cptracer::type_id<" +
+              traceVarName + ".reg((uint64_t) &" + traceVar.name + ", \"" + traceVar.uniqueName + "\", cptracer::type_id<" +
               traceVar.type + ">::id);");
           }
         }
