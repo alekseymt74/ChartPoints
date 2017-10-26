@@ -45,12 +45,32 @@
   <ItemGroup>
     <Compile Include="CPInstrBuildTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Resource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ChartPointsLib\ChartPointsLib.csproj">
       <Project>{82a926d0-46e9-42d7-80c2-ff4f14f467ad}</Project>
       <Name>ChartPointsLib</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\tracer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\tracer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\CPTracer_i.h" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
