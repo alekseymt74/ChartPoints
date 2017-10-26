@@ -141,6 +141,8 @@ namespace ChartPointsBuilder
     public ITaskItem[] InputChartPoints { get; set; }
     [Required]
     public string ProjectName { get; set; }
+    [Required]
+    public string ProjectFullName { get; set; }
     [Output]
     public ITaskItem[] OutputSrcFiles { get; set; }
     [Output]
@@ -198,7 +200,9 @@ namespace ChartPointsBuilder
       {
         TaskLogger.Log = Log;
         NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
-        string address = "net.pipe://localhost/ChartPoints/IPCChartPoint"; //!!!!!!!!!! move to vcxproj !!!!!!!!!!!!
+        //int colon_pos = ProjectFullName.IndexOf(":");
+        //string address = "net.pipe://localhost/ChartPoints/IPCChartPoint"; //!!!!!!!!!! move to vcxproj !!!!!!!!!!!!
+        string address = "net.pipe://localhost/IPCChartPoint/" + System.IO.Path.GetFullPath(ProjectFullName).ToLower();
         EndpointAddress ep = new EndpointAddress(address);
         ipcChartPnt = ChannelFactory<IIPCChartPoint>.CreateChannel(binding, ep);
         CPClassLayout cpClassLayout = ipcChartPnt.GetInjectionData(ProjectName);

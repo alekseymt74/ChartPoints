@@ -32,7 +32,8 @@ namespace ChartPoints
         IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(proj.Name);
         if (pPnts != null)
           pPnts.Validate();
-        string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
+        //string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
+        string address = "net.pipe://localhost/IPCChartPoint/" + System.IO.Path.GetFullPath(proj.FullName).ToLower();
         serviceHost = new ServiceHost(typeof(IPCChartPoint));
         NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
         serviceHost.AddServiceEndpoint(typeof(IIPCChartPoint), binding, address);
@@ -195,6 +196,7 @@ namespace ChartPoints
         task.SetParameter("InputHeaderFiles", "@(ClInclude)");
         task.SetParameter("InputChartPoints", "@(ChartPointFile)");
         task.SetParameter("ProjectName", "$(MSBuildProjectName)");
+        task.SetParameter("ProjectFullName", "@(MSBuildThisFileFullPath)");
         task.AddOutputProperty("OutputSrcFiles", "OutputSrcFiles");
         task.AddOutputProperty("OutputHeaderFiles", "OutputHeaderFiles");
         task.AddOutputProperty("SrcFilesChanged", "SrcFilesChanged");
