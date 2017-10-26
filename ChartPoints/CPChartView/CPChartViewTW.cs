@@ -9,6 +9,7 @@ namespace ChartPoints
   using System;
   using System.Runtime.InteropServices;
   using Microsoft.VisualStudio.Shell;
+  using System.Windows.Forms;
 
   /// <summary>
   /// This class implements the tool window exposed by this package and hosts a user control.
@@ -22,35 +23,59 @@ namespace ChartPoints
   /// </para>
   /// </remarks>
   [Guid("c6119b45-b5a9-4b8c-89d1-6af00ca9fd90")]
-  public class ChartPointsViewTW : ToolWindowPane
+  public class CPChartViewTW : ToolWindowPane
   {
+    private CPChartView control;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ChartPointsViewTW"/> class.
     /// </summary>
-    public ChartPointsViewTW() : base(null)
+    public CPChartViewTW() : base(null)
     {
       this.Caption = "ChartPointsViewTW";
 
       // This is the user control hosted by the tool window; Note that, even if this class implements IDisposable,
       // we are not calling Dispose on this object. This is because ToolWindowPane calls Dispose on
       // the object returned by the Content property.
-      this.Content = new ChartPointsViewTWControl();
+      control = new CPChartView();
+    }
+
+    public void SetTraceConsumer(CPTableView _traceConsumer)
+    {
+      control.SetTraceConsumer(_traceConsumer);
+    }
+
+    public ICPTracerDelegate CreateTracer(ulong id, string varName)
+    {
+      return control.CreateTracer(id, varName);
+    }
+
+    override public IWin32Window Window
+    {
+      get
+      {
+        return (IWin32Window)control;
+      }
     }
 
     public void Clear()
     {
-      ((ChartPointsViewTWControl) this.Content).Clear();
+      control?.Clear();
     }
 
-    public void UpdateView()
+    public void Trace(ulong id, System.Array tms, System.Array vals)
     {
-      ((ChartPointsViewTWControl)this.Content).UpdateView();
+      control?.Trace(id, tms, vals);
     }
+    //public void UpdateView()
+    //{
+    //  ((CPChartView)this.Content).UpdateView();
+    //}
 
-    public ICPTracerDelegate CreateTracer(string varName)
-    {
-      return ((ChartPointsViewTWControl)this.Content).CreateTracer(varName);
-    }
+    //public ICPTracerDelegate CreateTracer(string varName)
+    //{
+    //  return ((CPChartView)this.Content).CreateTracer(varName);
+    //}
 
   }
 }

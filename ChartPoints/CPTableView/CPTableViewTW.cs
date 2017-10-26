@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// <copyright file="CPListTW.cs" company="Company">
+// <copyright file="CPTableView.cs" company="Company">
 //     Copyright (c) Company.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
@@ -22,23 +22,22 @@ namespace ChartPoints
   /// implementation of the IVsUIElementPane interface.
   /// </para>
   /// </remarks>
-  [Guid("4b5a33a1-7bd0-4c99-980d-32360eb36779")]
-  public class CPListTW : ToolWindowPane
+  [Guid("b6e764c8-c1d6-4f02-a17c-f2690ef0f8ec")]
+  public class CPTableViewTW : ToolWindowPane
   {
-    private CPListTWCtrl control;
+    private CPTableView control;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CPListTW"/> class.
+    /// Initializes a new instance of the <see cref="CPTableView"/> class.
     /// </summary>
-    public CPListTW() : base(null)
+    public CPTableViewTW() : base(null)
     {
-      this.Caption = "CPListTW";
+      this.Caption = "CPTableViewTW";
 
       // This is the user control hosted by the tool window; Note that, even if this class implements IDisposable,
       // we are not calling Dispose on this object. This is because ToolWindowPane calls Dispose on
       // the object returned by the Content property.
-      //this.Content = new CPListTWControl();
-      control = new CPListTWCtrl();
+      control = new CPTableView();
     }
 
     override public IWin32Window Window
@@ -48,5 +47,21 @@ namespace ChartPoints
         return (IWin32Window)control;
       }
     }
+
+    public void Clear()
+    {
+      control?.Clear();
+    }
+
+    public void Trace(ulong id, System.Array tms, System.Array vals)
+    {
+      control?.Trace(id, tms, vals);
+    }
+
+    public CPTableView GetTraceConsumer()
+    {
+      return control;
+    }
+
   }
 }

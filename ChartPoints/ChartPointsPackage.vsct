@@ -105,6 +105,15 @@
           <ButtonText>CPListTW</ButtonText>
         </Strings>
       </Button>
+      <Button guid="guidChartPointsPackageCmdSet" id="cmdidCPTableViewCommand" priority="0x0100" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
+        <Icon guid="guidImages4" id="bmpPic1" />
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>CPTableView</ButtonText>
+        </Strings>
+      </Button>
     </Buttons>
 
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
@@ -118,6 +127,7 @@
       <Bitmap guid="guidImages1" href="Resources\ChartPointsViewTWCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
       <Bitmap guid="guidImages2" href="Resources\ChartPointsViewTWCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
       <Bitmap guid="guidImages3" href="Resources\CPListTWCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
+      <Bitmap guid="guidImages4" href="Resources\CPTableViewCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
     </Bitmaps>
   </Commands>
 
@@ -134,6 +144,7 @@
       <!--<IDSymbol value="4145" name="cmdidChartPointsViewTWCommand" />-->
       <IDSymbol value="4146" name="cmdidChartPointsViewTWCommand1" />
       <IDSymbol value="4147" name="cmdidCPListTWCommand" />
+      <IDSymbol value="4148" name="cmdidCPTableViewCommand" />
     </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{f3cad5de-f1a1-4783-9e3e-3d6e55a6f057}">
@@ -164,6 +175,15 @@
     </GuidSymbol>
   
     <GuidSymbol value="{576a90b3-4f5b-4bf2-a85b-8e00b85c4f8d}" name="guidImages3">
+      <IDSymbol name="bmpPic1" value="1" />
+      <IDSymbol name="bmpPic2" value="2" />
+      <IDSymbol name="bmpPicSearch" value="3" />
+      <IDSymbol name="bmpPicX" value="4" />
+      <IDSymbol name="bmpPicArrows" value="5" />
+      <IDSymbol name="bmpPicStrikethrough" value="6" />
+    </GuidSymbol>
+  
+    <GuidSymbol value="{d543c416-a69e-4f3a-98b4-52614d6bc522}" name="guidImages4">
       <IDSymbol name="bmpPic1" value="1" />
       <IDSymbol name="bmpPic2" value="2" />
       <IDSymbol name="bmpPicSearch" value="3" />

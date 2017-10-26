@@ -13,7 +13,7 @@ namespace ChartPoints
     private ICPTracerFactory test_srv;
     private CPProcTracer procTracer;
     private IVsOutputWindowPane outputWindowPane;
-    //private ICPTracer tracer;
+    private ICPTracerService traceServ;
     private IDictionary<UInt64, ICPTracerDelegate> traceConsumers;
 
     [DllImport("ole32.dll",EntryPoint = "CoInitialize",CallingConvention = CallingConvention.StdCall)]
@@ -30,37 +30,23 @@ namespace ChartPoints
     private void RegElem(string name, UInt64 id, UInt16 typeID)
     {
       outputWindowPane.OutputString("[RegElem]; name: " + name + "\tid: " + id + "\ttypeID: " + typeID + "\n");
-      ICPTracerDelegate cpDelegate = Globals.cpTracer.CreateTracer(name);
-      traceConsumers.Add(id, cpDelegate);
+      ICPTracerDelegate cpDelegate = traceServ.RegTraceEnt(id, name);// Globals.cpTracer.CreateTracer(name);
+      //traceConsumers.Add(id, cpDelegate);
     }
 
     //private void Trace(/*UInt64 id, */[MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_RECORD)]System.Array/*object*/ vals)
-    private void Trace(System.Array traceEnts)//System.Array ids, System.Array vals)
+    private void Trace(ulong id, System.Array tms, System.Array vals)
     {
-      //for (int i = 0; i < /*vals*/traceEnts.Length; ++i)
-      foreach(TraceEnt te in traceEnts)
-      {
-        //outputWindowPane.OutputString("[Trace]; id: " + ids.GetValue(i) + "\t: " + vals.GetValue(i) + "\n");
-        //foreach(var v in vals)
-        //  outputWindowPane.OutputString("[Trace]; id: " + ((TraceEnt)v).id + "\t: " + ((TraceEnt)v).val + "\n");
-        ICPTracerDelegate cpDelegate = null;
-        if (traceConsumers.TryGetValue(/*Convert.ToUInt64(ids.GetValue(i))*/te.id, out cpDelegate))
-        {
-          //foreach (var v in vals)
-            cpDelegate.Trace(/*Convert.ToDouble(vals.GetValue(i))*/te.val);
-        }
-      }
-      foreach (KeyValuePair<ulong, ICPTracerDelegate> cpDelegate in traceConsumers)
-      {
-        cpDelegate.Value.UpdateView();
-      }
-      //Globals.cpTracer.UpdateView();
+      traceServ.Trace(id, tms, vals);
     }
 
     public CPTraceHandler()
     {
       //tracer = _tracer;
-      Globals.cpTracer.Activate();
+      ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
+      cpServProv.GetService<ICPTracerService>(out traceServ);
+      //      Globals.cpTracer.Activate();
+      traceServ.Activate();
       traceConsumers = new SortedDictionary<ulong, ICPTracerDelegate>();
 
       Globals.outputWindow.GetPane(Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.DebugPane_guid, out outputWindowPane);

@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// <copyright file="ChartPointsViewTWCommand.cs" company="Company">
+// <copyright file="CPTableViewCommand.cs" company="Company">
 //     Copyright (c) Company.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
@@ -15,12 +15,12 @@ namespace ChartPoints
   /// <summary>
   /// Command handler
   /// </summary>
-  internal sealed class ChartPointsViewTWCommand : ICPTracer
+  internal sealed class CPTableViewTWCmd
   {
     /// <summary>
     /// Command ID.
     /// </summary>
-    public const int CommandId = 4146;
+    public const int CommandId = 4148;
 
     /// <summary>
     /// Command menu group (command set GUID).
@@ -31,17 +31,15 @@ namespace ChartPoints
     /// VS Package that provides this command, not null.
     /// </summary>
     private readonly Package package;
-
     private MenuCommand menuItem;
-
-    private ChartPointsViewTW window;
+    private CPTableViewTW window;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ChartPointsViewTWCommand"/> class.
+    /// Initializes a new instance of the <see cref="CPTableViewCommand"/> class.
     /// Adds our command handlers for menu (commands must exist in the command table file)
     /// </summary>
     /// <param name="package">Owner package, not null.</param>
-    private ChartPointsViewTWCommand(Package package)
+    private CPTableViewTWCmd(Package package)
     {
       if (package == null)
       {
@@ -62,16 +60,9 @@ namespace ChartPoints
 
     public void Activate()
     {
-      window = package.FindToolWindow(typeof(ChartPoints.ChartPointsViewTW), 0, true) as ChartPointsViewTW;
+      window = package.FindToolWindow(typeof(ChartPoints.CPTableViewTW), 0, true) as CPTableViewTW;
       Show();
       window?.Clear();
-    }
-
-    public void UpdateView()
-    {
-      if (window == null)
-        Activate();
-      window.UpdateView();
     }
 
     public void Show()
@@ -80,23 +71,21 @@ namespace ChartPoints
       frame?.Show();
     }
 
-    public ICPTracerDelegate CreateTracer(string varName)
-    {
-      if( window == null)
-        Activate();
-      return window.CreateTracer(varName);
-    }
-
     public void Enable(bool flag)
     {
       menuItem.Visible = flag;
       menuItem.Enabled = flag;
     }
 
+    public CPTableView GetTraceConsumer()
+    {
+      return window.GetTraceConsumer();
+    }
+
     /// <summary>
     /// Gets the instance of the command.
     /// </summary>
-    public static ChartPointsViewTWCommand Instance
+    public static CPTableViewTWCmd Instance
     {
       get;
       private set;
@@ -119,7 +108,7 @@ namespace ChartPoints
     /// <param name="package">Owner package, not null.</param>
     public static void Initialize(Package package)
     {
-      Instance = new ChartPointsViewTWCommand(package);
+      Instance = new CPTableViewTWCmd(package);
     }
 
     /// <summary>
@@ -132,7 +121,7 @@ namespace ChartPoints
       // Get the instance number 0 of this tool window. This window is single instance so this instance
       // is actually the only one.
       // The last flag is set to true so that if the tool window does not exists it will be created.
-      ToolWindowPane window = this.package.FindToolWindow(typeof(ChartPointsViewTW), 0, true);
+      ToolWindowPane window = this.package.FindToolWindow(typeof(CPTableViewTW), 0, true);
       if ((null == window) || (null == window.Frame))
       {
         throw new NotSupportedException("Cannot create tool window");
