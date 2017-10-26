@@ -134,12 +134,15 @@ namespace ChartPoints
       else
       {
         string prevConfName;
-        pOldActiveSlnCfg.get_DisplayName(out prevConfName);
-        if (prevConfName.Contains(" [ChartPoints]"))
+        if (pOldActiveSlnCfg != null)
         {
-          CPChartViewTWCmd.Instance.Enable(false);
-          CPTableViewTWCmd.Instance.Enable(false);
-          CPListTWCommand.Instance.Enable(false);
+          pOldActiveSlnCfg.get_DisplayName(out prevConfName);
+          if (prevConfName.Contains(" [ChartPoints]"))
+          {
+            CPChartViewTWCmd.Instance.Enable(false);
+            CPTableViewTWCmd.Instance.Enable(false);
+            CPListTWCommand.Instance.Enable(false);
+          }
         }
       }
 
