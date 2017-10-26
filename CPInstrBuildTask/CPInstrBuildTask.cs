@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Task = Microsoft.Build.Utilities.Task;
 using System.Collections;
-using System.Xml;
 using System.IO;
 using System.ServiceModel;
+using System.Reflection;
 using ChartPoints;
 
 namespace ChartPointsBuilder
@@ -169,6 +166,32 @@ namespace ChartPointsBuilder
       return cpfOrk;
     }
 
+    private bool CreateFileFromResource(string resName, string fileName)
+    {
+      try
+      {
+        var assembly = Assembly.GetExecutingAssembly();
+        using (Stream stream = assembly.GetManifestResourceStream(resName))
+        {
+          if (stream == null)
+            return false;
+          using (StreamReader reader = new StreamReader(stream))
+          {
+            if (reader == null)
+              return false;
+            string fileContent = reader.ReadToEnd();
+            File.WriteAllText(fileName, fileContent);
+          }
+        }
+      }
+      catch(Exception ex)
+      {
+        return false;
+      }
+
+      return true;
+    }
+
     public override bool Execute()
     {
       //string pathEnvVar = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
@@ -213,10 +236,16 @@ namespace ChartPointsBuilder
           }
         }
       }
+      // resource files
+      string tempPath = System.IO.Path.GetTempPath();
+      bool res = CreateFileFromResource("CPInstrBuildTask.Resources.CPTracer_i.h", "__cp__.CPTracer_i.h");
+      res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.h", "__cp__.tracer.h");
+      res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.cpp", "__cp__.tracer.cpp");
+      //
       foreach (var traceInclPos in cpClassLayout.traceInclPos)
       {
         fileCPOrk = GetFileOrchestrator(traceInclPos.Key);
-        fileCPOrk.AddTransform(traceInclPos.Value.lineNum, traceInclPos.Value.linePos, "#include \"..\\tracer\\tracer.h\"");
+        fileCPOrk.AddTransform(traceInclPos.Value.lineNum, traceInclPos.Value.linePos, "#include \"__cp__.tracer.h\"");// "#include \"..\\tracer\\tracer.h\"");
       }
       foreach (var inclFilePos in cpClassLayout.includesPos)
       {
@@ -238,7 +267,7 @@ namespace ChartPointsBuilder
         else
           items.Add(item);
       }
-      ITaskItem tracerItem = new TaskItem("..\\tracer\\tracer.cpp");
+      ITaskItem tracerItem = new TaskItem("__cp__.tracer.cpp");// "..\\tracer\\tracer.cpp");
       items.Add(tracerItem);
       if (items.Count > 0)
       {
