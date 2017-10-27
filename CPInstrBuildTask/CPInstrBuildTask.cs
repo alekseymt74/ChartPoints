@@ -269,13 +269,13 @@ namespace ChartPointsBuilder
           CPFileCodeOrchestrator cpCodeOrk = null;
           if (filesOrchestrator.TryGetValue(item.ItemSpec, out cpCodeOrk))
           {
-            ITaskItem replacedItem = new TaskItem(System.IO.Path.GetTempPath() + "__cp__." + item.ItemSpec);
+            ITaskItem replacedItem = new TaskItem(tempPath + "__cp__." + item.ItemSpec);
             items.Add(replacedItem);
           }
           else
             items.Add(item);
         }
-        ITaskItem tracerItem = new TaskItem("__cp__.tracer.cpp");// "..\\tracer\\tracer.cpp");
+        ITaskItem tracerItem = new TaskItem(tempPath + "__cp__.tracer.cpp");// "..\\tracer\\tracer.cpp");
         items.Add(tracerItem);
         if (items.Count > 0)
         {
