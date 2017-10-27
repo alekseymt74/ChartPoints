@@ -26,6 +26,7 @@ namespace ChartPoints
       cpServProv.GetService<ICPEventService>(out cpEvsService);
       IConstructEvents constrEvents = cpEvsService.GetConstructEvents();
       constrEvents.createdLineCPsEvent += OnCreatedLineCPsEvent;
+      constrEvents.createdFileCPsEvent += OnCreatedFileCPsEvent;
     }
 
     private void OnCellMouseUp(object sender, DataGridViewCellMouseEventArgs e)
@@ -123,6 +124,17 @@ namespace ChartPoints
       args.obj.remCPEvent += OnRemCpEvent;
     }
 
+    private void OnCreatedFileCPsEvent(IConstructEventArgs<IFileChartPoints> args)
+    {
+      args.obj.remCPLineEvent += OnRemCpLineEvent;
+    }
+
+    private void OnRemCpLineEvent(CPFileEvArgs args)
+    {
+      foreach (IChartPoint cp in args.lineCPs.chartPoints)
+        OnRemCpEvent(new CPLineEvArgs(args.lineCPs, cp));
+    }
+
     private void OnRemCpEvent(CPLineEvArgs args)
     {
       int rowIndex = -1;
@@ -138,7 +150,7 @@ namespace ChartPoints
           break;
         }
       }
-      if (rowIndex > 0)
+      if (rowIndex >= 0)
       {
         //tagData.Item1.remCPEvent.On -= OnRemCpEvent;
         list.Rows.RemoveAt(rowIndex);

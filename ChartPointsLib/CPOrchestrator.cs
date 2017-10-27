@@ -196,7 +196,7 @@ namespace ChartPoints
         task.SetParameter("InputHeaderFiles", "@(ClInclude)");
         task.SetParameter("InputChartPoints", "@(ChartPointFile)");
         task.SetParameter("ProjectName", "$(MSBuildProjectName)");
-        task.SetParameter("ProjectFullName", "@(MSBuildThisFileFullPath)");
+        task.SetParameter("ProjectFullName", "$(MSBuildThisFileFullPath)");
         task.AddOutputProperty("OutputSrcFiles", "OutputSrcFiles");
         task.AddOutputProperty("OutputHeaderFiles", "OutputHeaderFiles");
         task.AddOutputProperty("SrcFilesChanged", "SrcFilesChanged");

@@ -123,6 +123,20 @@ namespace ChartPoints
     }
   }
 
+  public class CPLineMoveEvArgs
+  {
+    public ILineChartPoints lineCPs { get; }
+    public int prevLine { get; }
+    public int newLine { get; }
+
+    public CPLineMoveEvArgs(ILineChartPoints _lineCPs, int _prevLine, int _newLine)
+    {
+      lineCPs = _lineCPs;
+      prevLine = _prevLine;
+      newLine = _newLine;
+    }
+  }
+
   public class CPFileEvArgs
   {
     public IFileChartPoints fileCPs { get; }

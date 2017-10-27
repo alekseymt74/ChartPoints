@@ -96,6 +96,7 @@ namespace ChartPoints
   {
     ICPEvent<CPFileEvArgs> addCPLineEvent { get; set; }
     ICPEvent<CPFileEvArgs> remCPLineEvent { get; set; }
+    ICPEvent<CPLineMoveEvArgs> moveCPLineEvent { get; set; }
     ISet<ILineChartPoints> linePoints { get; }
     int Count { get; }
     ILineChartPoints GetLineChartPoints(int lineNum);
