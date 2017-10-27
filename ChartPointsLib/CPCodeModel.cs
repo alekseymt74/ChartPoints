@@ -8,6 +8,7 @@ using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.VCCodeModel;
 using ChartPoints;
+using System.Diagnostics;
 
 namespace CP
 {
@@ -120,10 +121,56 @@ namespace CP
             || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefFloat
             || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefInt
             || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefLong
-            || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefShort)// !!! CHECK OTHER SUITABLE TYPES !!!
+            || varElem.Type.TypeKind == vsCMTypeRef.vsCMTypeRefShort
+
+            || varElem.TypeString.Contains("signed ")
+            //|| varElem.TypeString == "unsigned short"
+            //|| varElem.TypeString == "unsigned short int"
+            //|| varElem.TypeString == "unsigned int"
+            //|| varElem.TypeString == "unsigned long"
+            //|| varElem.TypeString == "unsigned long int"
+            //|| varElem.TypeString == "unsigned long long"
+            //|| varElem.TypeString == "unsigned long long int"
+            //|| varElem.TypeString == "unsigned char"
+            ////|| varElem.TypeString == "signed short" // vsCMTypeRefInt
+            //|| varElem.TypeString == "signed short int"
+            ////|| varElem.TypeString == "signed int" //vsCMTypeRefInt
+            ////|| varElem.TypeString == "signed long" // vsCMTypeRefInt
+            //|| varElem.TypeString == "signed long int"
+            //|| varElem.TypeString == "signed long long"
+            //|| varElem.TypeString == "signed long long int"
+            ////|| varElem.TypeString == "signed char" // vsCMTypeRefInt
+
+            || varElem.TypeString.Contains("long ")
+            //|| varElem.TypeString == "long int"
+            //|| varElem.TypeString == "long long"
+            //|| varElem.TypeString == "long long int"
+
+            //|| varElem.TypeString == "short" // vsCMTypeRefShort
+            || varElem.TypeString == "short int"
+            //|| varElem.TypeString == "int" // vsCMTypeRefInt
+            //|| varElem.TypeString == "signed" // vsCMTypeRefInt
+            || varElem.TypeString == "unsigned"
+            || varElem.TypeString == "long"
+            //|| varElem.TypeString == "double" // vsCMTypeRefDouble
+            //|| varElem.TypeString == "float" // vsCMTypeRefFloat
+            //|| varElem.TypeString == "bool" // vsCMTypeRefBool
+            //|| varElem.TypeString == "char" // vsCMTypeRefChar
+            || varElem.TypeString == "int8_t"   // signed char
+            || varElem.TypeString == "int16_t"  // short              
+            || varElem.TypeString == "int32_t"  // int                
+            || varElem.TypeString == "int64_t"  // long long          
+            || varElem.TypeString == "uint8_t"  // unsigned char      
+            || varElem.TypeString == "uint16_t" // unsigned short     
+            || varElem.TypeString == "uint32_t" // unsigned int       
+            || varElem.TypeString == "uint64_t" // unsigned long long 
+          )
         {
+          //Debug.WriteLine(varElem.TypeString + " : " + varElem.Type.TypeKind.ToString());
           return true;
         }
+        //else
+        //  Debug.WriteLine(varElem.TypeString);
 
         return false;
       }
@@ -133,10 +180,12 @@ namespace CP
         foreach (CodeElement _elem in ent.Variables)
         {
           VCCodeVariable varElem = (VCCodeVariable)_elem;
-          if (IsTypeSupported(varElem))
+          if (varElem.FullName == uniqueName)
           {
-            if (varElem.FullName == uniqueName)
+            if (IsTypeSupported(varElem))
+            {
               return varElem;
+            }
           }
         }
 
@@ -164,13 +213,13 @@ namespace CP
             if (_func.Name == ent.Name)
             {
               theFunc = _func;
-              VCCodeFunction vcFunc = (VCCodeFunction) _func;
+              VCCodeFunction vcFunc = (VCCodeFunction)_func;
               EditPoint pnt = _func.StartPoint.CreateEditPoint();
               if (pnt.FindPattern("{"))
                 traceVar.traceVarInitPos.Add(new FilePosPnt()
                 {
                   fileName = _func.ProjectItem.Name,
-                  pos = {lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset}
+                  pos = { lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset }
                 });
             }
           }
@@ -183,7 +232,7 @@ namespace CP
               traceVar.injConstructorPos = new FilePosPnt()
               {
                 fileName = ent.ProjectItem.Name,
-                pos = {lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset}
+                pos = { lineNum = pnt.Line - 1, linePos = pnt.LineCharOffset }
               };
             }
           }
@@ -222,7 +271,7 @@ namespace CP
       {
         VCCodeElement targetClassElem = (VCCodeElement)ent.Parent;
         if (targetClassElem != null && targetClassElem.Kind == vsCMElement.vsCMElementClass)
-          return (VCCodeClass) targetClassElem;
+          return (VCCodeClass)targetClassElem;
 
         return null;
       }
@@ -443,8 +492,8 @@ namespace CP
         ICheckCPPoint checkPnt = null;
         Document activeDoc = ChartPoints.Globals.dte.ActiveDocument;
         string projName = activeDoc.ProjectItem.ContainingProject.Name;
-        TextSelection sel = (TextSelection) activeDoc.Selection;
-        TextPoint caretPnt = (TextPoint) sel.ActivePoint;
+        TextSelection sel = (TextSelection)activeDoc.Selection;
+        TextPoint caretPnt = (TextPoint)sel.ActivePoint;
         VCCodeElement targetClassElem;
         for (;;)
         {
@@ -606,7 +655,7 @@ namespace CP
           if (theElems == null)
           {
             theElems = new List<ICheckElem>();
-            if(ownerClass.Variables.Count != 0)
+            if (ownerClass.Variables.Count != 0)
             {
               pPnts = ChartPoints.Globals.processor.GetProjectChartPoints(projName);
               fPnts = pPnts?.GetFileChartPoints(fileName);

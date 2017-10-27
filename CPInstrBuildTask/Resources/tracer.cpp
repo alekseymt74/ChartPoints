@@ -11,10 +11,35 @@ MIDL_DEFINE_GUID( CLSID, CLSID_CPTracerFactory, 0xEA343A3A, 0xCF94, 0x4210, 0x89
 namespace cptracer
 {
 
-  int32_t type_id<int8_t>::id = 0;
-  int32_t type_id<int16_t>::id = 1;
-  int32_t type_id<int32_t>::id = 2;
-  int32_t type_id<double>::id = 3;
+  //int32_t type_id< short >::id                  = 0;
+  int32_t type_id< short int >::id              = 0;
+  //int32_t type_id< signed short >::id           = 0;
+  //int32_t type_id< signed short int >::id       = 0;
+  //int32_t type_id< unsigned short >::id         = 1;
+  int32_t type_id< unsigned short int >::id     = 1;
+  int32_t type_id< int >::id                    = 2;
+  //int32_t type_id< signed >::id                 = 2;
+  //int32_t type_id< signed int >::id             = 2;
+  //int32_t type_id< unsigned >::id               = 3;
+  int32_t type_id< unsigned int >::id           = 3;
+  //int32_t type_id< long >::id                   = 4;
+  int32_t type_id< long int >::id               = 4;
+  //int32_t type_id< signed long >::id            = 4;
+  //int32_t type_id< signed long int >::id        = 4;
+  //int32_t type_id< unsigned long >::id          = 5;
+  int32_t type_id< unsigned long int >::id      = 5;
+  //int32_t type_id< long long >::id              = 6;
+  int32_t type_id< long long int >::id          = 6;
+  //int32_t type_id< signed long long >::id       = 6;
+  //int32_t type_id< signed long long int >::id   = 6;
+  //int32_t type_id< unsigned long long >::id     = 7;
+  int32_t type_id< unsigned long long int >::id = 7;
+  int32_t type_id< double >::id                 = 8;
+  int32_t type_id< float >::id                  = 9;
+  int32_t type_id< bool >::id                   = 10;
+  int32_t type_id< signed char >::id            = 11;
+  int32_t type_id< char >::id                   = 12;
+  int32_t type_id< unsigned char >::id          = 13;
 
   class tracer
   {
