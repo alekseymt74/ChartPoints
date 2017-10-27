@@ -289,7 +289,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <UsingTask TaskName="ChartPointsBuilder.CPInstrBuildTask" AssemblyFile="e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll" Condition="$(Configuration.Contains('[ChartPoints]'))" />
   <Target Name="GenerateToolOutput" BeforeTargets="ClCompile" Condition="$(Configuration.Contains('[ChartPoints]'))">
-    <CPInstrBuildTask InputSrcFiles="@(ClCompile)" InputHeaderFiles="@(ClInclude)" InputChartPoints="@(ChartPointFile)" ProjectName="$(MSBuildProjectName)">
+    <CPInstrBuildTask InputSrcFiles="@(ClCompile)" InputHeaderFiles="@(ClInclude)" InputChartPoints="@(ChartPointFile)" ProjectName="$(MSBuildProjectName)" ProjectFullName="$(MSBuildThisFileFullPath)">
       <Output TaskParameter="OutputSrcFiles" PropertyName="OutputSrcFiles" />
       <Output TaskParameter="OutputHeaderFiles" PropertyName="OutputHeaderFiles" />
       <Output TaskParameter="SrcFilesChanged" PropertyName="SrcFilesChanged" />

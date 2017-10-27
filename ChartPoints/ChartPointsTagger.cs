@@ -66,8 +66,11 @@ namespace ChartPoints
       var tempEvent = TagsChanged;
       if (tempEvent != null)
       {
-        ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(lineNum - 1);
-        tempEvent(this, new SnapshotSpanEventArgs(new SnapshotSpan(line.Start, 1)));
+        if (lineNum - 1 < _buffer.CurrentSnapshot.Lines.Count())
+        {
+          ITextSnapshotLine line = _buffer.CurrentSnapshot.Lines.ElementAt(lineNum - 1);
+          tempEvent(this, new SnapshotSpanEventArgs(new SnapshotSpan(line.Start, 1)));
+        }
       }
     }
 
@@ -143,6 +146,7 @@ namespace ChartPoints
       fCPs = _fCPs;
       fCPs.addCPLineEvent += OnAddCpLine;
       fCPs.remCPLineEvent += OnRemCpLine;
+      fCPs.moveCPLineEvent += OnMoveCPLine;
     }
 
     public void SetTagger(IChartPointsTagger _fCPTagger)
@@ -166,6 +170,11 @@ namespace ChartPoints
     {
       fCPTagger.RemoveLine(args.lineCPs.data.pos.lineNum);
       args.lineCPs.lineCPStatusChangedEvent -= OnLineCPStatusChanged;
+    }
+    private void OnMoveCPLine(CPLineMoveEvArgs args)
+    {
+      fCPTagger.RemoveLine(args.prevLine);
+      fCPTagger.AddLine(args.newLine, (uint)args.lineCPs.status);
     }
   }
 

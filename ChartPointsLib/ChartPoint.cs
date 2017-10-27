@@ -489,6 +489,7 @@ namespace ChartPoints
   {
     public ICPEvent<CPFileEvArgs> addCPLineEvent { get; set; } = new CPEvent<CPFileEvArgs>();
     public ICPEvent<CPFileEvArgs> remCPLineEvent { get; set; } = new CPEvent<CPFileEvArgs>();
+    public ICPEvent<CPLineMoveEvArgs> moveCPLineEvent { get; set; } = new CPEvent<CPLineMoveEvArgs>();
 
     public ISet<ILineChartPoints> linePoints { get; set; }
       =
@@ -575,9 +576,11 @@ namespace ChartPoints
       bool ret = linePoints.Remove(linePnts);
       if (ret)
       {
+        int prevLine = ((TextPosition)((LineChartPoints)linePnts).theData.pos).lineNum;
         ((TextPosition)((LineChartPoints)linePnts).theData.pos).lineNum += linesAdd;
         linePoints.Add(linePnts);
-        addCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
+        //addCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
+        moveCPLineEvent.Fire(new CPLineMoveEvArgs(linePnts, prevLine, prevLine + linesAdd));
       }
 
       return ret;
@@ -616,7 +619,7 @@ namespace ChartPoints
         {
           if (lPnts.data.pos.lineNum >= lineNum)
           {
-            if (linesAdd < 0 && lineNum + (-linesAdd) >= lPnts.data.pos.lineNum)
+            if (linesAdd < 0 && lineNum + (-linesAdd) > lPnts.data.pos.lineNum)
               RemoveLineChartPoints(lPnts);
             else
               MoveLineChartPoints(lPnts, linesAdd);
