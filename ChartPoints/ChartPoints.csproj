@@ -258,6 +258,8 @@
     <Content Include="Resources\ChartPointsViewTWCommand.png" />
     <Content Include="Resources\CPListTWCommand.png" />
     <Content Include="Resources\CPTableViewCommand.png" />
+    <EmbeddedResource Include="Resources\if_table_edit_64757.png" />
+    <EmbeddedResource Include="Resources\if_table_chart_64755.png" />
     <EmbeddedResource Include="CPTableView\CPTableView.resx">
       <DependentUpon>CPTableView.cs</DependentUpon>
     </EmbeddedResource>
