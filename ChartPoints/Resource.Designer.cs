@@ -73,6 +73,26 @@ namespace ChartPoints {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap if_table_chart_64755 {
+            get {
+                object obj = ResourceManager.GetObject("if_table_chart_64755", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap if_table_edit_64757 {
+            get {
+                object obj = ResourceManager.GetObject("if_table_edit_64757", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Spy {
             get {
                 object obj = ResourceManager.GetObject("Spy", resourceCulture);

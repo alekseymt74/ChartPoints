@@ -141,12 +141,12 @@ int main()
 
 	temp_utest tst;
     test_01 tst_01;
-	test_cpp_types tst_cpp_t;
-	for (int i = 0; i < 10; ++i)
-	{
-		tst_cpp_t.test();
-		std::this_thread::sleep_for(std::chrono::milliseconds(TM_WAIT_MS));
-	}
+	//test_cpp_types tst_cpp_t;
+	//for (int i = 0; i < 10; ++i)
+	//{
+	//	tst_cpp_t.test();
+	//	std::this_thread::sleep_for(std::chrono::milliseconds(TM_WAIT_MS));
+	//}
 std::chrono::system_clock::time_point tm_start = std::chrono::system_clock::now();
 	//std::thread thr0([&]()
 	//{
