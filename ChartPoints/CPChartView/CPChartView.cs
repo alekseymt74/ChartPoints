@@ -16,10 +16,10 @@ namespace ChartPoints
 
   public enum EChartViewMode
   {
-    Drag          = 1
-    , Spy         = 2
-    , DragAndSpy  = 3
-    , Auto        = 4
+    Drag = 1
+    , Spy = 2
+    , DragAndSpy = 3
+    , Auto = 4
   }
 
   public partial class CPChartView : UserControl, ICPTracer
@@ -40,6 +40,7 @@ namespace ChartPoints
       chart.MouseDown += Chart_MouseDown;
       chart.MouseUp += Chart_MouseUp;
       chart.MouseMove += Chart_MouseMove;
+      chart.MouseWheel += Chart_MouseWheel;
     }
 
     public void SetTraceConsumer(CPTableView _traceConsumer)
@@ -76,29 +77,29 @@ namespace ChartPoints
 
     private void Chart_MouseMove(object sender, MouseEventArgs e)
     {
-      if ( (mode & EChartViewMode.Drag) == EChartViewMode.Drag)
+      if ((mode & EChartViewMode.Drag) == EChartViewMode.Drag)
       {
         //chart.Invoke((MethodInvoker)(() =>
         //{
-          double dx1 = chart.ChartAreas[0].AxisX.PixelPositionToValue(Math.Max(Math.Min(e.X, chart.Size.Width - 1), 0));
-          double dx2 = chart.ChartAreas[0].AxisX.PixelPositionToValue(Math.Max(Math.Min(startDragPoint.X, chart.Size.Width - 1), 0));
-          double dy1 = chart.ChartAreas[0].AxisY.PixelPositionToValue(Math.Max(Math.Min(e.Y, chart.Size.Height - 1), 0));
-          double dy2 = chart.ChartAreas[0].AxisY.PixelPositionToValue(Math.Max(Math.Min(startDragPoint.Y, chart.Size.Height - 1), 0));
-          double dx = dx2 - dx1;
-          double dy = dy2 - dy1;
-          if (double.IsNaN(chart.ChartAreas[0].AxisX.ScaleView.Position))
-          {
-            chart.ChartAreas[0].AxisX.Minimum += dx;
-            chart.ChartAreas[0].AxisX.Maximum += dx;
-            chart.ChartAreas[0].AxisY.Minimum += dy;
-            chart.ChartAreas[0].AxisY.Maximum += dy;
-          }
-          else
-          {
-            chart.ChartAreas[0].AxisX.ScaleView.Position += dx;
-            chart.ChartAreas[0].AxisY.ScaleView.Position += dy;
-          }
-          startDragPoint = e.Location;
+        double dx1 = chart.ChartAreas[0].AxisX.PixelPositionToValue(Math.Max(Math.Min(e.X, chart.Size.Width - 1), 0));
+        double dx2 = chart.ChartAreas[0].AxisX.PixelPositionToValue(Math.Max(Math.Min(startDragPoint.X, chart.Size.Width - 1), 0));
+        double dy1 = chart.ChartAreas[0].AxisY.PixelPositionToValue(Math.Max(Math.Min(e.Y, chart.Size.Height - 1), 0));
+        double dy2 = chart.ChartAreas[0].AxisY.PixelPositionToValue(Math.Max(Math.Min(startDragPoint.Y, chart.Size.Height - 1), 0));
+        double dx = dx2 - dx1;
+        double dy = dy2 - dy1;
+        if (double.IsNaN(chart.ChartAreas[0].AxisX.ScaleView.Position))
+        {
+          chart.ChartAreas[0].AxisX.Minimum += dx;
+          chart.ChartAreas[0].AxisX.Maximum += dx;
+          chart.ChartAreas[0].AxisY.Minimum += dy;
+          chart.ChartAreas[0].AxisY.Maximum += dy;
+        }
+        else
+        {
+          chart.ChartAreas[0].AxisX.ScaleView.Position += dx;
+          chart.ChartAreas[0].AxisY.ScaleView.Position += dy;
+        }
+        startDragPoint = e.Location;
         //}));
       }
       //else
@@ -109,7 +110,7 @@ namespace ChartPoints
         chart.ChartAreas[0].CursorX.SetCursorPixelPosition(mousePoint, true);
         var xValue = chart.ChartAreas[0].AxisX.PixelPositionToValue(e.X);
         int serInd = 0;
-        foreach(Series ser in chart.Series)
+        foreach (Series ser in chart.Series)
         {
           if (ser.Enabled)
           {
@@ -282,5 +283,77 @@ namespace ChartPoints
       else
         mode = mode | EChartViewMode.Spy;
     }
+
+    private void Zoom(AxisScaleView asv, double coeff)
+    {
+      double shift = coeff * (asv.ViewMaximum - asv.ViewMinimum);
+      asv.Zoom(asv.ViewMinimum + shift, asv.ViewMaximum - shift);
+    }
+
+    private void OnYZoomIn(object sender, EventArgs e)
+    {
+      Zoom(chart.ChartAreas[0].AxisY.ScaleView, 0.05);
+    }
+
+    private void OnYZoomOut(object sender, EventArgs e)
+    {
+      Zoom(chart.ChartAreas[0].AxisY.ScaleView, -0.05 / 0.9);
+    }
+
+    private void OnXZoomIn(object sender, EventArgs e)
+    {
+      Zoom(chart.ChartAreas[0].AxisX.ScaleView, 0.05);
+    }
+
+    private void OnXZoomOut(object sender, EventArgs e)
+    {
+      Zoom(chart.ChartAreas[0].AxisX.ScaleView, -0.05 / 0.9);
+    }
+
+    private void OnXYZoomIn(object sender, EventArgs e)
+    {
+      OnYZoomIn(null, null);
+      OnXZoomIn(null, null);
+    }
+
+    private void OnXYZoomOut(object sender, EventArgs e)
+    {
+      OnYZoomOut(null, null);
+      OnXZoomOut(null, null);
+    }
+
+    private void Chart_MouseWheel(object sender, MouseEventArgs e)
+    {
+      double delta = 0.005 * ((int) (-e.Delta / SystemInformation.MouseWheelScrollDelta ));
+      if (e.Delta > 0)
+        delta /= 0.99;
+      double dx1 = chart.ChartAreas[0].AxisX.PixelPositionToValue(Math.Max(Math.Min(e.X, chart.Size.Width - 1), 0));
+      double dy1 = chart.ChartAreas[0].AxisY.PixelPositionToValue(Math.Max(Math.Min(e.Y, chart.Size.Height - 1), 0));
+      Zoom(chart.ChartAreas[0].AxisX.ScaleView, delta);
+      Zoom(chart.ChartAreas[0].AxisY.ScaleView, delta);
+      double dx2 = chart.ChartAreas[0].AxisX.PixelPositionToValue(Math.Max(Math.Min(e.X, chart.Size.Width - 1), 0));
+      double dy2 = chart.ChartAreas[0].AxisY.PixelPositionToValue(Math.Max(Math.Min(e.Y, chart.Size.Height - 1), 0));
+      double dx = dx1 - dx2;
+      double dy = dy1 - dy2;
+      if (double.IsNaN(chart.ChartAreas[0].AxisX.ScaleView.Position))
+      {
+        chart.ChartAreas[0].AxisX.Minimum += dx;
+        chart.ChartAreas[0].AxisX.Maximum += dx;
+        chart.ChartAreas[0].AxisY.Minimum += dy;
+        chart.ChartAreas[0].AxisY.Maximum += dy;
+      }
+      else
+      {
+        chart.ChartAreas[0].AxisX.ScaleView.Position += dx;
+        chart.ChartAreas[0].AxisY.ScaleView.Position += dy;
+      }
+      //chart.ChartAreas[0].AxisX.Minimum -= 1.0 * delta * dx;
+      //chart.ChartAreas[0].AxisX.Maximum -= 1.0 * delta * dx;
+      //chart.ChartAreas[0].AxisY.Minimum -= 1.0 * delta * dy;
+      //chart.ChartAreas[0].AxisY.Maximum -= 1.0 * delta * dy;
+      //chart.ChartAreas[0].AxisX.ScaleView.Scroll(chart.ChartAreas[0].AxisX.ScaleView.Position + 2.0 * delta * dx);
+      //chart.ChartAreas[0].AxisY.ScaleView.Scroll(chart.ChartAreas[0].AxisY.ScaleView.Position + 2.0 * delta * dy);
+    }
+
   }
 }
