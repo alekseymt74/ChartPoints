@@ -5,7 +5,7 @@
 class test_01
 {
   int i;
-  cptracer::tracer_elem_impl<int> i_te;
+  //cptracer::tracer_elem_impl<int> i_te;
   int j;
   //cptracer::tracer_elem_impl<int> j_te;
 public:

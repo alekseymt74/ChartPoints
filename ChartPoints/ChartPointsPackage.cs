@@ -364,7 +364,7 @@ namespace ChartPoints
   [ProvideToolWindowVisibility(typeof(CPListTW), VSConstants.UICONTEXT.SolutionExists_string)]
   [ProvideToolWindow(typeof(CPTableViewTW))]
   [ProvideToolWindowVisibility(typeof(CPTableViewTW), VSConstants.UICONTEXT.SolutionExists_string)]
-  public sealed class ChartPointsPackage : Package, IVsPersistSolutionOpts, IVsSolutionLoadManager
+  public sealed class ChartPointsPackage : Package, IVsPersistSolutionOpts, IVsSolutionLoadManager, IVsUpdateSolutionEvents2
   {
     private ChartPntFactory factory;
 
@@ -372,6 +372,9 @@ namespace ChartPoints
     private VsSolutionEvents solEvents;
     //private CommandEvents cmdEvents;
     //private RunningDocumentTable rdt;
+
+    private IVsSolutionBuildManager2 sbm;
+    private uint _sbmCookie;
 
     /// <summary>
     /// ChartPointsPackage GUID string.
@@ -428,6 +431,9 @@ namespace ChartPoints
       ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
       cpServProv.RegisterService<ICPTracerService>(new CPTracerService());
 
+      sbm = (IVsSolutionBuildManager2)ServiceProvider.GlobalProvider.GetService(typeof(SVsSolutionBuildManager));
+      sbm.AdviseUpdateSolutionEvents(this, out _sbmCookie);
+      IVsBuildManagerAccessor3 bma3 = (IVsBuildManagerAccessor3)ServiceProvider.GlobalProvider.GetService(typeof(SVsBuildManagerAccessor));
       //IVsMSBuildTaskFileManager
       //IVsBuildManagerAccessor3 vsBuildMgrAcc = GetService(typeof(SVsBuildManagerAccessor)) as IVsBuildManagerAccessor3;
       //IVsSolutionBuildManager vsSolBuildMgr = GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager;
@@ -524,6 +530,42 @@ namespace ChartPoints
         Microsoft.Build.Evaluation.Project msbuildProj = Globals.orchestrator.Orchestrate(pszFileName);
       }
 
+      return VSConstants.S_OK;
+    }
+
+    public int UpdateSolution_Begin(ref int pfCancelUpdate)
+    {
+      return VSConstants.S_OK;
+    }
+
+    public int UpdateSolution_Done(int fSucceeded, int fModified, int fCancelCommand)
+    {
+      return VSConstants.S_OK;
+    }
+
+    public int UpdateSolution_StartUpdate(ref int pfCancelUpdate)
+    {
+      return VSConstants.S_OK;
+    }
+
+    public int UpdateSolution_Cancel()
+    {
+      return VSConstants.S_OK;
+    }
+
+    public int OnActiveProjectCfgChange(IVsHierarchy pIVsHierarchy)
+    {
+      return VSConstants.S_OK;
+    }
+
+    public int UpdateProjectCfg_Begin(IVsHierarchy pHierProj, IVsCfg pCfgProj, IVsCfg pCfgSln, uint dwAction, ref int pfCancel)
+    {
+      IVsProjectCfg cfg = pCfgProj as IVsProjectCfg;
+      return VSConstants.S_OK;
+    }
+
+    public int UpdateProjectCfg_Done(IVsHierarchy pHierProj, IVsCfg pCfgProj, IVsCfg pCfgSln, uint dwAction, int fSuccess, int fCancel)
+    {
       return VSConstants.S_OK;
     }
     #endregion
