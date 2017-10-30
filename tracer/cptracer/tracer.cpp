@@ -1,4 +1,4 @@
-#include "__cp__.tracer.h"
+#include "tracer.h"
 #include <windows.h>
 
 namespace cptracer

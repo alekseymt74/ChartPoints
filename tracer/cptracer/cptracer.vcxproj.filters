@@ -24,10 +24,7 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test_01.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cptracer\tracer.h">
+    <ClInclude Include="tracer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -35,13 +32,16 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_01.cpp">
+    <ClCompile Include="cptracer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cptracer\tracer.cpp">
+    <ClCompile Include="tracer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tracer_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,6 +1,6 @@
 ﻿#ifndef TEST_01_H
 #define TEST_01_H
-#include "tracer.h"
+#include "cptracer\tracer.h"
 
 class test_01
 {
