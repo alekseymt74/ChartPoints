@@ -64,12 +64,14 @@ class ATL_NO_VTABLE CCPProcTracer :
   std::atomic_bool active;
   std::thread *consumer_thr;
   std::mutex mtx;
+  std::mutex mtx1;
   data_queue data;
   typedef std::vector<TraceEnt> te_data;
   typedef std::shared_ptr< te_data > te_data_ptr;
   typedef std::map<uint64_t, te_data_ptr > tes_data_cont;
   typedef tes_data_cont::iterator it_tes;
   tes_data_cont tes;
+  void send();
   void cons_proc();
   //static std::chrono::system_clock::time_point tm_start;
 public:

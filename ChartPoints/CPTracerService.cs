@@ -10,6 +10,8 @@ namespace ChartPoints
   {
     CPChartViewTWCmd cpViewTW;
     CPTableViewTWCmd cpTableTW;
+    private IDictionary<string, int> duplNames = new SortedDictionary<string, int>();
+    private object regLockObj = new object();
 
     public CPTracerService()
     {
@@ -19,7 +21,19 @@ namespace ChartPoints
 
     public ICPTracerDelegate RegTraceEnt(ulong id, string name)
     {
-      return cpViewTW.CreateTracer(id, name);
+      ICPTracerDelegate deleg = null;
+      lock (regLockObj)
+      {
+        int numDuplicates = 0;
+        if (duplNames.TryGetValue(name, out numDuplicates))
+          duplNames[name] = ++numDuplicates;
+        else
+          duplNames.Add(name, numDuplicates);
+
+        deleg = cpViewTW.CreateTracer(id, name + " [" + numDuplicates.ToString() + "]");
+      }
+
+      return deleg;
     }
 
     public void Trace(ulong id, System.Array tms, System.Array vals)
@@ -32,6 +46,7 @@ namespace ChartPoints
       cpViewTW.Activate();
       cpTableTW.Activate();
       cpViewTW.SetTraceConsumer(cpTableTW.GetTraceConsumer());
+      duplNames.Clear();
     }
 
     public void Show()
