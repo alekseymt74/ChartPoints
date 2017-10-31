@@ -19,20 +19,27 @@ CCPProcTracer::CCPProcTracer()
 
 STDMETHODIMP CCPProcTracer::RegElem( BSTR name, ULONGLONG id, USHORT typeID )
 {
-  if( !consumer_thr )
+  CComBSTR _name( name );
+  std::thread thr( [ = ]()
   {
-    active = true;
-    consumer_thr = new std::thread( std::bind( &CCPProcTracer::cons_proc, this ) );
-  }
-  it_tes it = tes.find( id );
-  if( it == tes.end() )
-  {
-    std::pair<it_tes, bool> it_ins = tes.insert( std::make_pair( id, std::make_shared<te_data>() ) );
-    it = it_ins.first;
-  }
-  else
+    std::lock_guard< std::mutex > lock1( mtx1 );
     send();
-  Fire_OnRegElem( name, id, typeID );
+    if( !consumer_thr )
+    {
+      active = true;
+      consumer_thr = new std::thread( std::bind( &CCPProcTracer::cons_proc, this ) );
+    }
+    it_tes it = tes.find( id );
+    if( it == tes.end() )
+    {
+      std::pair<it_tes, bool> it_ins = tes.insert( std::make_pair( id, std::make_shared<te_data>() ) );
+      it = it_ins.first;
+    }
+    //else
+    //  send();
+    Fire_OnRegElem( _name, id, typeID );
+  } );
+  thr.detach();
 
   return S_OK;
 }
@@ -41,8 +48,7 @@ STDMETHODIMP CCPProcTracer::RegElem( BSTR name, ULONGLONG id, USHORT typeID )
 STDMETHODIMP CCPProcTracer::Trace( ULONGLONG id, ULONGLONG tm, DOUBLE val )
 {
   std::lock_guard< std::mutex > lock( mtx );
-  //std::chrono::system_clock::rep tm_ellapsed = std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::system_clock::now() - tm_start ).count();
-  data.in_ptr->push( data_queue::data_ent( id, tm/*tm_ellapsed*/, val ) );
+  data.in_ptr->emplace/*push*/( data_queue::data_ent( id, tm, val ) );
 
   return S_OK;
 }
@@ -50,7 +56,7 @@ STDMETHODIMP CCPProcTracer::Trace( ULONGLONG id, ULONGLONG tm, DOUBLE val )
 void CCPProcTracer::send()
 {
   data_queue::data_ent val;
-  std::lock_guard< std::mutex > lock1(mtx1);
+  //std::lock_guard< std::mutex > lock1(mtx1);
   {
     std::lock_guard< std::mutex > lock(mtx);
     data.swap();

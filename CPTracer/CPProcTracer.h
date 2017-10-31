@@ -13,6 +13,7 @@
 #include <queue>
 #include <mutex>
 #include <map>
+#include <boost/circular_buffer.hpp>
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
@@ -34,7 +35,7 @@ public:
     {}
   };
   typedef trace_ent data_ent;
-  typedef std::queue< data_ent > data_cont;
+  typedef std::queue< data_ent/*, boost::circular_buffer<data_ent>*/ > data_cont;
 private:
   data_cont data_1;
   data_cont data_2;
@@ -42,6 +43,8 @@ public:
   data_cont *in_ptr;
   data_cont *out_ptr;
   data_queue()
+    //: data_1( boost::circular_buffer<data_ent>(10000) )
+    //, data_2( boost::circular_buffer<data_ent>( 10000 ) )
   {
     in_ptr = &data_1;
     out_ptr = &data_2;
