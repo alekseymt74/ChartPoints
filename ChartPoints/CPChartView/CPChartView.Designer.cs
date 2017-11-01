@@ -28,24 +28,24 @@
     /// </summary>
     private void InitializeComponent()
     {
-      System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-      System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+      System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+      System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
       this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-      this.chart = new System.Windows.Forms.DataVisualization.Charting.Chart();
       this.yAxisToolStrip = new System.Windows.Forms.ToolStrip();
-      this.xAxisToolStrip = new System.Windows.Forms.ToolStrip();
-      this.mainToolStrip = new System.Windows.Forms.ToolStrip();
-      this.fitToViewBtn = new System.Windows.Forms.ToolStripButton();
-      this.spyBtn = new System.Windows.Forms.ToolStripButton();
       this.yZoomInBtn = new System.Windows.Forms.ToolStripButton();
       this.yZoomOutBtn = new System.Windows.Forms.ToolStripButton();
+      this.chart = new System.Windows.Forms.DataVisualization.Charting.Chart();
+      this.xAxisToolStrip = new System.Windows.Forms.ToolStrip();
       this.xZoomInBtn = new System.Windows.Forms.ToolStripButton();
       this.xZoomOutBtn = new System.Windows.Forms.ToolStripButton();
+      this.mainToolStrip = new System.Windows.Forms.ToolStrip();
+      this.fitToViewBtn = new System.Windows.Forms.ToolStripButton();
       this.xyZoomInBtn = new System.Windows.Forms.ToolStripButton();
       this.xyZoomOutBtn = new System.Windows.Forms.ToolStripButton();
+      this.spyBtn = new System.Windows.Forms.ToolStripButton();
       this.tableLayoutPanel1.SuspendLayout();
-      ((System.ComponentModel.ISupportInitialize)(this.chart)).BeginInit();
       this.yAxisToolStrip.SuspendLayout();
+      ((System.ComponentModel.ISupportInitialize)(this.chart)).BeginInit();
       this.xAxisToolStrip.SuspendLayout();
       this.mainToolStrip.SuspendLayout();
       this.SuspendLayout();
@@ -70,43 +70,6 @@
       this.tableLayoutPanel1.Size = new System.Drawing.Size(233, 364);
       this.tableLayoutPanel1.TabIndex = 2;
       // 
-      // chart
-      // 
-      chartArea4.Area3DStyle.Inclination = 15;
-      chartArea4.Area3DStyle.IsClustered = true;
-      chartArea4.Area3DStyle.IsRightAngleAxes = false;
-      chartArea4.Area3DStyle.Perspective = 10;
-      chartArea4.Area3DStyle.Rotation = 10;
-      chartArea4.Area3DStyle.WallWidth = 0;
-      chartArea4.AxisX.IsLabelAutoFit = false;
-      chartArea4.AxisX.LabelStyle.Format = "H:m:s:ff";
-      chartArea4.AxisX.ScrollBar.LineColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(64)))));
-      chartArea4.AxisY.IsLabelAutoFit = false;
-      chartArea4.AxisY.LabelStyle.Format = "#.##";
-      chartArea4.AxisY.LabelStyle.IntervalOffset = 0D;
-      chartArea4.AxisY.ScrollBar.LineColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(64)))));
-      chartArea4.CursorX.Interval = 1E-08D;
-      chartArea4.CursorX.IsUserEnabled = true;
-      chartArea4.CursorX.IsUserSelectionEnabled = true;
-      chartArea4.CursorX.LineColor = System.Drawing.Color.ForestGreen;
-      chartArea4.CursorX.SelectionColor = System.Drawing.Color.GreenYellow;
-      chartArea4.CursorY.Interval = 1E-08D;
-      chartArea4.CursorY.IsUserEnabled = true;
-      chartArea4.CursorY.IsUserSelectionEnabled = true;
-      chartArea4.CursorY.LineColor = System.Drawing.Color.ForestGreen;
-      chartArea4.CursorY.SelectionColor = System.Drawing.Color.GreenYellow;
-      chartArea4.Name = "ChartArea1";
-      this.chart.ChartAreas.Add(chartArea4);
-      this.tableLayoutPanel1.SetColumnSpan(this.chart, 3);
-      this.chart.Dock = System.Windows.Forms.DockStyle.Fill;
-      legend4.Name = "Legend1";
-      this.chart.Legends.Add(legend4);
-      this.chart.Location = new System.Drawing.Point(3, 28);
-      this.chart.Name = "chart";
-      this.chart.Size = new System.Drawing.Size(227, 333);
-      this.chart.TabIndex = 0;
-      this.chart.Text = "chart";
-      // 
       // yAxisToolStrip
       // 
       this.yAxisToolStrip.Dock = System.Windows.Forms.DockStyle.Left;
@@ -119,56 +82,6 @@
       this.yAxisToolStrip.Size = new System.Drawing.Size(58, 25);
       this.yAxisToolStrip.TabIndex = 2;
       this.yAxisToolStrip.Text = "toolStrip2";
-      // 
-      // xAxisToolStrip
-      // 
-      this.xAxisToolStrip.Dock = System.Windows.Forms.DockStyle.Right;
-      this.xAxisToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.xZoomInBtn,
-            this.xZoomOutBtn});
-      this.xAxisToolStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
-      this.xAxisToolStrip.Location = new System.Drawing.Point(175, 0);
-      this.xAxisToolStrip.Name = "xAxisToolStrip";
-      this.xAxisToolStrip.Size = new System.Drawing.Size(58, 25);
-      this.xAxisToolStrip.TabIndex = 3;
-      this.xAxisToolStrip.Text = "toolStrip3";
-      // 
-      // mainToolStrip
-      // 
-      this.mainToolStrip.Anchor = System.Windows.Forms.AnchorStyles.None;
-      this.mainToolStrip.Dock = System.Windows.Forms.DockStyle.None;
-      this.mainToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fitToViewBtn,
-            this.xyZoomInBtn,
-            this.xyZoomOutBtn,
-            this.spyBtn});
-      this.mainToolStrip.Location = new System.Drawing.Point(58, 0);
-      this.mainToolStrip.Name = "mainToolStrip";
-      this.mainToolStrip.Size = new System.Drawing.Size(117, 25);
-      this.mainToolStrip.TabIndex = 1;
-      this.mainToolStrip.Text = "toolStrip1";
-      // 
-      // fitToViewBtn
-      // 
-      this.fitToViewBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-      this.fitToViewBtn.Image = global::ChartPoints.Resource.FitView;
-      this.fitToViewBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
-      this.fitToViewBtn.Name = "fitToViewBtn";
-      this.fitToViewBtn.Size = new System.Drawing.Size(23, 22);
-      this.fitToViewBtn.Text = "Fit to view";
-      this.fitToViewBtn.Click += new System.EventHandler(this.FitToView);
-      // 
-      // spyBtn
-      // 
-      this.spyBtn.CheckOnClick = true;
-      this.spyBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-      this.spyBtn.Image = global::ChartPoints.Resource.Spy;
-      this.spyBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
-      this.spyBtn.Name = "spyBtn";
-      this.spyBtn.Size = new System.Drawing.Size(23, 22);
-      this.spyBtn.Text = "toolStripButton1";
-      this.spyBtn.ToolTipText = "Spy";
-      this.spyBtn.Click += new System.EventHandler(this.SetSpyMode);
       // 
       // yZoomInBtn
       // 
@@ -192,6 +105,57 @@
       this.yZoomOutBtn.ToolTipText = "Y Zoom Out";
       this.yZoomOutBtn.Click += new System.EventHandler(this.OnYZoomOut);
       // 
+      // chart
+      // 
+      chartArea1.Area3DStyle.Inclination = 15;
+      chartArea1.Area3DStyle.IsClustered = true;
+      chartArea1.Area3DStyle.IsRightAngleAxes = false;
+      chartArea1.Area3DStyle.Perspective = 10;
+      chartArea1.Area3DStyle.Rotation = 10;
+      chartArea1.Area3DStyle.WallWidth = 0;
+      chartArea1.AxisX.IsLabelAutoFit = false;
+      chartArea1.AxisX.LabelStyle.Format = "H:m:s:ff";
+      chartArea1.AxisX.LabelStyle.IntervalOffsetType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Auto;
+      chartArea1.AxisX.ScrollBar.LineColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(64)))));
+      chartArea1.AxisY.IsLabelAutoFit = false;
+      chartArea1.AxisY.LabelStyle.Format = "#.##";
+      chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
+      chartArea1.AxisY.ScrollBar.LineColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(64)))));
+      chartArea1.CursorX.Interval = 1E-08D;
+      chartArea1.CursorX.IsUserEnabled = true;
+      chartArea1.CursorX.IsUserSelectionEnabled = true;
+      chartArea1.CursorX.LineColor = System.Drawing.Color.ForestGreen;
+      chartArea1.CursorX.SelectionColor = System.Drawing.Color.GreenYellow;
+      chartArea1.CursorY.Interval = 1E-08D;
+      chartArea1.CursorY.IsUserEnabled = true;
+      chartArea1.CursorY.IsUserSelectionEnabled = true;
+      chartArea1.CursorY.LineColor = System.Drawing.Color.ForestGreen;
+      chartArea1.CursorY.SelectionColor = System.Drawing.Color.GreenYellow;
+      chartArea1.Name = "ChartArea1";
+      this.chart.ChartAreas.Add(chartArea1);
+      this.tableLayoutPanel1.SetColumnSpan(this.chart, 3);
+      this.chart.Dock = System.Windows.Forms.DockStyle.Fill;
+      legend1.Name = "Legend1";
+      this.chart.Legends.Add(legend1);
+      this.chart.Location = new System.Drawing.Point(3, 28);
+      this.chart.Name = "chart";
+      this.chart.Size = new System.Drawing.Size(227, 333);
+      this.chart.TabIndex = 0;
+      this.chart.Text = "chart";
+      // 
+      // xAxisToolStrip
+      // 
+      this.xAxisToolStrip.Dock = System.Windows.Forms.DockStyle.Right;
+      this.xAxisToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.xZoomInBtn,
+            this.xZoomOutBtn});
+      this.xAxisToolStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
+      this.xAxisToolStrip.Location = new System.Drawing.Point(175, 0);
+      this.xAxisToolStrip.Name = "xAxisToolStrip";
+      this.xAxisToolStrip.Size = new System.Drawing.Size(58, 25);
+      this.xAxisToolStrip.TabIndex = 3;
+      this.xAxisToolStrip.Text = "toolStrip3";
+      // 
       // xZoomInBtn
       // 
       this.xZoomInBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -213,6 +177,31 @@
       this.xZoomOutBtn.Text = "toolStripButton4";
       this.xZoomOutBtn.ToolTipText = "X Zoom Out";
       this.xZoomOutBtn.Click += new System.EventHandler(this.OnXZoomOut);
+      // 
+      // mainToolStrip
+      // 
+      this.mainToolStrip.Anchor = System.Windows.Forms.AnchorStyles.None;
+      this.mainToolStrip.Dock = System.Windows.Forms.DockStyle.None;
+      this.mainToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fitToViewBtn,
+            this.xyZoomInBtn,
+            this.xyZoomOutBtn,
+            this.spyBtn});
+      this.mainToolStrip.Location = new System.Drawing.Point(64, 0);
+      this.mainToolStrip.Name = "mainToolStrip";
+      this.mainToolStrip.Size = new System.Drawing.Size(104, 25);
+      this.mainToolStrip.TabIndex = 1;
+      this.mainToolStrip.Text = "toolStrip1";
+      // 
+      // fitToViewBtn
+      // 
+      this.fitToViewBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+      this.fitToViewBtn.Image = global::ChartPoints.Resource.FitView;
+      this.fitToViewBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+      this.fitToViewBtn.Name = "fitToViewBtn";
+      this.fitToViewBtn.Size = new System.Drawing.Size(23, 22);
+      this.fitToViewBtn.Text = "Fit to view";
+      this.fitToViewBtn.Click += new System.EventHandler(this.FitToView);
       // 
       // xyZoomInBtn
       // 
@@ -236,6 +225,18 @@
       this.xyZoomOutBtn.ToolTipText = "XY Zoom Out";
       this.xyZoomOutBtn.Click += new System.EventHandler(this.OnXYZoomOut);
       // 
+      // spyBtn
+      // 
+      this.spyBtn.CheckOnClick = true;
+      this.spyBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+      this.spyBtn.Image = global::ChartPoints.Resource.Spy;
+      this.spyBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+      this.spyBtn.Name = "spyBtn";
+      this.spyBtn.Size = new System.Drawing.Size(23, 22);
+      this.spyBtn.Text = "toolStripButton1";
+      this.spyBtn.ToolTipText = "Spy";
+      this.spyBtn.Click += new System.EventHandler(this.SetSpyMode);
+      // 
       // CPChartView
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -247,9 +248,9 @@
       this.Size = new System.Drawing.Size(233, 364);
       this.tableLayoutPanel1.ResumeLayout(false);
       this.tableLayoutPanel1.PerformLayout();
-      ((System.ComponentModel.ISupportInitialize)(this.chart)).EndInit();
       this.yAxisToolStrip.ResumeLayout(false);
       this.yAxisToolStrip.PerformLayout();
+      ((System.ComponentModel.ISupportInitialize)(this.chart)).EndInit();
       this.xAxisToolStrip.ResumeLayout(false);
       this.xAxisToolStrip.PerformLayout();
       this.mainToolStrip.ResumeLayout(false);

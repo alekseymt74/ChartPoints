@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using CPTracerLib;
+using System.Diagnostics;
 
 namespace ChartPoints
 {
@@ -124,9 +125,14 @@ namespace ChartPoints
       {
         TimeSpan tmSpan = TimeSpan.FromMilliseconds(tms_out[i]);
         if (series.Points.Count != 0)
-          series.Points.AddXY(tmSpan.TotalHours, series.Points.ElementAt(series.Points.Count - 1).YValues[0]);
-        series.Points.AddXY(tmSpan.TotalHours, vals_out[i]);
+          series.Points.AddXY(tmSpan.TotalDays/*((double)tms_out[i]) / 1000.0 / 3600.0 / 24.0*/, series.Points.ElementAt(series.Points.Count - 1).YValues[0]);
+        series.Points.AddXY(tmSpan.TotalDays/*((double)tms_out[i]) / 1000.0 / 3600.0 / 24.0*/, vals_out[i]);
       }
+      //if (tms_out.Count > 0)
+      //{
+      //  Debug.WriteLine("###################" + tms_out[tms_out.Count - 1].ToString() + " " + TimeSpan.FromMilliseconds(tms_out[tms_out.Count - 1]).TotalHours.ToString());
+      //  Debug.WriteLine(TimeSpan.FromMilliseconds(tms_out[tms_out.Count - 1]).ToString());
+      //}
       tms_out.Clear();
       vals_out.Clear();
     }
