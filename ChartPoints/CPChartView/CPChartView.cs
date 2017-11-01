@@ -25,7 +25,7 @@ namespace ChartPoints
   public partial class CPChartView : UserControl, ICPTracer
   {
     private Point startDragPoint;
-    private IDictionary<ulong, Tuple<ICPTracerDelegate, Series>> serDelegates = new SortedDictionary<ulong, Tuple<ICPTracerDelegate, Series>>();
+    private IDictionary<ulong, IList<Tuple<ICPTracerDelegate, Series>> > serDelegates = new SortedDictionary<ulong, IList<Tuple<ICPTracerDelegate, Series>>>();
     private IDictionary<int, ICPTracerDelegate> depDelegates = new SortedDictionary<int, ICPTracerDelegate>();
     private Timer updateTimer;
     CPTableView traceConsumer;
@@ -51,7 +51,7 @@ namespace ChartPoints
 
     private void OnEnableTraceEnt(EnableTraceEntEvArgs args)
     {
-      EnableItem(args.id, args.flag);
+      EnableItem(args.id, args.instNum, args.flag);
     }
 
     EChartViewMode GetMode() { return mode; }
@@ -163,26 +163,34 @@ namespace ChartPoints
       {
         IAsyncResult asyncRes = chart.BeginInvoke((MethodInvoker)(() =>
         {
-          foreach (KeyValuePair<ulong, Tuple<ICPTracerDelegate, Series>> val in serDelegates)
-            val.Value.Item1.UpdateView();
+          foreach (KeyValuePair<ulong, IList<Tuple<ICPTracerDelegate, Series>>> val in serDelegates)
+          {
+            foreach(Tuple<ICPTracerDelegate, Series> deleg in val.Value)
+              deleg.Item1.UpdateView();
+          }
         }));
       }
     }
 
+    private object traceLockObj = new object();
+
     public void Trace(ulong id, System.Array tms, System.Array vals)
     {
-      Tuple<ICPTracerDelegate, Series> deleg = null;
-      if (serDelegates.TryGetValue(id, out deleg))
-        deleg.Item1.Trace(tms, vals);
-      if ((mode & EChartViewMode.Spy) != EChartViewMode.Spy)
-        traceConsumer.Trace(id, tms, vals);
+      lock (traceLockObj)
+      {
+        IList<Tuple<ICPTracerDelegate, Series>> delegs = null;
+        if (serDelegates.TryGetValue(id, out delegs))
+          delegs.ElementAt(delegs.Count - 1).Item1.Trace(tms, vals);
+        if ((mode & EChartViewMode.Spy) != EChartViewMode.Spy)
+          traceConsumer.Trace(id, tms, vals);
+      }
     }
 
-    public void EnableItem(ulong id, bool flag)
+    public void EnableItem(ulong id, int instNum, bool flag)
     {
-      Tuple<ICPTracerDelegate, Series> deleg = null;
-      if (serDelegates.TryGetValue(id, out deleg))
-        deleg.Item2.Enabled = flag;
+      IList<Tuple<ICPTracerDelegate, Series>> delegs = null;
+      if (serDelegates.TryGetValue(id, out delegs))
+        delegs.ElementAt(instNum).Item2.Enabled = flag;
     }
 
     private ICPTracerDelegate AddTracer(ulong id, string varName)
@@ -196,8 +204,13 @@ namespace ChartPoints
       CPTracerDelegate cpDelegate = new CPTracerDelegate(cons);
       chart.ApplyPaletteColors();
       cpDelegate.properties.Add("color", ser.Color);
-      serDelegates.Add(id, new Tuple<ICPTracerDelegate, Series>(cpDelegate, ser));
-
+      IList<Tuple<ICPTracerDelegate, Series>> delegs = null;
+      if (!serDelegates.TryGetValue(id, out delegs))
+      {
+        delegs = new List<Tuple<ICPTracerDelegate, Series>>();
+        serDelegates.Add(id, delegs);
+      }
+      delegs.Add(new Tuple<ICPTracerDelegate, Series>(cpDelegate, ser));
       ICPTracerDelegate cpDepDelegate = traceConsumer.CreateTracer(id, varName);
       cpDepDelegate.SetProperty("color", ser.Color);
       depDelegates.Add(chart.Series.Count - 1, cpDepDelegate);

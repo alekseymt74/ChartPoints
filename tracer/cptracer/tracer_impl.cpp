@@ -66,10 +66,7 @@ namespace cptracer
     {
       // std::cout << id << ": " << val << std::endl;
       if (trace_elem_cons)
-      {
-        std::chrono::high_resolution_clock::rep tm_ellapsed = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::high_resolution_clock::now() - tm_start).count();
-        trace_elem_cons->Trace(id, tm_ellapsed, val);
-      }
+        trace_elem_cons->Trace(id, std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::high_resolution_clock::now() - tm_start ).count(), val);
     }
     catch (...)
     {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using CPTracerLib;
 using EnvDTE;
@@ -29,23 +30,23 @@ namespace ChartPoints
 
     private void RegElem(string name, UInt64 id, UInt16 typeID)
     {
+      //Debug.WriteLine("[*** CPTraceHandler::RegElem ***]; thread id: " + System.Threading.Thread.CurrentThread.ManagedThreadId.ToString());
       outputWindowPane.OutputString("[RegElem]; name: " + name + "\tid: " + id + "\ttypeID: " + typeID + "\n");
-      ICPTracerDelegate cpDelegate = traceServ.RegTraceEnt(id, name);// Globals.cpTracer.CreateTracer(name);
-      //traceConsumers.Add(id, cpDelegate);
+      ICPTracerDelegate cpDelegate = traceServ.RegTraceEnt(id, name);
     }
 
     //private void Trace(/*UInt64 id, */[MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_RECORD)]System.Array/*object*/ vals)
     private void Trace(ulong id, System.Array tms, System.Array vals)
     {
+      //Debug.WriteLine("##################" + tms.Length.ToString());
+      //Debug.WriteLine("[*** CPTraceHandler::Trace ***]; thread id: " + System.Threading.Thread.CurrentThread.ManagedThreadId.ToString());
       traceServ.Trace(id, tms, vals);
     }
 
     public CPTraceHandler()
     {
-      //tracer = _tracer;
       ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
       cpServProv.GetService<ICPTracerService>(out traceServ);
-      //      Globals.cpTracer.Activate();
       traceServ.Activate();
       traceConsumers = new SortedDictionary<ulong, ICPTracerDelegate>();
 

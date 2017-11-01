@@ -21,8 +21,8 @@ namespace ChartPoints
     static public readonly int ValueCellInd = 3;
 
     private bool ignoreCellValEvents = false;
-    private IDictionary<ulong, ICPTracerDelegate> rowDelegates = new SortedDictionary<ulong, ICPTracerDelegate>();
-    private IDictionary<int, ulong> rowIdInds = new SortedDictionary<int, ulong>();
+    private IDictionary<ulong, IList<ICPTracerDelegate>> rowDelegates = new SortedDictionary<ulong, IList<ICPTracerDelegate>>();
+    private IDictionary<int, KeyValuePair<ulong, int>> rowIdInds = new SortedDictionary<int, KeyValuePair<ulong, int>>();
     private Timer updateTimer;
 
     public CPTableView()
@@ -38,8 +38,11 @@ namespace ChartPoints
       {
         /*IAsyncResult asyncRes = */table./*Begin*/Invoke((MethodInvoker)(() =>
         {
-          foreach (KeyValuePair<ulong, ICPTracerDelegate> val in rowDelegates)
-            val.Value.UpdateView();
+          foreach (KeyValuePair<ulong, IList<ICPTracerDelegate>> val in rowDelegates)
+          {
+            foreach(ICPTracerDelegate deleg in val.Value)
+              deleg.UpdateView();
+          }
         }));
       }
     }
@@ -59,17 +62,12 @@ namespace ChartPoints
 
     public void Trace(ulong id, System.Array tms, System.Array vals)
     {
-      ICPTracerDelegate deleg = null;
-      if (rowDelegates.TryGetValue(id, out deleg))
+      IList<ICPTracerDelegate> delegs = null;
+      if (rowDelegates.TryGetValue(id, out delegs))
       {
-          deleg.Trace(tms, vals);
+          delegs.ElementAt(delegs.Count - 1).Trace(tms, vals);
       }
     }
-
-    //public void EnableItem(ulong id, bool flag)
-    //{
-    //  ;
-    //}
 
     private ICPTracerDelegate AddTracer(ulong id, string varName)
     {
@@ -80,8 +78,14 @@ namespace ChartPoints
       row.Cells[NameCellInd].Value = varName;
       ICPTraceConsumer cons = new CPTableTraceConsumer(table, row);
       ICPTracerDelegate cpDelegate = new CPTracerDelegate(cons);
-      rowDelegates.Add(id, cpDelegate);
-      rowIdInds.Add(row.Index, id);
+      IList<ICPTracerDelegate> delegs = null;
+      if(!rowDelegates.TryGetValue(id, out delegs))
+      {
+        delegs = new List<ICPTracerDelegate>();
+        rowDelegates.Add(id, delegs);
+      }
+      delegs.Add(cpDelegate);
+      rowIdInds.Add(row.Index, new KeyValuePair<ulong, int>(id, delegs.Count - 1));
       if (updateTimer == null)
       {
         updateTimer = new Timer();
@@ -122,15 +126,16 @@ namespace ChartPoints
       if (e.ColumnIndex == EnabledCellInd && e.RowIndex != -1)
       {
         DataGridViewRow row = table.Rows[e.RowIndex];
-        ulong id = ulong.MaxValue;
-        if (rowIdInds.TryGetValue(e.RowIndex, out id))
+        KeyValuePair<ulong, int> idInst;
+        if (rowIdInds.TryGetValue(e.RowIndex, out idInst))
         {
           bool value = (bool)row.Cells[0].Value;
-          enableEvent.Fire(new EnableTraceEntEvArgs(id, value));
-          ICPTracerDelegate deleg = null;
-          if (rowDelegates.TryGetValue(id, out deleg))
+          ulong id = idInst.Key;
+          enableEvent.Fire(new EnableTraceEntEvArgs(id, idInst.Value, value));
+          IList<ICPTracerDelegate> delegs = null;
+          if (rowDelegates.TryGetValue(id, out delegs))
           {
-            deleg.SetProperty("enable", value);
+            delegs.ElementAt(idInst.Value).SetProperty("enable", value);
             if(!value)
               row.Cells[ValueCellInd].Value = "--";
           }
@@ -149,11 +154,13 @@ namespace ChartPoints
   public class EnableTraceEntEvArgs
   {
     public ulong id { get; }
+    public int instNum { get; }
     public bool flag { get; }
 
-    public EnableTraceEntEvArgs(ulong _id, bool _flag)
+    public EnableTraceEntEvArgs(ulong _id, int _instNum, bool _flag)
     {
       id = _id;
+      instNum = _instNum;
       flag = _flag;
     }
   }

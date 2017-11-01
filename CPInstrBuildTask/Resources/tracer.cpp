@@ -46,9 +46,9 @@ namespace cptracer
     try
     {
 #ifdef _UNICODE 
-      temp::h_mod = LoadLibrary(TEXT("e:/projects/tests/MSVS.ext/ChartPoints/tracer/Debug/cptracer.dll"));
+      temp::h_mod = LoadLibrary(TEXT("e:/projects/tests/MSVS.ext/ChartPoints/tracer/Release/cptracer.dll"));
 #else
-      temp::h_mod = LoadLibrary("e:/projects/tests/MSVS.ext/ChartPoints/tracer/Debug/cptracer.dll");
+      temp::h_mod = LoadLibrary("e:/projects/tests/MSVS.ext/ChartPoints/tracer/Release/cptracer.dll");
 #endif
       if(temp::h_mod == NULL)
         return nullptr;
