@@ -11,7 +11,7 @@ namespace ChartPoints
 {
   class CPTraceHandler// : IDisposable
   {
-    private ICPTracerFactory test_srv;
+    private ICPTracerFactory tracersFactory;
     private CPProcTracer procTracer;
     private IVsOutputWindowPane outputWindowPane;
     private ICPTracerService traceServ;
@@ -27,21 +27,6 @@ namespace ChartPoints
     static extern UInt32 CoCreateInstance([In, MarshalAs(UnmanagedType.LPStruct)] Guid rclsid,
        IntPtr pUnkOuter, UInt32 dwClsContext, [In, MarshalAs(UnmanagedType.LPStruct)] Guid riid,
        [MarshalAs(UnmanagedType.IUnknown)] out object rReturnedComObject);
-
-    private void RegElem(string name, UInt64 id, UInt16 typeID)
-    {
-      //Debug.WriteLine("[*** CPTraceHandler::RegElem ***]; thread id: " + System.Threading.Thread.CurrentThread.ManagedThreadId.ToString());
-      outputWindowPane.OutputString("[RegElem]; name: " + name + "\tid: " + id + "\ttypeID: " + typeID + "\n");
-      ICPTracerDelegate cpDelegate = traceServ.RegTraceEnt(id, name);
-    }
-
-    //private void Trace(/*UInt64 id, */[MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_RECORD)]System.Array/*object*/ vals)
-    private void Trace(ulong id, System.Array tms, System.Array vals)
-    {
-      //Debug.WriteLine("##################" + tms.Length.ToString());
-      //Debug.WriteLine("[*** CPTraceHandler::Trace ***]; thread id: " + System.Threading.Thread.CurrentThread.ManagedThreadId.ToString());
-      traceServ.Trace(id, tms, vals);
-    }
 
     public CPTraceHandler()
     {
@@ -60,10 +45,30 @@ namespace ChartPoints
       Guid IUnknownGuid = new Guid("00000000-0000-0000-C000-000000000046");
       //UInt32 dwRes = CoCreateInstance(test_srv_CLSID, IntPtr.Zero, (uint)(CLSCTX.CLSCTX_LOCAL_SERVER), IUnknownGuid, out obj);
       obj = Activator.CreateInstance(test_srv_type);
-      test_srv = obj as ICPTracerFactory;
-      test_srv.CreateProcTracer(out procTracer, 1);
+      tracersFactory = obj as ICPTracerFactory;
+      foreach (EnvDTE.Process p in Globals.dte.Debugger.DebuggedProcesses)
+      {
+        Debug.WriteLine("$$$$$$$$$$$$$$$$$ " + p.ProcessID);
+      }
+      tracersFactory.CreateProcTracer(out procTracer, 1);
+      //traceServ.RegProcessTracer(1, "proc_name");
       procTracer.OnRegElem += RegElem;
       procTracer.OnTrace += Trace;
+    }
+
+    private void RegElem(string name, UInt64 id, UInt16 typeID)
+    {
+      //Debug.WriteLine("[*** CPTraceHandler::RegElem ***]; thread id: " + System.Threading.Thread.CurrentThread.ManagedThreadId.ToString());
+      outputWindowPane.OutputString("[RegElem]; name: " + name + "\tid: " + id + "\ttypeID: " + typeID + "\n");
+      ICPTracerDelegate cpDelegate = traceServ.RegTraceEnt(id, name);
+    }
+
+    //private void Trace(/*UInt64 id, */[MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_RECORD)]System.Array/*object*/ vals)
+    private void Trace(ulong id, System.Array tms, System.Array vals)
+    {
+      //Debug.WriteLine("##################" + tms.Length.ToString());
+      //Debug.WriteLine("[*** CPTraceHandler::Trace ***]; thread id: " + System.Threading.Thread.CurrentThread.ManagedThreadId.ToString());
+      traceServ.Trace(id, tms, vals);
     }
 
     private void CloseHandle()
@@ -73,10 +78,10 @@ namespace ChartPoints
         int nRef = System.Runtime.InteropServices.Marshal.ReleaseComObject(procTracer);
         procTracer = null;
       }
-      if (test_srv != null)
+      if (tracersFactory != null)
       {
-        int nRef = System.Runtime.InteropServices.Marshal.ReleaseComObject(test_srv);
-        test_srv = null;
+        int nRef = System.Runtime.InteropServices.Marshal.ReleaseComObject(tracersFactory);
+        tracersFactory = null;
       }
       GC.Collect();
     }

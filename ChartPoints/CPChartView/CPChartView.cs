@@ -41,6 +41,8 @@ namespace ChartPoints
       chart.MouseUp += Chart_MouseUp;
       chart.MouseMove += Chart_MouseMove;
       chart.MouseWheel += Chart_MouseWheel;
+
+      RegProcessTracer(333, "test.exe");
     }
 
     public void SetTraceConsumer(CPTableView _traceConsumer)
@@ -280,15 +282,56 @@ namespace ChartPoints
       chart.BeginInvoke((MethodInvoker)(() =>
       {
         this.spyBtn.Checked = false;
-        chart.ChartAreas[0].AxisX.Minimum = double.NaN;
-        chart.ChartAreas[0].AxisX.Maximum = double.NaN;
-        chart.ChartAreas[0].AxisY.Minimum = double.NaN;
-        chart.ChartAreas[0].AxisY.Maximum = double.NaN;
-        chart.ChartAreas[0].AxisX.ScaleView.ZoomReset(0);
-        chart.ChartAreas[0].AxisY.ScaleView.ZoomReset(0);
+        if (chart.ChartAreas.Count > 0)
+        {
+          chart.ChartAreas[0].AxisX.Minimum = double.NaN;
+          chart.ChartAreas[0].AxisX.Maximum = double.NaN;
+          chart.ChartAreas[0].AxisY.Minimum = double.NaN;
+          chart.ChartAreas[0].AxisY.Maximum = double.NaN;
+          chart.ChartAreas[0].AxisX.ScaleView.ZoomReset(0);
+          chart.ChartAreas[0].AxisY.ScaleView.ZoomReset(0);
+        }
       }));
     }
 
+    bool RegProcessTracer(int procID, string procName)
+    {
+      System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+      System.Windows.Forms.DataVisualization.Charting.Title chartTitle = new System.Windows.Forms.DataVisualization.Charting.Title();
+      chartArea.Area3DStyle.Inclination = 15;
+      chartArea.Area3DStyle.IsClustered = true;
+      chartArea.Area3DStyle.IsRightAngleAxes = false;
+      chartArea.Area3DStyle.Perspective = 10;
+      chartArea.Area3DStyle.Rotation = 10;
+      chartArea.Area3DStyle.WallWidth = 0;
+      chartArea.AxisX.IsLabelAutoFit = false;
+      chartArea.AxisX.LabelStyle.Format = "H:m:s:ff";
+      chartArea.AxisX.LabelStyle.IntervalOffsetType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Auto;
+      chartArea.AxisX.ScrollBar.LineColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(64)))));
+      chartArea.AxisY.IsLabelAutoFit = false;
+      chartArea.AxisY.LabelStyle.Format = "#.##";
+      chartArea.AxisY.LabelStyle.IntervalOffset = 0D;
+      chartArea.AxisY.ScrollBar.LineColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(64)))));
+      chartArea.CursorX.Interval = 1E-08D;
+      chartArea.CursorX.IsUserEnabled = true;
+      chartArea.CursorX.IsUserSelectionEnabled = true;
+      chartArea.CursorX.LineColor = System.Drawing.Color.ForestGreen;
+      chartArea.CursorX.SelectionColor = System.Drawing.Color.GreenYellow;
+      chartArea.CursorY.Interval = 1E-08D;
+      chartArea.CursorY.IsUserEnabled = true;
+      chartArea.CursorY.IsUserSelectionEnabled = true;
+      chartArea.CursorY.LineColor = System.Drawing.Color.ForestGreen;
+      chartArea.CursorY.SelectionColor = System.Drawing.Color.GreenYellow;
+      string chartName = "ChartArea" + procID.ToString();
+      chartArea.Name = chartName;
+      this.chart.ChartAreas.Add(chartArea);
+      chartTitle.DockedToChartArea = chartName;
+      chartTitle.Text = procName + "[" + procID.ToString() + "]";
+      chartTitle.Name = "CATitle" + procID.ToString();
+      this.chart.Titles.Add(chartTitle);
+
+      return true;
+    }
     private void SetSpyMode(object sender, EventArgs e)
     {
       if ((mode & EChartViewMode.Spy) == EChartViewMode.Spy)

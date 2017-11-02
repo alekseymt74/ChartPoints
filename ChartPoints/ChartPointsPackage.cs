@@ -19,6 +19,9 @@ using System.Runtime.Serialization;
 using System.Reflection;
 using System.IO;
 using System.Threading;
+using Microsoft.VisualStudio.Debugger.Interop;
+using ChartPoints.CPServices.impl;
+using ChartPoints.CPServices.decl;
 
 namespace ChartPoints
 {
@@ -364,7 +367,11 @@ namespace ChartPoints
   [ProvideToolWindowVisibility(typeof(CPListTW), VSConstants.UICONTEXT.SolutionExists_string)]
   [ProvideToolWindow(typeof(CPTableViewTW))]
   [ProvideToolWindowVisibility(typeof(CPTableViewTW), VSConstants.UICONTEXT.SolutionExists_string)]
-  public sealed class ChartPointsPackage : Package, IVsPersistSolutionOpts, IVsSolutionLoadManager, IVsUpdateSolutionEvents2
+  public sealed class ChartPointsPackage
+    : Package
+    , IVsPersistSolutionOpts
+    , IVsSolutionLoadManager
+    , IVsUpdateSolutionEvents2
   {
     private ChartPntFactory factory;
 
@@ -397,13 +404,25 @@ namespace ChartPoints
     protected override void Initialize()
     {
       base.Initialize();
+
+      ChartPntToggleCmd.Initialize(this);
+      CPTableViewTWCmd.Initialize(this);
+      CPChartViewTWCmd.Initialize(this);
+      CPListTWCommand.Initialize(this);
+
+      ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
+      cpServProv.RegisterService<ICPTracerService>(new CPTracerService());
+
+      IVsDebugger vsDebugService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SVsShellDebugger)) as IVsDebugger;
+      if (vsDebugService != null)
+        cpServProv.RegisterService<ICPDebugService>(new CPDebugService(vsDebugService));
+
+
       Globals.dte = (DTE)GetService(typeof(DTE));
-      //Globals.cpEventsService = new CPEventService();
       factory = new ChartPntFactoryImpl();
       if(Globals.processor == null)
         Globals.processor = factory.CreateProcessor();
       Globals.orchestrator = factory.CreateOrchestrator();
-      //Globals.orchestrator.InitSolutionConfigurations();
       Globals.outputWindow = GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
       IVsSolution vsSolution = GetService(typeof(SVsSolution)) as IVsSolution;
       object objLoadMgr = this;   //the class that implements IVsSolutionManager  
@@ -422,14 +441,6 @@ namespace ChartPoints
       //rdt = new RunningDocumentTable(this);
       //rdt.Advise(new RunningDocTableEvents(rdt));
 
-      ChartPntToggleCmd.Initialize(this);
-      CPTableViewTWCmd.Initialize(this);
-      CPChartViewTWCmd.Initialize(this);
-      //Globals.cpTracer = ChartPointsViewTWCommand.Instance;
-      CPListTWCommand.Initialize(this);
-
-      ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
-      cpServProv.RegisterService<ICPTracerService>(new CPTracerService());
 
       sbm = (IVsSolutionBuildManager2)ServiceProvider.GlobalProvider.GetService(typeof(SVsSolutionBuildManager));
       sbm.AdviseUpdateSolutionEvents(this, out _sbmCookie);
@@ -568,6 +579,7 @@ namespace ChartPoints
     {
       return VSConstants.S_OK;
     }
+
     #endregion
   }
 }

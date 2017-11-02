@@ -8,6 +8,8 @@ using EnvDTE;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using EnvDTE80;
+using System.Diagnostics;
+using ChartPoints.CPServices.decl;
 
 namespace ChartPoints
 {
@@ -16,6 +18,29 @@ namespace ChartPoints
     private ServiceHost serviceHost;
     private EnvDTE.DebuggerEvents debugEvents;
     private CPTraceHandler traceHandler;
+    ICPServiceProvider cpServProv;
+
+    public CPOrchestrator()
+    {
+      cpServProv = ICPServiceProvider.GetProvider();
+      ICPDebugService debugServ;
+      cpServProv.GetService<ICPDebugService>(out debugServ);
+      if (debugServ != null)
+      {
+        debugServ.debugProcCreateCPEvent += OnProcDebugCreate;
+        debugServ.debugProcDestroyCPEvent += OnProcDebugDestroy;
+      }
+    }
+
+    private void OnProcDebugCreate(CPProcEvArgs args)
+    {
+      IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(Path.GetFileNameWithoutExtension(args.Name));
+    }
+
+    private void OnProcDebugDestroy(CPProcEvArgs args)
+    {
+      ;
+    }
 
     private bool IsChartPointsMode()
     {
@@ -67,6 +92,7 @@ namespace ChartPoints
         SolutionConfiguration cpConf = solBuild.SolutionConfigurations.Add(confType + " [ChartPoints]", confType, true);
       }
     }
+
     public bool InitSolutionConfigurations()
     {
       SolutionBuild2 solBuild = (SolutionBuild2)Globals.dte.Solution.SolutionBuild;
@@ -121,7 +147,7 @@ namespace ChartPoints
       }
     }
 
-    private void DebuggerEventsOnOnContextChanged(Process newProcess, Program newProgram, Thread newThread, StackFrame newStackFrame)
+    private void DebuggerEventsOnOnContextChanged(EnvDTE.Process newProcess, Program newProgram, Thread newThread, EnvDTE.StackFrame newStackFrame)
     {
       //System.Windows.Forms.MessageBox.Show("Debugger context changed.");
       //throw new NotImplementedException();

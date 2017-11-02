@@ -79,6 +79,7 @@
     <Compile Include="CPListTWCtrl.Designer.cs">
       <DependentUpon>CPListTWCtrl.cs</DependentUpon>
     </Compile>
+    <Compile Include="CPServices\impl\CPDebugService.cs" />
     <Compile Include="CPTableView\CPTableView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -87,8 +88,8 @@
     </Compile>
     <Compile Include="CPTableView\CPTableViewTW.cs" />
     <Compile Include="CPTableView\CPTableViewTWCmd.cs" />
-    <Compile Include="CPTraceConsumer.cs" />
-    <Compile Include="CPTracerService.cs" />
+    <Compile Include="CPServices\impl\CPTraceConsumer.cs" />
+    <Compile Include="CPServices\impl\CPTracerService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resource.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -140,6 +141,9 @@
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.CoreUtility.14.3.25407\lib\net45\Microsoft.VisualStudio.CoreUtility.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop, Version=8.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Editor, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Imaging, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
