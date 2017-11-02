@@ -40,24 +40,33 @@ namespace ChartPoints.CPServices.impl
       return true;
     }
 
+    private bool IsChartPointsMode()
+    {
+      string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
+      return activeConfig.Contains(" [ChartPoints]");
+    }
+
     public int Event(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent, ref Guid riidEvent, uint dwAttrib)
     {
-      if (pEvent is IDebugProcessCreateEvent2)
+      if (IsChartPointsMode())
       {
-        CPProcEvArgs args;
-        if (CreateProcEvArgs(pProcess, out args))
+        if (pEvent is IDebugProcessCreateEvent2)
         {
-          Debug.WriteLine("[IDebugProcessCreateEvent2]; " + args.Name);
-          debugProcCreateCPEvent.Fire(args);
+          CPProcEvArgs args;
+          if (CreateProcEvArgs(pProcess, out args))
+          {
+            Debug.WriteLine("[IDebugProcessCreateEvent2]; " + args.Name);
+            debugProcCreateCPEvent.Fire(args);
+          }
         }
-      }
-      else if (pEvent is IDebugProcessDestroyEvent2)
-      {
-        CPProcEvArgs args;
-        if (CreateProcEvArgs(pProcess, out args))
+        else if (pEvent is IDebugProcessDestroyEvent2)
         {
-          Debug.WriteLine("[IDebugProcessDestroyEvent2]; " + args.Name);
-          debugProcDestroyCPEvent.Fire(args);
+          CPProcEvArgs args;
+          if (CreateProcEvArgs(pProcess, out args))
+          {
+            Debug.WriteLine("[IDebugProcessDestroyEvent2]; " + args.Name);
+            debugProcDestroyCPEvent.Fire(args);
+          }
         }
       }
       //else if (pEvent is IDebugProgramCreateEvent2)

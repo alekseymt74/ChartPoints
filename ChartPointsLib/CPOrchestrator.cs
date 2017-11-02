@@ -17,8 +17,10 @@ namespace ChartPoints
   {
     private ServiceHost serviceHost;
     private EnvDTE.DebuggerEvents debugEvents;
-    private CPTraceHandler traceHandler;
+    private ISet<CPTraceHandler> traceHandlers = new SortedSet<CPTraceHandler>(Comparer<CPTraceHandler>.Create((lh, rh) => (lh.id.CompareTo(rh.id))));
     ICPServiceProvider cpServProv;
+    bool cpTraceFlag = false;
+
 
     public CPOrchestrator()
     {
@@ -35,14 +37,30 @@ namespace ChartPoints
     private void OnProcDebugCreate(CPProcEvArgs args)
     {
       IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(Path.GetFileNameWithoutExtension(args.Name));
+      if (pPnts != null && pPnts.Count > 0)
+      {
+        traceHandlers.Add(new CPTraceHandler(args.procId));
+        cpTraceFlag = true;
+      }
     }
 
     private void OnProcDebugDestroy(CPProcEvArgs args)
     {
-      ;
+      CPTraceHandler tracer = traceHandlers.FirstOrDefault((h) => (h.id == args.procId));
+      if(tracer != null)
+      {
+        tracer.Dispose();
+        traceHandlers.Remove(tracer);
+        if (traceHandlers.Count == 0)
+        {
+          ICPTracerService traceServ;
+          cpServProv.GetService<ICPTracerService>(out traceServ);
+          traceServ.Show();
+        }
+      }
     }
 
-    private bool IsChartPointsMode()
+    private bool IsChartPointsMode()//!!! Move to global !!!
     {
       string activeConfig = (string) Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
       return activeConfig.Contains(" [ChartPoints]");
@@ -123,9 +141,9 @@ namespace ChartPoints
       Globals.dte.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildProjConfigBegin;
       Globals.dte.Events.BuildEvents.OnBuildProjConfigDone += OnBuildProjConfigDone;
       debugEvents = Globals.dte.Events.DebuggerEvents;
-      debugEvents.OnEnterRunMode += new _dispDebuggerEvents_OnEnterRunModeEventHandler(DebuggerEventsOnOnEnterRunMode);//DebuggerEventsOnOnEnterRunMode;
+      //debugEvents.OnEnterRunMode += new _dispDebuggerEvents_OnEnterRunModeEventHandler(DebuggerEventsOnOnEnterRunMode);//DebuggerEventsOnOnEnterRunMode;
       debugEvents.OnEnterDesignMode += new _dispDebuggerEvents_OnEnterDesignModeEventHandler(DebugEventsOnOnEnterDesignMode);//DebugEventsOnOnEnterDesignMode
-      debugEvents.OnContextChanged += new _dispDebuggerEvents_OnContextChangedEventHandler(DebuggerEventsOnOnContextChanged);//DebuggerEventsOnOnContextChanged;
+      //debugEvents.OnContextChanged += new _dispDebuggerEvents_OnContextChangedEventHandler(DebuggerEventsOnOnContextChanged);//DebuggerEventsOnOnContextChanged;
       //LoadChartPoints();
 
       return true;
@@ -133,32 +151,39 @@ namespace ChartPoints
 
     private void DebugEventsOnOnEnterDesignMode(dbgEventReason reason)
     {
-      if (IsChartPointsMode() && traceHandler != null)
+      if (IsChartPointsMode() && cpTraceFlag)
       {
-        traceHandler.Dispose();
-        //int gen = GC.GetGeneration(traceHandler);
-        traceHandler = null;
-        ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
         ICPTracerService traceServ;
         cpServProv.GetService<ICPTracerService>(out traceServ);
         traceServ.Show();
-        //        Globals.cpTracer.Show();
-        //GC.Collect(gen, GCCollectionMode.Forced);
+        cpTraceFlag = false;
       }
+      //if (IsChartPointsMode() && traceHandler != null)
+      //{
+      //  traceHandler.Dispose();
+      //  //int gen = GC.GetGeneration(traceHandler);
+      //  traceHandler = null;
+      //  ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
+      //  ICPTracerService traceServ;
+      //  cpServProv.GetService<ICPTracerService>(out traceServ);
+      //  traceServ.Show();
+      //  //        Globals.cpTracer.Show();
+      //  //GC.Collect(gen, GCCollectionMode.Forced);
+      //}
     }
 
-    private void DebuggerEventsOnOnContextChanged(EnvDTE.Process newProcess, Program newProgram, Thread newThread, EnvDTE.StackFrame newStackFrame)
-    {
-      //System.Windows.Forms.MessageBox.Show("Debugger context changed.");
-      //throw new NotImplementedException();
-    }
+    //private void DebuggerEventsOnOnContextChanged(EnvDTE.Process newProcess, Program newProgram, Thread newThread, EnvDTE.StackFrame newStackFrame)
+    //{
+    //  //System.Windows.Forms.MessageBox.Show("Debugger context changed.");
+    //  //throw new NotImplementedException();
+    //}
 
-    private void DebuggerEventsOnOnEnterRunMode(dbgEventReason reason)
-    {
-      //LoadChartPoints();
-      if (IsChartPointsMode() && traceHandler == null)
-        traceHandler = new CPTraceHandler(1);
-    }
+      //private void DebuggerEventsOnOnEnterRunMode(dbgEventReason reason)
+      //{
+      //  //LoadChartPoints();
+      //  if (IsChartPointsMode() && traceHandler == null)
+      //    traceHandler = new CPTraceHandler(1);
+      //}
 
     public bool RemoveSolutionConfigurations()
     {

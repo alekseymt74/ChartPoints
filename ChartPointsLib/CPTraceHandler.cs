@@ -82,7 +82,7 @@ namespace ChartPoints
     private IVsOutputWindowPane outputWindowPane;
     private ICPTracerService traceServ;
     private IDictionary<UInt64, ICPTracerDelegate> traceConsumers;
-    private ulong id;
+    public ulong id { get; }
 
     public CPTraceHandler(ulong _id)
     {
