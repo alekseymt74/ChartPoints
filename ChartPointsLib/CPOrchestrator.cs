@@ -157,7 +157,7 @@ namespace ChartPoints
     {
       //LoadChartPoints();
       if (IsChartPointsMode() && traceHandler == null)
-        traceHandler = new CPTraceHandler();
+        traceHandler = new CPTraceHandler(1);
     }
 
     public bool RemoveSolutionConfigurations()

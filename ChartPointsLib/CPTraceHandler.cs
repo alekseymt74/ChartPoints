@@ -9,27 +9,84 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace ChartPoints
 {
-  class CPTraceHandler// : IDisposable
+  internal class TraceTransport
   {
-    private ICPTracerFactory tracersFactory;
+    private static ICPTracerFactory tracersFactory;
+    static Guid test_srv_CLSID = new Guid("EA343A3A-CF94-4210-89F5-9BDF56112CA2");
+    static IDictionary<ulong, CPProcTracer> procTracers = new SortedDictionary<ulong, CPProcTracer>();
+
+    public static bool Open()
+    {
+      Type test_srv_type = Type.GetTypeFromCLSID(test_srv_CLSID, true);
+      Object obj = null;
+      Guid IUnknownGuid = new Guid("00000000-0000-0000-C000-000000000046");
+      obj = Activator.CreateInstance(test_srv_type);
+      if (obj == null)
+        return false;
+      tracersFactory = obj as ICPTracerFactory;
+      if (tracersFactory == null)
+        return false;
+
+      return true;
+    }
+
+    public static void Close()
+    {
+      foreach (KeyValuePair<ulong, CPProcTracer> tracer in procTracers)
+      {
+        int nRef = System.Runtime.InteropServices.Marshal.ReleaseComObject(tracer.Value);
+      }
+      procTracers.Clear();
+      if (tracersFactory != null)
+      {
+        int nRef = System.Runtime.InteropServices.Marshal.ReleaseComObject(tracersFactory);
+        tracersFactory = null;
+      }
+      GC.Collect();
+    }
+
+    public static bool GetProcTracer(ulong id, out CPProcTracer tracer)
+    {
+      tracer = null;
+      if (!procTracers.TryGetValue(id, out tracer) && tracersFactory != null)
+      {
+        tracersFactory.CreateProcTracer(out tracer, id);
+        if (tracer != null)
+        {
+          procTracers.Add(id, tracer);
+
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    public static bool ReleaseProcTracer(ulong id, ref CPProcTracer tracer)
+    {
+      if (!procTracers.TryGetValue(id, out tracer))
+        return false;
+
+      procTracers.Remove(id);
+      int nRef = System.Runtime.InteropServices.Marshal.ReleaseComObject(tracer);//???FinalReleaseComObject???
+      tracer = null;
+
+      return true;
+    }
+
+  }
+
+  class CPTraceHandler
+  {
     private CPProcTracer procTracer;
     private IVsOutputWindowPane outputWindowPane;
     private ICPTracerService traceServ;
     private IDictionary<UInt64, ICPTracerDelegate> traceConsumers;
+    private ulong id;
 
-    [DllImport("ole32.dll",EntryPoint = "CoInitialize",CallingConvention = CallingConvention.StdCall)]
-    public static extern UInt32 CoInitialize(int reserved);
-
-    [DllImport("Ole32.dll", /*ExactSpelling = true, */EntryPoint = "CoInitializeEx", CallingConvention = CallingConvention.StdCall)]//, SetLastError = false, PreserveSig = false)]
-    static extern UInt32 CoInitializeEx(int reserved, uint dwCoInit);
-
-    [DllImport("ole32.dll", EntryPoint = "CoCreateInstance", CallingConvention = CallingConvention.StdCall)]
-    static extern UInt32 CoCreateInstance([In, MarshalAs(UnmanagedType.LPStruct)] Guid rclsid,
-       IntPtr pUnkOuter, UInt32 dwClsContext, [In, MarshalAs(UnmanagedType.LPStruct)] Guid riid,
-       [MarshalAs(UnmanagedType.IUnknown)] out object rReturnedComObject);
-
-    public CPTraceHandler()
+    public CPTraceHandler(ulong _id)
     {
+      id = _id;
       ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
       cpServProv.GetService<ICPTracerService>(out traceServ);
       traceServ.Activate();
@@ -38,22 +95,12 @@ namespace ChartPoints
       Globals.outputWindow.GetPane(Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.DebugPane_guid, out outputWindowPane);
       if (outputWindowPane != null)
         outputWindowPane.Activate();
-      //UInt32 ret = CoInitializeEx(0, 0/*COINIT_MULTITHREADED*/);
-      Guid test_srv_CLSID = new Guid("EA343A3A-CF94-4210-89F5-9BDF56112CA2");
-      Type test_srv_type = Type.GetTypeFromCLSID(test_srv_CLSID, true);
-      Object obj = null;
-      Guid IUnknownGuid = new Guid("00000000-0000-0000-C000-000000000046");
-      //UInt32 dwRes = CoCreateInstance(test_srv_CLSID, IntPtr.Zero, (uint)(CLSCTX.CLSCTX_LOCAL_SERVER), IUnknownGuid, out obj);
-      obj = Activator.CreateInstance(test_srv_type);
-      tracersFactory = obj as ICPTracerFactory;
-      foreach (EnvDTE.Process p in Globals.dte.Debugger.DebuggedProcesses)
+      TraceTransport.Open();
+      if(TraceTransport.GetProcTracer(id, out procTracer))
       {
-        Debug.WriteLine("$$$$$$$$$$$$$$$$$ " + p.ProcessID);
+        procTracer.OnRegElem += RegElem;
+        procTracer.OnTrace += Trace;
       }
-      tracersFactory.CreateProcTracer(out procTracer, 1);
-      //traceServ.RegProcessTracer(1, "proc_name");
-      procTracer.OnRegElem += RegElem;
-      procTracer.OnTrace += Trace;
     }
 
     private void RegElem(string name, UInt64 id, UInt16 typeID)
@@ -63,7 +110,6 @@ namespace ChartPoints
       ICPTracerDelegate cpDelegate = traceServ.RegTraceEnt(id, name);
     }
 
-    //private void Trace(/*UInt64 id, */[MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_RECORD)]System.Array/*object*/ vals)
     private void Trace(ulong id, System.Array tms, System.Array vals)
     {
       //Debug.WriteLine("##################" + tms.Length.ToString());
@@ -71,30 +117,16 @@ namespace ChartPoints
       traceServ.Trace(id, tms, vals);
     }
 
-    private void CloseHandle()
-    {
-      if (procTracer != null)
-      {
-        int nRef = System.Runtime.InteropServices.Marshal.ReleaseComObject(procTracer);
-        procTracer = null;
-      }
-      if (tracersFactory != null)
-      {
-        int nRef = System.Runtime.InteropServices.Marshal.ReleaseComObject(tracersFactory);
-        tracersFactory = null;
-      }
-      GC.Collect();
-    }
-
     public void Dispose()
     {
-      this.CloseHandle();
-      //GC.SuppressFinalize(this);
+      //if (procTracer != null)
+      //{
+      //  int nRef = System.Runtime.InteropServices.Marshal.ReleaseComObject(procTracer);//???FinalReleaseComObject???
+      //  procTracer = null;
+      //}
+      TraceTransport.ReleaseProcTracer(id, ref procTracer);
+      TraceTransport.Close();
     }
 
-    //~CPTraceHandler()
-    //{
-    //  this.CloseHandle();
-    //}
   }
 }
