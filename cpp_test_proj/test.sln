@@ -37,8 +37,8 @@ Global
 		{DDC3062E-BF29-4701-AB12-BB599492660A}.Release|x86.Build.0 = Release|Win32
 		{49DD05F6-BFC7-42EB-A9CA-3399E25D7195}.Debug [ChartPoints]|x64.ActiveCfg = Debug|x64
 		{49DD05F6-BFC7-42EB-A9CA-3399E25D7195}.Debug [ChartPoints]|x64.Build.0 = Debug|x64
-		{49DD05F6-BFC7-42EB-A9CA-3399E25D7195}.Debug [ChartPoints]|x86.ActiveCfg = Debug|Win32
-		{49DD05F6-BFC7-42EB-A9CA-3399E25D7195}.Debug [ChartPoints]|x86.Build.0 = Debug|Win32
+		{49DD05F6-BFC7-42EB-A9CA-3399E25D7195}.Debug [ChartPoints]|x86.ActiveCfg = Debug [ChartPoints]|Win32
+		{49DD05F6-BFC7-42EB-A9CA-3399E25D7195}.Debug [ChartPoints]|x86.Build.0 = Debug [ChartPoints]|Win32
 		{49DD05F6-BFC7-42EB-A9CA-3399E25D7195}.Debug|x64.ActiveCfg = Debug|x64
 		{49DD05F6-BFC7-42EB-A9CA-3399E25D7195}.Debug|x64.Build.0 = Debug|x64
 		{49DD05F6-BFC7-42EB-A9CA-3399E25D7195}.Debug|x86.ActiveCfg = Debug|Win32

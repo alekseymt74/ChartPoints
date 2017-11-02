@@ -17,8 +17,13 @@ public:
 
 int main()
 {
-	while(true)
+	test_01 tst_01;
+	//while (true)
+	for(int i = 0; i < 500; ++i)
+	{
+		tst_01.f();
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
 
 	return 0;
 }

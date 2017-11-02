@@ -69,12 +69,47 @@ namespace ChartPoints
 
     public int OnAfterLoadProject(IVsHierarchy pStubHierarchy, IVsHierarchy pRealHierarchy)
     {
+      object propItemObj = null;
+      pRealHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
+      if (propItemObj != null)
+      {
+        string projName = (string)propItemObj;
+        if (projName != "Miscellaneous Files")
+        {
+          EnvDTE.Project theProj = null;
+          foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+          {
+            if (proj.Name == projName)
+              theProj = proj;
+          }
+          if (theProj != null)
+            Globals.orchestrator.InitProjConfigurations(theProj);
+        }
+      }
+
       return VSConstants.S_OK;
     }
 
     // Somethimes it's not called...
     public int OnAfterOpenProject(IVsHierarchy pHierarchy, int fAdded)
     {
+      object propItemObj = null;
+      pHierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out propItemObj);
+      if (propItemObj != null)
+      {
+        string projName = (string)propItemObj;
+        if (projName != "Miscellaneous Files")
+        {
+          EnvDTE.Project theProj = null;
+          foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+          {
+            if (proj.Name == projName)
+              theProj = proj;
+          }
+          if (theProj != null)
+            Globals.orchestrator.InitProjConfigurations(theProj);
+        }
+      }
 
       return VSConstants.S_OK;
     }

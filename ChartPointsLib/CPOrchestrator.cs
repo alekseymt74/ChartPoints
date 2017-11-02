@@ -10,6 +10,7 @@ using Microsoft.Build.Evaluation;
 using EnvDTE80;
 using System.Diagnostics;
 using ChartPoints.CPServices.decl;
+using Microsoft.VisualStudio.VCProjectEngine;
 
 namespace ChartPoints
 {
@@ -39,7 +40,8 @@ namespace ChartPoints
       IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(Path.GetFileNameWithoutExtension(args.Name));
       if (pPnts != null && pPnts.Count > 0)
       {
-        traceHandlers.Add(new CPTraceHandler(args.procId));
+        TraceTransport.Open();
+        traceHandlers.Add(new CPTraceHandler(args.procId, args.Name));
         cpTraceFlag = true;
       }
     }
@@ -51,8 +53,10 @@ namespace ChartPoints
       {
         tracer.Dispose();
         traceHandlers.Remove(tracer);
+        tracer = null;
         if (traceHandlers.Count == 0)
         {
+          TraceTransport.Close();
           ICPTracerService traceServ;
           cpServProv.GetService<ICPTracerService>(out traceServ);
           traceServ.Show();
@@ -109,6 +113,22 @@ namespace ChartPoints
       {
         SolutionConfiguration cpConf = solBuild.SolutionConfigurations.Add(confType + " [ChartPoints]", confType, true);
       }
+      //foreach(EnvDTE.Project proj in Globals.dte.Solution.Projects)
+      //{
+      //  needAdd = true;
+      //  VCProject vcProj = proj.Object as VCProject;
+      //  Configurations projConfManager = vcProj.Configurations;
+      //  if (projConfManager != null)
+      //  {
+      //    foreach (Configuration conf in projConfManager)
+      //    {
+      //      if (conf.ConfigurationName == confType + " [ChartPoints]")
+      //        needAdd = false;
+      //    }
+      //    if (needAdd)
+      //      vcProj.AddConfiguration(confType + " [ChartPoints]");//, confType, true);
+      //  }
+      //}
     }
 
     public bool InitSolutionConfigurations()
@@ -145,6 +165,42 @@ namespace ChartPoints
       debugEvents.OnEnterDesignMode += new _dispDebuggerEvents_OnEnterDesignModeEventHandler(DebugEventsOnOnEnterDesignMode);//DebugEventsOnOnEnterDesignMode
       //debugEvents.OnContextChanged += new _dispDebuggerEvents_OnContextChangedEventHandler(DebuggerEventsOnOnContextChanged);//DebuggerEventsOnOnContextChanged;
       //LoadChartPoints();
+
+      return true;
+    }
+
+    private void CheckAndAddProjConf(EnvDTE.Project proj, string confType)
+    {
+      bool needAdd = true;
+      //VCProject vcProj = proj.Object as VCProject;
+      //Configurations projConfManager = vcProj.Configurations;
+      //if (projConfManager != null)
+      //{
+      //  foreach (Configuration conf in projConfManager)
+      //  {
+      //    if (conf.ConfigurationName == confType + " [ChartPoints]")
+      //      needAdd = false;
+      //  }
+      //  if (needAdd)
+      //    vcProj.AddConfiguration(confType + " [ChartPoints]");//, confType, true);
+      //}
+      ConfigurationManager projConfManager = proj.ConfigurationManager;
+      if (projConfManager != null)
+      {
+        foreach (Configuration conf in projConfManager)
+        {
+          if (conf.ConfigurationName == confType + " [ChartPoints]")
+            needAdd = false;
+        }
+        if (needAdd)
+          projConfManager.AddConfigurationRow(confType + " [ChartPoints]", confType, true);
+      }
+    }
+
+    public bool InitProjConfigurations(EnvDTE.Project proj)
+    {
+      CheckAndAddProjConf(proj, "Debug");
+      CheckAndAddProjConf(proj, "Release");
 
       return true;
     }

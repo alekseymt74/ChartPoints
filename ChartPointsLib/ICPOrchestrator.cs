@@ -10,6 +10,7 @@ namespace ChartPoints
   {
     bool InitSolutionConfigurations();
     bool RemoveSolutionConfigurations();
+    bool InitProjConfigurations(EnvDTE.Project proj);
     bool Orchestrate(EnvDTE.Project proj);
     Microsoft.Build.Evaluation.Project Orchestrate(string projConfFile);
     bool Build();

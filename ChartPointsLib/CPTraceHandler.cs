@@ -17,15 +17,18 @@ namespace ChartPoints
 
     public static bool Open()
     {
-      Type test_srv_type = Type.GetTypeFromCLSID(test_srv_CLSID, true);
-      Object obj = null;
-      Guid IUnknownGuid = new Guid("00000000-0000-0000-C000-000000000046");
-      obj = Activator.CreateInstance(test_srv_type);
-      if (obj == null)
-        return false;
-      tracersFactory = obj as ICPTracerFactory;
       if (tracersFactory == null)
-        return false;
+      {
+        Type test_srv_type = Type.GetTypeFromCLSID(test_srv_CLSID, true);
+        Object obj = null;
+        Guid IUnknownGuid = new Guid("00000000-0000-0000-C000-000000000046");
+        obj = Activator.CreateInstance(test_srv_type);
+        if (obj == null)
+          return false;
+        tracersFactory = obj as ICPTracerFactory;
+        if (tracersFactory == null)
+          return false;
+      }
 
       return true;
     }
@@ -80,22 +83,20 @@ namespace ChartPoints
   {
     private CPProcTracer procTracer;
     private IVsOutputWindowPane outputWindowPane;
-    private ICPTracerService traceServ;
-    private IDictionary<UInt64, ICPTracerDelegate> traceConsumers;
+    private ICPProcessTracer localProcTracer;
     public ulong id { get; }
 
-    public CPTraceHandler(ulong _id)
+    public CPTraceHandler(ulong _id, string name)
     {
       id = _id;
       ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
+      ICPTracerService traceServ;
       cpServProv.GetService<ICPTracerService>(out traceServ);
-      traceServ.Activate();
-      traceConsumers = new SortedDictionary<ulong, ICPTracerDelegate>();
+      traceServ.RegProcTracer(_id, name, out localProcTracer);
 
       Globals.outputWindow.GetPane(Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.DebugPane_guid, out outputWindowPane);
       if (outputWindowPane != null)
         outputWindowPane.Activate();
-      TraceTransport.Open();
       if(TraceTransport.GetProcTracer(id, out procTracer))
       {
         procTracer.OnRegElem += RegElem;
@@ -103,18 +104,18 @@ namespace ChartPoints
       }
     }
 
-    private void RegElem(string name, UInt64 id, UInt16 typeID)
+    private void RegElem(string name, UInt64 elem_id, UInt16 typeID)
     {
       //Debug.WriteLine("[*** CPTraceHandler::RegElem ***]; thread id: " + System.Threading.Thread.CurrentThread.ManagedThreadId.ToString());
-      outputWindowPane.OutputString("[RegElem]; name: " + name + "\tid: " + id + "\ttypeID: " + typeID + "\n");
-      ICPTracerDelegate cpDelegate = traceServ.RegTraceEnt(id, name);
+      outputWindowPane.OutputString("[RegElem]; name: " + name + "\tid: " + elem_id + "\ttypeID: " + typeID + "\n");
+      ICPTracerDelegate cpDelegate = localProcTracer?.RegTraceEnt(elem_id, name);
     }
 
-    private void Trace(ulong id, System.Array tms, System.Array vals)
+    private void Trace(ulong elem_id, System.Array tms, System.Array vals)
     {
       //Debug.WriteLine("##################" + tms.Length.ToString());
       //Debug.WriteLine("[*** CPTraceHandler::Trace ***]; thread id: " + System.Threading.Thread.CurrentThread.ManagedThreadId.ToString());
-      traceServ.Trace(id, tms, vals);
+      localProcTracer?.Trace(elem_id, tms, vals);
     }
 
     public void Dispose()
@@ -125,7 +126,6 @@ namespace ChartPoints
       //  procTracer = null;
       //}
       TraceTransport.ReleaseProcTracer(id, ref procTracer);
-      TraceTransport.Close();
     }
 
   }
