@@ -12,34 +12,97 @@
 CCPProcTracer::CCPProcTracer()
   : consumer_thr( nullptr )
   , active( false )
+  , reg_thread( nullptr )
+  , reg_thr_active( true )
+  , need_reg(false)
 {
   //tm_start = std::chrono::system_clock::now();
+  reg_thread = new std::thread( std::bind( &CCPProcTracer::reg_proc, this ) );
 }
 
-
-STDMETHODIMP CCPProcTracer::RegElem( BSTR name, ULONGLONG id, USHORT typeID )
+void CCPProcTracer::reg_proc()
 {
-  CComBSTR _name( name );
-  std::thread thr( [ = ]()
+  CoInitializeEx( NULL, COINIT_MULTITHREADED );
+  while( reg_thr_active )
   {
+    {
+      std::unique_lock<std::mutex> lock( need_reg_mtx );
+      while( !need_reg )
+        need_reg_cond.wait( lock );
+    }
+    if( !reg_thr_active )
+      break;
+    //std::shared_lock< std::shared_mutex > lock1( mtx1 );
     std::lock_guard< std::mutex > lock1( mtx1 );
-    send();
+    //send();
     if( !consumer_thr )
     {
       active = true;
       consumer_thr = new std::thread( std::bind( &CCPProcTracer::cons_proc, this ) );
     }
-    it_tes it = tes.find( id );
+    //////it_tes it1 = tes.find( 0 );//!!!!!!!!!!!!!!
+    //////if( it1 == tes.end() )
+    //////{
+    //////  std::pair<it_tes, bool> it_ins = tes.insert( std::make_pair( 0, std::make_shared<te_data>() ) );
+    //////  Fire_OnRegElem( CComBSTR( "UNKNOWN_TRACER" ), 0, 8 );
+    //////}//!!!!!!!!!!!!!!
+    it_tes it = tes.find( _id );
     if( it == tes.end() )
     {
-      std::pair<it_tes, bool> it_ins = tes.insert( std::make_pair( id, std::make_shared<te_data>() ) );
+      std::pair<it_tes, bool> it_ins = tes.insert( std::make_pair( _id, std::make_shared<te_data>() ) );
       it = it_ins.first;
     }
-    //else
-    //  send();
-    Fire_OnRegElem( _name, id, typeID );
-  } );
-  thr.detach();
+    else
+      send();
+    Fire_OnRegElem( _name, _id, _typeID );
+    need_reg = false;
+    //std::this_thread::sleep_for( std::chrono::milliseconds( 1500 ) );
+  }
+  CoUninitialize();
+}
+
+STDMETHODIMP CCPProcTracer::RegElem( BSTR name, ULONGLONG id, USHORT typeID )
+{
+  //std::shared_lock< std::shared_mutex > lock1( mtx1 );
+  std::lock_guard< std::mutex > lock1( mtx1 );
+  std::unique_lock<std::mutex> lock( need_reg_mtx );
+  _name = name;
+  _id = id;
+  _typeID = typeID;
+  need_reg = true;
+  need_reg_cond.notify_one();
+  lock.unlock();
+  ////std::shared_lock< std::shared_mutex > lock1( mtx1 );
+  ////std::lock_guard< std::shared_mutex > lock1( mtx1 );
+  //std::lock_guard< std::shared_mutex > lock1( mtx1 );
+  //CComBSTR _name( name );
+  //std::thread thr( [ = ]()
+  //{
+  //  //std::lock_guard< std::mutex > lock1( mtx1 );
+  //  std::shared_lock< std::shared_mutex > lock1( mtx1 );
+  //  //send();
+  //  if( !consumer_thr )
+  //  {
+  //    active = true;
+  //    consumer_thr = new std::thread( std::bind( &CCPProcTracer::cons_proc, this ) );
+  //  }
+  //  //////it_tes it1 = tes.find( 0 );//!!!!!!!!!!!!!!
+  //  //////if( it1 == tes.end() )
+  //  //////{
+  //  //////  std::pair<it_tes, bool> it_ins = tes.insert( std::make_pair( 0, std::make_shared<te_data>() ) );
+  //  //////  Fire_OnRegElem( CComBSTR( "UNKNOWN_TRACER" ), 0, 8 );
+  //  //////}//!!!!!!!!!!!!!!
+  //  it_tes it = tes.find( id );
+  //  if( it == tes.end() )
+  //  {
+  //    std::pair<it_tes, bool> it_ins = tes.insert( std::make_pair( id, std::make_shared<te_data>() ) );
+  //    it = it_ins.first;
+  //  }
+  //  else
+  //    send();
+  //  Fire_OnRegElem( _name, id, typeID );
+  //} );
+  //thr.detach();
 
   return S_OK;
 }
@@ -79,6 +142,17 @@ void CCPProcTracer::send()
       trace_ent.val = val.val;
       it->second->push_back(trace_ent);
     }
+    //////else//!!!!!!!!!!!!!!
+    //////{
+    //////  it_tes it1 = tes.find( 0 );
+    //////  if( it1 != tes.end() )
+    //////  {
+    //////    TraceEnt trace_ent;
+    //////    trace_ent.tm = val.tm;
+    //////    trace_ent.val = val.val;
+    //////    it->second->push_back( trace_ent );
+    //////  }
+    //////}//!!!!!!!!!!!!!!
   }
   for (it_tes it = tes.begin(); it != tes.end(); ++it)
   {
@@ -104,7 +178,11 @@ void CCPProcTracer::cons_proc()
   CoInitializeEx( NULL, COINIT_MULTITHREADED );
   while( active )
   {
-    send();
+    {
+      //std::lock_guard< std::mutex > lock1( mtx1 );
+      std::lock_guard< std::mutex > lock1( mtx1 );
+      send();
+    }
     std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
   }
 
@@ -117,5 +195,16 @@ CCPProcTracer::~CCPProcTracer()
   {
     active = false;
     consumer_thr->join();
+    delete consumer_thr;
+  }
+  if( reg_thread )
+  {
+    std::unique_lock<std::mutex> lock( need_reg_mtx );
+    reg_thr_active = false;
+    need_reg = true;
+    need_reg_cond.notify_one();
+    lock.unlock();
+    reg_thread->join();
+    delete reg_thread;
   }
 }

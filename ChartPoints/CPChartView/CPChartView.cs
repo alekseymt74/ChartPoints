@@ -30,6 +30,7 @@ namespace ChartPoints
     private Timer updateTimer;
     CPTableView traceConsumer;
     EChartViewMode mode = EChartViewMode.Auto;
+    //ICPTracerDelegate unkTracer;
 
     public CPChartView()
     {
@@ -42,13 +43,14 @@ namespace ChartPoints
       chart.MouseMove += Chart_MouseMove;
       chart.MouseWheel += Chart_MouseWheel;
 
-      RegProcessTracer(333, "test.exe");
+      RegProcessTracer(333, "test.exe");//!!! 
     }
 
     public void SetTraceConsumer(CPTableView _traceConsumer)
     {
       traceConsumer = _traceConsumer;
       traceConsumer.enableEvent += OnEnableTraceEnt;
+      //unkTracer = CreateTracer(0, "UNKNOWN_TRACER");
     }
 
     private void OnEnableTraceEnt(EnableTraceEntEvArgs args)
@@ -183,6 +185,8 @@ namespace ChartPoints
         IList<Tuple<ICPTracerDelegate, Series>> delegs = null;
         if (serDelegates.TryGetValue(id, out delegs))
           delegs.ElementAt(delegs.Count - 1).Item1.Trace(tms, vals);
+        //else
+        //  unkTracer.Trace(tms, vals);
         if ((mode & EChartViewMode.Spy) != EChartViewMode.Spy)
           traceConsumer.Trace(id, tms, vals);
       }
