@@ -61,49 +61,25 @@ namespace CPInstrBuildTask {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///
-        ////* this ALWAYS GENERATED file contains the definitions for the interfaces */
-        ///
-        ///
-        /// /* File created by MIDL compiler version 8.00.0603 */
-        ////* at Thu Oct 26 08:52:14 2017
-        /// */
-        ////* Compiler settings for CPTracer.idl:
-        ///    Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0603 
-        ///    protocol : dce , ms_ext, c_ext, robust
-        ///    error checks: allocation ref bounds_check enum stub_data 
-        ///    VC __declspec() decoration level: 
-        ///         __declspec(uuid()), __declspec(selectany), __declspec(novtable)
-        ///     [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string CPTracer_i {
-            get {
-                return ResourceManager.GetString("CPTracer_i", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to #include &quot;tracer.h&quot;
-        ///#include &lt;iostream&gt;
-        ///#include &lt;chrono&gt;
-        ///#include &quot;../CPTracer/CPTracer_i.h&quot;
-        ///#include &lt;atlcomcli.h&gt;
-        ///
-        ///#define MIDL_DEFINE_GUID(type,name,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) \
-        ///        const type name = {l,w1,w2,{b1,b2,b3,b4,b5,b6,b7,b8}}
-        ///MIDL_DEFINE_GUID( CLSID, CLSID_CPTracerFactory, 0xEA343A3A, 0xCF94, 0x4210, 0x89, 0xF5, 0x9B, 0xDF, 0x56, 0x11, 0x2C, 0xA2 );
+        ///   Looks up a localized string similar to #include &quot;__cp__.tracer.h&quot;
+        ///#include &lt;windows.h&gt;
         ///
         ///namespace cptracer
         ///{
         ///
-        ///  int32_t type_id&lt;int8_t&gt;::id = 0;
-        ///  int32_t type_id&lt;int16_t&gt;::id = 1;
-        ///  int32_t type_id&lt;int32_t&gt;: [rest of string was truncated]&quot;;.
+        ///  //int32_t type_id&lt; short &gt;::id                  = 0;
+        ///  int32_t type_id&lt; short int &gt;::id = 0;
+        ///  //int32_t type_id&lt; signed short &gt;::id           = 0;
+        ///  //int32_t type_id&lt; signed short int &gt;::id       = 0;
+        ///  //int32_t type_id&lt; unsigned short &gt;::id         = 1;
+        ///  int32_t type_id&lt; unsigned short int &gt;::id = 1;
+        ///  int32_t type_id&lt; int &gt;::id = 2;
+        ///  //int32_t type_id&lt; signed &gt;::id                 = 2;
+        ///  //int32_t type_id&lt; signed i [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string tracer {
+        internal static string @__cp___tracer_cpp {
             get {
-                return ResourceManager.GetString("tracer", resourceCulture);
+                return ResourceManager.GetString("__cp___tracer_cpp", resourceCulture);
             }
         }
         
@@ -112,9 +88,15 @@ namespace CPInstrBuildTask {
         ///#define TRACER_H
         ///
         ///#include &lt;stdint.h&gt;
-        ///#include &lt;string&gt;
         ///#include &lt;memory&gt;
-        ///#include &lt;iostream&gt;
+        ///
+        ///#if defined(CPTRACER_EXPORTS)
+        ///#define CPTRACER_DLL_API __declspec( dllexport )
+        ///#elif defined(CPTRACER_EXPORTS)
+        ///#define CPTRACER_DLL_API __declspec( dllimport )
+        ///#else
+        ///#define CPTRACER_DLL_API
+        ///#endif
         ///
         ///namespace cptracer
         ///{
@@ -125,19 +107,16 @@ namespace CPInstrBuildTask {
         ///    static int32_t id;
         ///  };
         ///
-        ///  class tracer_elem
+        ///  class CPTRACER_DLL_API tracer
         ///  {
-        ///    uint64_t addr;
-        ///    std::string name;
         ///  public:
-        ///    tracer_elem();
-        ///    tracer_elem( uint64_t _addr, const char *_name, uint32_t _type_id );
-        ///    virtual void reg( uint64_t _addr, const char *_name, uint32_t _type_id );
-        ///    const std::string &amp;get [rest of string was truncated]&quot;;.
+        ///    typedef std::shared_ptr&lt;tracer&gt; tracer_ptr;
+        ///  protected:
+        /// [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string tracer1 {
+        internal static string @__cp___tracer_h {
             get {
-                return ResourceManager.GetString("tracer1", resourceCulture);
+                return ResourceManager.GetString("__cp___tracer_h", resourceCulture);
             }
         }
     }

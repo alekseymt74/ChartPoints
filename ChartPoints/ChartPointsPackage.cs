@@ -452,6 +452,15 @@ namespace ChartPoints
       if (vsDebugService != null)
         cpServProv.RegisterService<ICPDebugService>(new CPDebugService(vsDebugService));
 
+      ICPExtension extensionServ = new CPExtension();
+      cpServProv.RegisterService<ICPExtension>(extensionServ);
+      string envPath = Environment.GetEnvironmentVariable("PATH");
+      string vsixInstPath = extensionServ.GetVSIXInstallPath();
+      if (envPath.IndexOf(vsixInstPath) < 0)
+      {
+        Environment.SetEnvironmentVariable("PATH", envPath + ";" + vsixInstPath, EnvironmentVariableTarget.User);//!!! Add to deployment !!!
+        envPath = Environment.GetEnvironmentVariable("PATH");
+      }
 
       Globals.dte = (DTE)GetService(typeof(DTE));
       factory = new ChartPntFactoryImpl();

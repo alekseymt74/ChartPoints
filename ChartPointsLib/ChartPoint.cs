@@ -597,8 +597,8 @@ namespace ChartPoints
           lPnts = ChartPntFactory.Instance.CreateLineChartPoint(classMethodElem, lineNum, linePos, data);
           AddLineChartPoints(lPnts);
         }
-        else
-          ;
+        //else
+          //;
       }
 
       return lPnts;

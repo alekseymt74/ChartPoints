@@ -80,6 +80,7 @@
       <DependentUpon>CPListTWCtrl.cs</DependentUpon>
     </Compile>
     <Compile Include="CPServices\impl\CPDebugService.cs" />
+    <Compile Include="CPServices\impl\CPExtension.cs" />
     <Compile Include="CPTableView\CPTableView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -122,13 +123,7 @@
     <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="EnvDTE100, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
     <Reference Include="EnvDTE80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="EnvDTE90, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.Build, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -321,6 +316,18 @@
       <Project>{82a926d0-46e9-42d7-80c2-ff4f14f467ad}</Project>
       <Name>ChartPointsLib</Name>
       <EmbedInteropTypes>False</EmbedInteropTypes>
+    </ProjectReference>
+    <ProjectReference Include="..\CPInstrBuildTask\CPInstrBuildTask.csproj">
+      <Project>{449b3905-9540-4bd1-a920-d47092c6520a}</Project>
+      <Name>CPInstrBuildTask</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\cpti64\cpti64.vcxproj">
+      <Project>{afab5ec2-1049-489f-a7e8-a9810e3d7eb3}</Project>
+      <Name>cpti64</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\cpti\cpti.vcxproj">
+      <Project>{57ed0155-79d6-4c6a-ba08-796ba1f24ef4}</Project>
+      <Name>cpti</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

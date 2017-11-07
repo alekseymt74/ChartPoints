@@ -118,13 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="CPTracer_i" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\CPTracer_i.h;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;windows-1251</value>
+  <data name="__cp___tracer_cpp" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\__cp__.tracer.cpp;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
-  <data name="tracer" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\tracer.cpp;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;windows-1251</value>
-  </data>
-  <data name="tracer1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\tracer.h;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;windows-1251</value>
+  <data name="__cp___tracer_h" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\__cp__.tracer.h;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
 </root>

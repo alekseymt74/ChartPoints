@@ -45,10 +45,16 @@ namespace cptracer
   {
     try
     {
+#ifdef _WIN64
+#define DLLNAME "cpti64.dll"
+#else //_WIN32
+#define DLLNAME "cpti.dll"
+#endif
+
 #ifdef _UNICODE 
-      temp::h_mod = LoadLibrary(TEXT("e:/projects/tests/MSVS.ext/ChartPoints/tracer/Release/cptracer.dll"));
+      temp::h_mod = LoadLibrary(TEXT(DLLNAME));
 #else
-      temp::h_mod = LoadLibrary("e:/projects/tests/MSVS.ext/ChartPoints/tracer/Release/cptracer.dll");
+      temp::h_mod = LoadLibrary(DLLNAME);
 #endif
       if(temp::h_mod == NULL)
         return nullptr;

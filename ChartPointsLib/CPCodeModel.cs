@@ -177,16 +177,23 @@ namespace CP
 
       public VCCodeVariable GetCodeVar(string uniqueName)
       {
-        foreach (CodeElement _elem in ent.Variables)
+        try
         {
-          VCCodeVariable varElem = (VCCodeVariable)_elem;
-          if (varElem.FullName == uniqueName)
+          foreach (CodeElement _elem in ent.Variables)
           {
-            if (IsTypeSupported(varElem))
+            VCCodeVariable varElem = (VCCodeVariable)_elem;
+            if (varElem.FullName == uniqueName)
             {
-              return varElem;
+              if (IsTypeSupported(varElem))
+              {
+                return varElem;
+              }
             }
           }
+        }
+        catch(Exception ex)
+        {
+          Debug.WriteLine(ex);
         }
 
         return null;

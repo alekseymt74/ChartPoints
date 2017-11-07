@@ -126,8 +126,8 @@ namespace ChartPointsBuilder
       {
         strData.Add(linePos, trans);
       }
-      else
-        ;//!!!((TextTransformAdd)str).Append(text);
+      //else
+        //!!!((TextTransformAdd)str).Append(text);
     }
   }
 
@@ -186,7 +186,7 @@ namespace ChartPointsBuilder
           }
         }
       }
-      catch(Exception ex)
+      catch(Exception /*ex*/)
       {
         return false;
       }
@@ -250,9 +250,9 @@ namespace ChartPointsBuilder
         }
         // resource files
         string tempPath = System.IO.Path.GetTempPath();
-        bool res = CreateFileFromResource("CPInstrBuildTask.Resources.CPTracer_i.h", tempPath + "__cp__.CPTracer_i.h");
-        res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.h", tempPath + "__cp__.tracer.h");
-        res = CreateFileFromResource("CPInstrBuildTask.Resources.tracer.cpp", tempPath + "__cp__.tracer.cpp");
+        //bool res = CreateFileFromResource("CPInstrBuildTask.Resources.CPTracer_i.h", tempPath + "__cp__.CPTracer_i.h");
+        bool res = CreateFileFromResource("CPInstrBuildTask.Resources.__cp__.tracer.h", tempPath + "__cp__.tracer.h");
+        res = CreateFileFromResource("CPInstrBuildTask.Resources.__cp__.tracer.cpp", tempPath + "__cp__.tracer.cpp");
         //
         foreach (var traceInclPos in cpClassLayout.traceInclPos)
         {
@@ -304,7 +304,7 @@ namespace ChartPointsBuilder
           HeaderFilesChanged = true;
         }
       }
-      catch(Exception ex)
+      catch(Exception /*ex*/)
       {
         SrcFilesChanged = false;
         HeaderFilesChanged = false;

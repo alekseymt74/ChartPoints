@@ -284,16 +284,22 @@ namespace ChartPoints
       //IEnumerable<ProjectItemDefinitionGroupElement> defGroup = projRoot.ItemDefinitionGroups.Where(gr => (gr.Condition.Contains("[ChartPoints]") && gr.Condition.Contains("|$(Platform)")));
       //#####################################
       //Condition="'$(CONFIG)'=='DEBUG'"
+      ICPExtension extensionServ;
+      cpServProv.GetService<ICPExtension>(out extensionServ);
+      string instPath = extensionServ.GetVSIXInstallPath();
+
       ProjectUsingTaskElement usingTaskElem;
       IEnumerable<ProjectUsingTaskElement> usingTaskElemCont
         = projRoot.UsingTasks.Where(t => (t.TaskName == "ChartPointsBuilder.CPInstrBuildTask"
-        && t.AssemblyFile == @"e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll"));
+        //&& t.AssemblyFile == @"e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll"));
+        && t.AssemblyFile == instPath + "\\CPInstrBuildTask.dll"));
       if (usingTaskElemCont.Any())
         usingTaskElem = usingTaskElemCont.ElementAt(0);
       else
       {
         usingTaskElem = projRoot.AddUsingTask("ChartPointsBuilder.CPInstrBuildTask",
-          @"e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll", null);
+          //@"e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll", null);
+          instPath + "\\CPInstrBuildTask.dll", null);
         usingTaskElem.Condition = "$(Configuration.Contains('[ChartPoints]'))";
         ProjectTargetElement target = projRoot.AddTarget("GenerateToolOutput");
         target.BeforeTargets = "ClCompile";
