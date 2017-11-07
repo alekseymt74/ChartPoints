@@ -28,7 +28,7 @@
     /// </summary>
     private void InitializeComponent()
     {
-      System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+      //System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
       System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
       this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
       this.yAxisToolStrip = new System.Windows.Forms.ToolStrip();
@@ -107,32 +107,32 @@
       // 
       // chart
       // 
-      chartArea1.Area3DStyle.Inclination = 15;
-      chartArea1.Area3DStyle.IsClustered = true;
-      chartArea1.Area3DStyle.IsRightAngleAxes = false;
-      chartArea1.Area3DStyle.Perspective = 10;
-      chartArea1.Area3DStyle.Rotation = 10;
-      chartArea1.Area3DStyle.WallWidth = 0;
-      chartArea1.AxisX.IsLabelAutoFit = false;
-      chartArea1.AxisX.LabelStyle.Format = "H:m:s:ff";
-      chartArea1.AxisX.LabelStyle.IntervalOffsetType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Auto;
-      chartArea1.AxisX.ScrollBar.LineColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(64)))));
-      chartArea1.AxisY.IsLabelAutoFit = false;
-      chartArea1.AxisY.LabelStyle.Format = "#.##";
-      chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
-      chartArea1.AxisY.ScrollBar.LineColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(64)))));
-      chartArea1.CursorX.Interval = 1E-08D;
-      chartArea1.CursorX.IsUserEnabled = true;
-      chartArea1.CursorX.IsUserSelectionEnabled = true;
-      chartArea1.CursorX.LineColor = System.Drawing.Color.ForestGreen;
-      chartArea1.CursorX.SelectionColor = System.Drawing.Color.GreenYellow;
-      chartArea1.CursorY.Interval = 1E-08D;
-      chartArea1.CursorY.IsUserEnabled = true;
-      chartArea1.CursorY.IsUserSelectionEnabled = true;
-      chartArea1.CursorY.LineColor = System.Drawing.Color.ForestGreen;
-      chartArea1.CursorY.SelectionColor = System.Drawing.Color.GreenYellow;
-      chartArea1.Name = "ChartArea1";
-      this.chart.ChartAreas.Add(chartArea1);
+      //chartArea1.Area3DStyle.Inclination = 15;
+      //chartArea1.Area3DStyle.IsClustered = true;
+      //chartArea1.Area3DStyle.IsRightAngleAxes = false;
+      //chartArea1.Area3DStyle.Perspective = 10;
+      //chartArea1.Area3DStyle.Rotation = 10;
+      //chartArea1.Area3DStyle.WallWidth = 0;
+      //chartArea1.AxisX.IsLabelAutoFit = false;
+      //chartArea1.AxisX.LabelStyle.Format = "H:m:s:ff";
+      //chartArea1.AxisX.LabelStyle.IntervalOffsetType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Auto;
+      //chartArea1.AxisX.ScrollBar.LineColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(64)))));
+      //chartArea1.AxisY.IsLabelAutoFit = false;
+      //chartArea1.AxisY.LabelStyle.Format = "#.##";
+      //chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
+      //chartArea1.AxisY.ScrollBar.LineColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(64)))));
+      //chartArea1.CursorX.Interval = 1E-08D;
+      //chartArea1.CursorX.IsUserEnabled = true;
+      //chartArea1.CursorX.IsUserSelectionEnabled = true;
+      //chartArea1.CursorX.LineColor = System.Drawing.Color.ForestGreen;
+      //chartArea1.CursorX.SelectionColor = System.Drawing.Color.GreenYellow;
+      //chartArea1.CursorY.Interval = 1E-08D;
+      //chartArea1.CursorY.IsUserEnabled = true;
+      //chartArea1.CursorY.IsUserSelectionEnabled = true;
+      //chartArea1.CursorY.LineColor = System.Drawing.Color.ForestGreen;
+      //chartArea1.CursorY.SelectionColor = System.Drawing.Color.GreenYellow;
+      //chartArea1.Name = "ChartArea1";
+      //this.chart.ChartAreas.Add(chartArea1);
       this.tableLayoutPanel1.SetColumnSpan(this.chart, 3);
       this.chart.Dock = System.Windows.Forms.DockStyle.Fill;
       legend1.Name = "Legend1";

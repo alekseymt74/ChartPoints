@@ -17,11 +17,18 @@ namespace CPTracerLib
 namespace ChartPoints
 {
 
+  public interface ICPProcessTracer
+  {
+    ulong id { get; }
+    string name { get; }
+    ICPTracerDelegate RegTraceEnt(ulong id, string name);
+    void Trace(ulong id, System.Array tms, System.Array vals);
+    void Clear();
+  }
 
   public interface ICPTracerService : ICPService
   {
-    ICPTracerDelegate RegTraceEnt(ulong id, string name);
-    void Trace(ulong id, System.Array tms, System.Array vals);
+    void RegProcTracer(ulong id, string name, out ICPProcessTracer tracer);
     void Activate();
     void Show();
   }

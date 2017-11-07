@@ -30,9 +30,12 @@ namespace cptracer
   {
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     hr = trace_cons.CoCreateInstance(CLSID_CPTracerFactory, NULL, CLSCTX_LOCAL_SERVER);
-    if (hr == S_OK)
-      hr = trace_cons->GetProcTracer(&trace_elem_cons, 1);
-    tm_start = std::chrono::high_resolution_clock::now();
+    if( hr == S_OK )
+    {
+      DWORD proc_id = GetCurrentProcessId();
+      hr = trace_cons->GetProcTracer( &trace_elem_cons, proc_id );
+      tm_start = std::chrono::high_resolution_clock::now();
+    }
   }
 
   tracer_impl::~tracer_impl()

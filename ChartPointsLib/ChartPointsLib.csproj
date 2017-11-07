@@ -39,16 +39,28 @@
     <Reference Include="envdte, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="envdte100, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="EnvDTE80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="envdte90, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.Build, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Framework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Build.Utilities.v12.0, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Shell.14.0, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.VCCodeModel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.VCProject, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.VCProjectEngine, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />
@@ -70,18 +82,19 @@
     <Compile Include="ChartPoint.cs" />
     <Compile Include="ChartPointsProcessorImpl.cs" />
     <Compile Include="CPCodeModel.cs" />
-    <Compile Include="CPEvents.cs" />
+    <Compile Include="CPServices\decl\ICPDebugService.cs" />
+    <Compile Include="CPServices\impl\CPEventService.cs" />
     <Compile Include="CPOrchestrator.cs" />
-    <Compile Include="CPServiceProvider.cs" />
+    <Compile Include="CPServices\impl\CPServiceProvider.cs" />
     <Compile Include="CPTraceHandler.cs" />
     <Compile Include="CPTracker.cs" />
     <Compile Include="IChartPoint.cs" />
     <Compile Include="IChartPointsProcessor.cs" />
     <Compile Include="ICPCodeModel.cs" />
-    <Compile Include="ICPEvents.cs" />
+    <Compile Include="CPServices\decl\ICPEventService.cs" />
     <Compile Include="ICPOrchestrator.cs" />
-    <Compile Include="ICPServiceProvider.cs" />
-    <Compile Include="ICPTraceConsumer.cs" />
+    <Compile Include="CPServices\decl\ICPServiceProvider.cs" />
+    <Compile Include="CPServices\decl\ICPTracerService.cs" />
     <Compile Include="ICPTracker.cs" />
     <Compile Include="IPCChartPoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
