@@ -22,6 +22,7 @@ using System.Threading;
 using Microsoft.VisualStudio.Debugger.Interop;
 using ChartPoints.CPServices.impl;
 using ChartPoints.CPServices.decl;
+using Microsoft.Build.Framework;
 
 namespace ChartPoints
 {
@@ -440,6 +441,7 @@ namespace ChartPoints
     {
       base.Initialize();
 
+
       ChartPntToggleCmd.Initialize(this);
       CPTableViewTWCmd.Initialize(this);
       CPChartViewTWCmd.Initialize(this);
@@ -448,6 +450,7 @@ namespace ChartPoints
       ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
       cpServProv.RegisterService<ICPTracerService>(new CPTracerService());
 
+      //Globals.bmAccessor = GetService(typeof(SVsBuildManagerAccessor)) as IVsBuildManagerAccessor;
       IVsDebugger vsDebugService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SVsShellDebugger)) as IVsDebugger;
       if (vsDebugService != null)
         cpServProv.RegisterService<ICPDebugService>(new CPDebugService(vsDebugService));
@@ -461,6 +464,18 @@ namespace ChartPoints
         Environment.SetEnvironmentVariable("PATH", envPath + ";" + vsixInstPath, EnvironmentVariableTarget.User);//!!! Add to deployment !!!
         envPath = Environment.GetEnvironmentVariable("PATH");
       }
+
+      ////////////////////////////////////////////////////
+      var p = new System.Diagnostics.Process();
+      p.StartInfo.FileName = "cmd.exe";
+      p.StartInfo.Arguments = String.Format("/C {0} //RegServer", vsixInstPath + "\\CPTracer.exe");
+      //p.StartInfo.FileName = vsixInstPath + "\\CPTracer.exe";
+      //p.StartInfo.Arguments = " //RegServer";
+      //p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+      p.StartInfo.Verb = "runas";
+      p.Start();
+      p.WaitForExit();
+      ////////////////////////////////////////////////////
 
       Globals.dte = (DTE)GetService(typeof(DTE));
       factory = new ChartPntFactoryImpl();
@@ -504,6 +519,15 @@ namespace ChartPoints
     //  }
     //}
 
+    private void OnStartupComplete()
+    {
+      ;
+    }
+
+    private void OnBeginShutdown()
+    {
+      ;
+    }
     public static void StartEvents(DTE dte)
     {
       System.Windows.Forms.MessageBox.Show("Events are attached.");

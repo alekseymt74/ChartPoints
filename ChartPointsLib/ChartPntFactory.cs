@@ -25,6 +25,7 @@ namespace ChartPoints
     public static ITextChangedListener textChangedListener { get; set; }
     public static ICPTrackManager cpTrackManager { get; set; }
 
+    //public static IVsBuildManagerAccessor bmAccessor { get; set; }
 
     public static Type GetType<T>(T obj)
     {

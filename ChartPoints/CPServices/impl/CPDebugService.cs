@@ -11,6 +11,7 @@ using Microsoft.VisualStudio;
 
 namespace ChartPoints.CPServices.impl
 {
+
   class CPDebugService
     : ICPDebugService
     , IDebugEventCallback2

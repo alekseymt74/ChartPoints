@@ -11,9 +11,44 @@ using EnvDTE80;
 using System.Diagnostics;
 using ChartPoints.CPServices.decl;
 using Microsoft.VisualStudio.VCProjectEngine;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Execution;
 
 namespace ChartPoints
 {
+  //public class TestLogger : Microsoft.Build.Utilities.Logger
+  //{
+  //  public override void Initialize(Microsoft.Build.Framework.IEventSource eventSource)
+  //  {
+  //    //Register for the ProjectStarted, TargetStarted, and ProjectFinished events
+  //    eventSource.ProjectStarted += new ProjectStartedEventHandler(eventSource_ProjectStarted);
+  //    eventSource.TargetStarted += new TargetStartedEventHandler(eventSource_TargetStarted);
+  //    eventSource.ProjectFinished += new ProjectFinishedEventHandler(eventSource_ProjectFinished);
+  //    eventSource.MessageRaised += new BuildMessageEventHandler(eventSource_MessageRaised);
+  //  }
+  //  void eventSource_MessageRaised(object sender, BuildMessageEventArgs e)
+  //  {
+  //    Console.WriteLine("Project Started: " + e.ProjectFile);
+  //  }
+
+  //  void eventSource_ProjectStarted(object sender, ProjectStartedEventArgs e)
+  //  {
+  //    Console.WriteLine("Project Started: " + e.ProjectFile);
+  //  }
+
+  //  void eventSource_ProjectFinished(object sender, ProjectFinishedEventArgs e)
+  //  {
+  //    Console.WriteLine("Project Finished: " + e.ProjectFile);
+  //  }
+  //  void eventSource_TargetStarted(object sender, TargetStartedEventArgs e)
+  //  {
+  //    if (Verbosity == LoggerVerbosity.Detailed)
+  //    {
+  //      Console.WriteLine("Target Started: " + e.TargetName);
+  //    }
+  //  }
+  //}
+
   public class CPOrchestrator : ICPOrchestrator
   {
     private ServiceHost serviceHost;
@@ -70,11 +105,16 @@ namespace ChartPoints
       return activeConfig.Contains(" [ChartPoints]");
     }
 
+    //private TestLogger cpBuildLogger;
+
     public void OnBuildProjConfigBegin(string projName, string projConfig
       , string platform, string solConfig)
     {
       if (solConfig.Contains(" [ChartPoints]"))
       {
+        //cpBuildLogger = new TestLogger();
+        //BuildManager.DefaultBuildManager;
+        //Globals.bmAccessor.RegisterLogger(1, cpBuildLogger);
         EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
         IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(proj.Name);
         if (pPnts != null)
