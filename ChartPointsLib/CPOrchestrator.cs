@@ -305,12 +305,6 @@ namespace ChartPoints
     public Microsoft.Build.Evaluation.Project Orchestrate(string projConfFile)
     {
       Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
-      //Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadedProjects.FirstOrDefault(pr => pr.FullPath == projConfFile);
-      //if (msbuildProj != null)
-      //  ProjectCollection.GlobalProjectCollection.UnloadProject(msbuildProj);
-      //msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
-      //bool remRet = ProjectCollection.GlobalProjectCollection.LoadedProjects.Remove(msbuildProj);
-      //msbuildProj = null;
       if (msbuildProj == null)
       {
         msbuildProj = new Microsoft.Build.Evaluation.Project(projConfFile);
@@ -320,31 +314,53 @@ namespace ChartPoints
       ProjectRootElement projRoot = msbuildProj.Xml;
       if (projRoot == null)
         return null;
-      //#####################################
-      //IEnumerable<ProjectItemDefinitionGroupElement> defGroup = projRoot.ItemDefinitionGroups.Where(gr => (gr.Condition.Contains("[ChartPoints]") && gr.Condition.Contains("|$(Platform)")));
-      //#####################################
-      //Condition="'$(CONFIG)'=='DEBUG'"
       ICPExtension extensionServ;
       cpServProv.GetService<ICPExtension>(out extensionServ);
       string instPath = extensionServ.GetVSIXInstallPath();
 
-      ProjectUsingTaskElement usingTaskElem;
+      //#####################################
+      bool need_save = false;
+      ProjectUsingTaskElement cpBuildTaskElem = null;
       IEnumerable<ProjectUsingTaskElement> usingTaskElemCont
-        = projRoot.UsingTasks.Where(t => (t.TaskName == "ChartPointsBuilder.CPInstrBuildTask"
-        //&& t.AssemblyFile == @"e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll"));
-        && t.AssemblyFile == instPath + "\\CPInstrBuildTask.dll"));
-      if (usingTaskElemCont.Any())
-        usingTaskElem = usingTaskElemCont.ElementAt(0);
-      else
+        = projRoot.UsingTasks.Where(t => (t.TaskName == "ChartPointsBuilder.CPInstrBuildTask"));
+      // look for <UsingTask> with assembly CPInstrBuildTask.dll in extension path. Remove all non-valid
+      foreach (ProjectUsingTaskElement ut in usingTaskElemCont)
       {
-        usingTaskElem = projRoot.AddUsingTask("ChartPointsBuilder.CPInstrBuildTask",
-          //@"e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll", null);
-          instPath + "\\CPInstrBuildTask.dll", null);
-        usingTaskElem.Condition = "$(Configuration.Contains('[ChartPoints]'))";
-        ProjectTargetElement target = projRoot.AddTarget("GenerateToolOutput");
-        target.BeforeTargets = "ClCompile";
-        target.Condition = "$(Configuration.Contains('[ChartPoints]'))";
-        ProjectTaskElement task = target.AddTask("CPInstrBuildTask");
+        if (ut.AssemblyFile == instPath + "\\CPInstrBuildTask.dll")
+        {
+          if (cpBuildTaskElem == null)
+            cpBuildTaskElem = ut;
+          else
+            projRoot.RemoveChild(ut);
+        }
+        else
+          projRoot.RemoveChild(ut);
+      }
+      // add if not exists
+      if(cpBuildTaskElem == null)
+      {
+        cpBuildTaskElem = projRoot.AddUsingTask("ChartPointsBuilder.CPInstrBuildTask", instPath + "\\CPInstrBuildTask.dll", null);
+        cpBuildTaskElem.Condition = "$(Configuration.Contains('[ChartPoints]'))";
+        need_save = true;
+      }
+
+      //check targets
+      ProjectTargetElement cpTargetElem = null;
+      IEnumerable<ProjectTargetElement> targetsElemCont = projRoot.Targets.Where(t => (t.Name == "CPInstrBuildTarget"));
+      foreach(ProjectTargetElement t in targetsElemCont)
+      {
+        if(t.Tasks.Count() == 1 && t.Tasks.ElementAt(0).Name == "CPInstrBuildTask")
+        {
+          cpTargetElem = t;
+          break;
+        }
+      }
+      if(cpTargetElem == null)
+      {
+        cpTargetElem = projRoot.AddTarget("CPInstrBuildTarget");
+        cpTargetElem.BeforeTargets = "ClCompile";
+        cpTargetElem.Condition = "$(Configuration.Contains('[ChartPoints]'))";
+        ProjectTaskElement task = cpTargetElem.AddTask("CPInstrBuildTask");
         task.SetParameter("InputSrcFiles", "@(ClCompile)");
         task.SetParameter("InputHeaderFiles", "@(ClInclude)");
         task.SetParameter("InputChartPoints", "@(ChartPointFile)");
@@ -355,37 +371,36 @@ namespace ChartPoints
         task.AddOutputProperty("SrcFilesChanged", "SrcFilesChanged");
         task.AddOutputProperty("HeaderFilesChanged", "HeaderFilesChanged");
 
-        ProjectItemGroupElement srcItemGroup = target.AddItemGroup();
+        ProjectItemGroupElement srcItemGroup = cpTargetElem.AddItemGroup();
         srcItemGroup.Condition = "$(SrcFilesChanged) == True";
-        //ProjectItemElement addInclPath = srcItemGroup.AddItem("AdditionalIncludeDirectories", "$(TEMP)");
-        //addInclPath.Include = "";
-        //addInclPath.Remove = "";
         ProjectItemElement srcRemoveItem = srcItemGroup.AddItem("ClCompile", "Fake");
         srcRemoveItem.Include = "";
         srcRemoveItem.Remove = "@(ClCompile)";
         ProjectItemElement srcIncludeItem = srcItemGroup.AddItem("ClCompile", "$(OutputSrcFiles)");
         srcIncludeItem.AddMetadata("AdditionalIncludeDirectories", "$(MSBuildProjectDirectory);%(AdditionalIncludeDirectories);");
 
-        ProjectItemGroupElement headerItemGroup = target.AddItemGroup();
+        ProjectItemGroupElement headerItemGroup = cpTargetElem.AddItemGroup();
         headerItemGroup.Condition = "$(HeaderFilesChanged) == True";
         ProjectItemElement headerRemoveItem = headerItemGroup.AddItem("ClInclude", "Fake");
         headerRemoveItem.Include = "";
         headerRemoveItem.Remove = "@(ClInclude)";
         ProjectItemElement headerIncludeItem = headerItemGroup.AddItem("ClInclude", "$(OutputHeaderFiles)");
+        need_save = true;
+      }
 
+      if (need_save)
+      {
         msbuildProj.ReevaluateIfNecessary();
         msbuildProj.Save();
       }
-      //proj.Save();
-      //msbuildProj.Save();
-      //SaveProject(proj, msbuildProj);
-
       return msbuildProj;
     }
+
     public bool Build()
     {
       return false;
     }
+
     public bool Run()
     {
       return false;
