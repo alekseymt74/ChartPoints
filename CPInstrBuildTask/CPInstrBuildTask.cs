@@ -252,7 +252,13 @@ namespace ChartPointsBuilder
         string tempPath = System.IO.Path.GetTempPath();
         //bool res = CreateFileFromResource("CPInstrBuildTask.Resources.CPTracer_i.h", tempPath + "__cp__.CPTracer_i.h");
         bool res = CreateFileFromResource("CPInstrBuildTask.Resources.__cp__.tracer.h", tempPath + "__cp__.tracer.h");
-        res = CreateFileFromResource("CPInstrBuildTask.Resources.__cp__.tracer.cpp", tempPath + "__cp__.tracer.cpp");
+        string tracerCppFName = tempPath + "__cp__.tracer.cpp";
+        res = CreateFileFromResource("CPInstrBuildTask.Resources.__cp__.tracer.cpp", tracerCppFName);//!!! read, orchestrate & write instead of CreateFileFromResource !!!
+        string content = File.ReadAllText(tracerCppFName);
+        string vsixExtPath = System.IO.Path.GetFullPath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)).ToLower();
+        vsixExtPath = vsixExtPath.Replace(@"\", @"\\");
+        string orcContent = content.Replace("#define PATH2DLL \"\"", "#define PATH2DLL \"" + vsixExtPath + "\"");
+        File.WriteAllText(tracerCppFName, orcContent);
         //
         foreach (var traceInclPos in cpClassLayout.traceInclPos)
         {

@@ -318,6 +318,10 @@
       <Name>ChartPointsLib</Name>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </ProjectReference>
+    <ProjectReference Include="..\cper\cper.csproj">
+      <Project>{6ff9b8c6-a4d3-423e-8c9f-56a201787b24}</Project>
+      <Name>cper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CPInstrBuildTask\CPInstrBuildTask.csproj">
       <Project>{449b3905-9540-4bd1-a920-d47092c6520a}</Project>
       <Name>CPInstrBuildTask</Name>

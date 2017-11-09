@@ -23,6 +23,8 @@ using Microsoft.VisualStudio.Debugger.Interop;
 using ChartPoints.CPServices.impl;
 using ChartPoints.CPServices.decl;
 using Microsoft.Build.Framework;
+using System.Security.Principal;
+using System.Windows.Forms;
 
 namespace ChartPoints
 {
@@ -457,24 +459,54 @@ namespace ChartPoints
 
       ICPExtension extensionServ = new CPExtension();
       cpServProv.RegisterService<ICPExtension>(extensionServ);
-      string envPath = Environment.GetEnvironmentVariable("PATH");
+
+      //string envPath = Environment.GetEnvironmentVariable("PATH");
       string vsixInstPath = extensionServ.GetVSIXInstallPath();
-      if (envPath.IndexOf(vsixInstPath) < 0)
+      //if (envPath.IndexOf(vsixInstPath) < 0)
+      //{
+      //  Environment.SetEnvironmentVariable("PATH", envPath + ";" + vsixInstPath, EnvironmentVariableTarget.User);//!!! Add to deployment !!!
+      //  envPath = Environment.GetEnvironmentVariable("PATH");
+      //}
+
+      string regSrvFName = vsixInstPath + "\\cper.exe";
+      if (File.Exists(regSrvFName))
       {
-        Environment.SetEnvironmentVariable("PATH", envPath + ";" + vsixInstPath, EnvironmentVariableTarget.User);//!!! Add to deployment !!!
-        envPath = Environment.GetEnvironmentVariable("PATH");
+        string message = "First time registration.\nAdministration privileges needed.";
+        string caption = "ChartPoints";
+        MessageBoxButtons buttons = MessageBoxButtons.OK;
+        MessageBox.Show(message, caption, buttons);
+        var p = new System.Diagnostics.Process();
+        p.StartInfo.FileName = regSrvFName;
+        p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+        p.StartInfo.Verb = "runas";
+        if (p.Start())
+        {
+          p.WaitForExit();
+          File.Delete(regSrvFName);
+        }
       }
 
-      ////////////////////////////////////////////////////
-      var p = new System.Diagnostics.Process();
-      p.StartInfo.FileName = "cmd.exe";
-      p.StartInfo.Arguments = String.Format("/C {0} //RegServer", vsixInstPath + "\\CPTracer.exe");
-      //p.StartInfo.FileName = vsixInstPath + "\\CPTracer.exe";
-      //p.StartInfo.Arguments = " //RegServer";
+      //bool isAsAdmin = WindowsIdentity.GetCurrent().Owner.IsWellKnown(WellKnownSidType.BuiltinAdministratorsSid);
+      //var p = new System.Diagnostics.Process();
+      //p.StartInfo.FileName = "cmd.exe";
+      //if (isAsAdmin)
+      //  p.StartInfo.Arguments = String.Format("/C {0} //RegServer", vsixInstPath + "\\CPTracer.exe");
+      //else
+      //  p.StartInfo.Arguments = String.Format("/C {0} //RegServerPerUser", vsixInstPath + "\\CPTracer.exe");
       //p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-      p.StartInfo.Verb = "runas";
-      p.Start();
-      p.WaitForExit();
+      //p.Start();
+      //p.WaitForExit();
+
+      ////////////////////////////////////////////////////
+      //var p = new System.Diagnostics.Process();
+      //p.StartInfo.FileName = "cmd.exe";
+      //p.StartInfo.Arguments = String.Format("/C {0} //RegServer", vsixInstPath + "\\CPTracer.exe");
+      ////p.StartInfo.FileName = vsixInstPath + "\\CPTracer.exe";
+      ////p.StartInfo.Arguments = " //RegServer";
+      ////p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+      //p.StartInfo.Verb = "runas";
+      //p.Start();
+      //p.WaitForExit();
       ////////////////////////////////////////////////////
 
       Globals.dte = (DTE)GetService(typeof(DTE));

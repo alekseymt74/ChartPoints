@@ -51,10 +51,14 @@ namespace cptracer
 #define DLLNAME "cpti.dll"
 #endif
 
+#define PATH2DLL ""
+
+#define FULLNAME PATH2DLL ## "\\" ## DLLNAME
+
 #ifdef _UNICODE 
-      temp::h_mod = LoadLibrary(TEXT(DLLNAME));
+      temp::h_mod = LoadLibrary(TEXT( FULLNAME ));
 #else
-      temp::h_mod = LoadLibrary(DLLNAME);
+      temp::h_mod = LoadLibrary( FULLNAME );
 #endif
       if(temp::h_mod == NULL)
         return nullptr;
