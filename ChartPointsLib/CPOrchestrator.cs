@@ -16,38 +16,38 @@ using Microsoft.Build.Execution;
 
 namespace ChartPoints
 {
-  //public class TestLogger : Microsoft.Build.Utilities.Logger
-  //{
-  //  public override void Initialize(Microsoft.Build.Framework.IEventSource eventSource)
-  //  {
-  //    //Register for the ProjectStarted, TargetStarted, and ProjectFinished events
-  //    eventSource.ProjectStarted += new ProjectStartedEventHandler(eventSource_ProjectStarted);
-  //    eventSource.TargetStarted += new TargetStartedEventHandler(eventSource_TargetStarted);
-  //    eventSource.ProjectFinished += new ProjectFinishedEventHandler(eventSource_ProjectFinished);
-  //    eventSource.MessageRaised += new BuildMessageEventHandler(eventSource_MessageRaised);
-  //  }
-  //  void eventSource_MessageRaised(object sender, BuildMessageEventArgs e)
-  //  {
-  //    Console.WriteLine("Project Started: " + e.ProjectFile);
-  //  }
+  public class TestLogger : Microsoft.Build.Utilities.Logger
+  {
+    public override void Initialize(Microsoft.Build.Framework.IEventSource eventSource)
+    {
+      //Register for the ProjectStarted, TargetStarted, and ProjectFinished events
+      eventSource.ProjectStarted += new ProjectStartedEventHandler(eventSource_ProjectStarted);
+      eventSource.TargetStarted += new TargetStartedEventHandler(eventSource_TargetStarted);
+      eventSource.ProjectFinished += new ProjectFinishedEventHandler(eventSource_ProjectFinished);
+      eventSource.MessageRaised += new BuildMessageEventHandler(eventSource_MessageRaised);
+    }
+    void eventSource_MessageRaised(object sender, BuildMessageEventArgs e)
+    {
+      Console.WriteLine("Project Started: " + e.ProjectFile);
+    }
 
-  //  void eventSource_ProjectStarted(object sender, ProjectStartedEventArgs e)
-  //  {
-  //    Console.WriteLine("Project Started: " + e.ProjectFile);
-  //  }
+    void eventSource_ProjectStarted(object sender, ProjectStartedEventArgs e)
+    {
+      Console.WriteLine("Project Started: " + e.ProjectFile);
+    }
 
-  //  void eventSource_ProjectFinished(object sender, ProjectFinishedEventArgs e)
-  //  {
-  //    Console.WriteLine("Project Finished: " + e.ProjectFile);
-  //  }
-  //  void eventSource_TargetStarted(object sender, TargetStartedEventArgs e)
-  //  {
-  //    if (Verbosity == LoggerVerbosity.Detailed)
-  //    {
-  //      Console.WriteLine("Target Started: " + e.TargetName);
-  //    }
-  //  }
-  //}
+    void eventSource_ProjectFinished(object sender, ProjectFinishedEventArgs e)
+    {
+      Console.WriteLine("Project Finished: " + e.ProjectFile);
+    }
+    void eventSource_TargetStarted(object sender, TargetStartedEventArgs e)
+    {
+      if (Verbosity == LoggerVerbosity.Detailed)
+      {
+        Console.WriteLine("Target Started: " + e.TargetName);
+      }
+    }
+  }
 
   public class CPOrchestrator : ICPOrchestrator
   {
@@ -112,19 +112,37 @@ namespace ChartPoints
     {
       if (solConfig.Contains(" [ChartPoints]"))
       {
-        //cpBuildLogger = new TestLogger();
-        //BuildManager.DefaultBuildManager;
-        //Globals.bmAccessor.RegisterLogger(1, cpBuildLogger);
-        EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
-        IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(proj.Name);
-        if (pPnts != null)
-          pPnts.Validate();
-        //string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
-        string address = "net.pipe://localhost/IPCChartPoint/" + System.IO.Path.GetFullPath(proj.FullName).ToLower();
-        serviceHost = new ServiceHost(typeof(IPCChartPoint));
-        NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
-        serviceHost.AddServiceEndpoint(typeof(IIPCChartPoint), binding, address);
-        serviceHost.Open();
+        try
+        {
+          //cpBuildLogger = new TestLogger();
+          ////BuildManager bm = BuildManager.DefaultBuildManager;
+          ////Globals.bmAccessor.RegisterLogger(1, cpBuildLogger);
+          //ProjectCollection.GlobalProjectCollection.UnregisterAllLoggers();
+          //ProjectCollection.GlobalProjectCollection.RegisterLogger(cpBuildLogger);
+          EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
+          //!!! Needed for newly created project to update vcxproj file !!!
+          //Orchestrate(proj.FullName);
+          IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(proj.Name);
+          if (pPnts != null)
+          {
+            pPnts.Validate(); }
+            if (serviceHost == null)
+            {
+              serviceHost = new ServiceHost(typeof(IPCChartPoint));
+              //if (serviceHost.State != CommunicationState.Opening && serviceHost.State != CommunicationState.Opened)
+              //{
+              NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
+              string address = "net.pipe://localhost/IPCChartPoint/" + System.IO.Path.GetFullPath(proj.FullName).ToLower();
+              serviceHost.AddServiceEndpoint(typeof(IIPCChartPoint), binding, address);
+              serviceHost.Open();
+              //}
+            }
+          //}
+        }
+        catch(Exception ex)
+        {
+          serviceHost = null;
+        }
       }
     }
 
@@ -135,7 +153,8 @@ namespace ChartPoints
       {
         if (serviceHost != null)
         {
-          serviceHost.Close();
+          if(serviceHost.State == CommunicationState.Opened)
+            serviceHost.Close();
           serviceHost = null;
         }
       }
@@ -233,12 +252,22 @@ namespace ChartPoints
             needAdd = false;
         }
         if (needAdd)
-          projConfManager.AddConfigurationRow(confType + " [ChartPoints]", confType, true);
+        {
+          //Configuration activeConf = projConfManager.ActiveConfiguration;
+          Configurations cpConfs = projConfManager.AddConfigurationRow(confType + " [ChartPoints]", confType, false);// true);
+          //Configuration srcConf = projConfManager.Item(confType);
+          //foreach(Configuration cpConf in cpConfs)
+          //{
+          //  //Property platformProp = cpConf.Properties.Item("Platform");
+          //  //platformProp.let_Value("x86");
+          //}
+        }
       }
     }
 
     public bool InitProjConfigurations(EnvDTE.Project proj)
     {
+      //Orchestrate(proj.FullName);
       CheckAndAddProjConf(proj, "Debug");
       CheckAndAddProjConf(proj, "Release");
 

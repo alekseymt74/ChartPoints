@@ -25,11 +25,12 @@ using ChartPoints.CPServices.decl;
 using Microsoft.Build.Framework;
 using System.Security.Principal;
 using System.Windows.Forms;
+using Microsoft.Build.Evaluation;
 
 namespace ChartPoints
 {
 
-  internal class VsSolutionEvents : IVsSolutionEvents
+  internal class VsSolutionEvents : IVsSolutionEvents, IVsSolutionEvents6//IVsSolutionEvents2, IVsSolutionEvents3, IVsSolutionEvents4
   {
     //private Microsoft.VisualStudio.OLE.Interop.IStream propsStream;
     private MemoryStream propsStream;
@@ -158,6 +159,66 @@ namespace ChartPoints
     {
       return VSConstants.S_OK;
     }
+
+    //public int OnAfterMergeSolution(object pUnkReserved)
+    //{
+    //  return VSConstants.S_OK;
+    //}
+
+    //public int OnAfterRenameProject(IVsHierarchy pHierarchy)
+    //{
+    //  return VSConstants.S_OK;
+    //}
+
+    //public int OnQueryChangeProjectParent(IVsHierarchy pHierarchy, IVsHierarchy pNewParentHier, ref int pfCancel)
+    //{
+    //  return VSConstants.S_OK;
+    //}
+
+    //public int OnAfterChangeProjectParent(IVsHierarchy pHierarchy)
+    //{
+    //  return VSConstants.S_OK;
+    //}
+
+    //public int OnAfterAsynchOpenProject(IVsHierarchy pHierarchy, int fAdded)
+    //{
+    //  return VSConstants.S_OK;
+    //}
+
+    public static Guid newProjGuid = new Guid();
+    public static string newProjFullPath;
+    public int OnBeforeProjectRegisteredInRunningDocumentTable(Guid projectID, string projectFullPath)
+    {
+      newProjGuid = projectID;
+      newProjFullPath = projectFullPath;
+
+      return VSConstants.S_OK;
+    }
+
+    public int OnAfterProjectRegisteredInRunningDocumentTable(Guid projectID, string projectFullPath, uint docCookie)
+    {
+      return VSConstants.S_OK;
+    }
+
+    //public int OnBeforeOpeningChildren(IVsHierarchy pHierarchy)
+    //{
+    //  return VSConstants.S_OK;
+    //}
+
+    //public int OnAfterOpeningChildren(IVsHierarchy pHierarchy)
+    //{
+    //  return VSConstants.S_OK;
+    //}
+
+    //public int OnBeforeClosingChildren(IVsHierarchy pHierarchy)
+    //{
+    //  return VSConstants.S_OK;
+    //}
+
+    //public int OnAfterClosingChildren(IVsHierarchy pHierarchy)
+    //{
+    //  return VSConstants.S_OK;
+    //}
   }
 
   internal class VSUpdateSolEvents : IVsUpdateSolutionEvents3
@@ -410,16 +471,21 @@ namespace ChartPoints
     , IVsPersistSolutionOpts
     , IVsSolutionLoadManager
     , IVsUpdateSolutionEvents2
+    , IVsBuildStatusCallback
   {
     private ChartPntFactory factory;
 
     private IVsSolutionBuildManager3 buildManager3;
     private VsSolutionEvents solEvents;
-    //private CommandEvents cmdEvents;
+    private CommandEvents cmdEvents;
+    private CommandEvents createCmd;
     //private RunningDocumentTable rdt;
 
-    private IVsSolutionBuildManager2 sbm;
+    private IVsSolutionBuildManager2 sbm2;
     private uint _sbmCookie;
+
+    //private SolutionEvents dteSolEvents;
+    //private DTEEvents dteEvents;
 
     /// <summary>
     /// ChartPointsPackage GUID string.
@@ -526,20 +592,41 @@ namespace ChartPoints
       uint solUpdateEvsCookie;
       buildManager3.AdviseUpdateSolutionEvents3(solUpdateEvents, out solUpdateEvsCookie);
       //EnvDTE.DebuggerEvents debugEvents = _applicationObject.Events.DebuggerEvents;
-      //cmdEvents = Globals.dte.Events.CommandEvents;
+      cmdEvents = Globals.dte.Events.CommandEvents;
       //cmdEvents.BeforeExecute += CmdEvents_BeforeExecute;
+      string guidVSStd97 = "{5efc7975-14bc-11cf-9b2b-00aa00573819}".ToUpper();
+      int cmdidNewProject = 216;
+      createCmd = Globals.dte.Events.CommandEvents[guidVSStd97, cmdidNewProject];
+      createCmd.AfterExecute += this.NewProjCreated_AfterExecute;
+
+      //dteEvents = Globals.dte.Events.DTEEvents;
+      //dteSolEvents = Globals.dte.Events.SolutionEvents;
+      //dteSolEvents.ProjectAdded += DteSolEvents_ProjectAdded;
 
       //rdt = new RunningDocumentTable(this);
       //rdt.Advise(new RunningDocTableEvents(rdt));
 
 
-      sbm = (IVsSolutionBuildManager2)ServiceProvider.GlobalProvider.GetService(typeof(SVsSolutionBuildManager));
-      sbm.AdviseUpdateSolutionEvents(this, out _sbmCookie);
+      sbm2 = (IVsSolutionBuildManager2)ServiceProvider.GlobalProvider.GetService(typeof(SVsSolutionBuildManager));
+      sbm2.AdviseUpdateSolutionEvents(this, out _sbmCookie);
       IVsBuildManagerAccessor3 bma3 = (IVsBuildManagerAccessor3)ServiceProvider.GlobalProvider.GetService(typeof(SVsBuildManagerAccessor));
       //IVsMSBuildTaskFileManager
       //IVsBuildManagerAccessor3 vsBuildMgrAcc = GetService(typeof(SVsBuildManagerAccessor)) as IVsBuildManagerAccessor3;
       //IVsSolutionBuildManager vsSolBuildMgr = GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager;
     }
+
+    void NewProjCreated_AfterExecute(string Guid, int ID, object CustomIn, object CustomOut)
+    {
+      // if we are here - new project created 
+      IVsSolution4 vsSolution = GetService(typeof(SVsSolution)) as IVsSolution4;
+      vsSolution.UnloadProject(VsSolutionEvents.newProjGuid, (uint)_VSProjectUnloadStatus.UNLOADSTATUS_LoadPendingIfNeeded);
+      Globals.orchestrator.Orchestrate(VsSolutionEvents.newProjFullPath);
+      vsSolution.ReloadProject(VsSolutionEvents.newProjGuid);
+    }
+
+    //private void DteSolEvents_ProjectAdded(EnvDTE.Project Project)
+    //{
+    //}
 
     //private void CmdEvents_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
     //{
@@ -669,9 +756,17 @@ namespace ChartPoints
       return VSConstants.S_OK;
     }
 
+    private TestLogger cpBuildLogger;
+    private IVsProjectCfg vsProjCfg;
+    private IVsBuildableProjectCfg vsBuildProjCfg;
+    private IVsBuildableProjectCfg2 vsBuildProjCfg2;
     public int UpdateProjectCfg_Begin(IVsHierarchy pHierProj, IVsCfg pCfgProj, IVsCfg pCfgSln, uint dwAction, ref int pfCancel)
     {
-      IVsProjectCfg cfg = pCfgProj as IVsProjectCfg;
+      //vsProjCfg = pCfgProj as IVsProjectCfg;
+      //vsProjCfg.get_BuildableProjectCfg(out vsBuildProjCfg);
+      //uint cookie;
+      //vsBuildProjCfg.AdviseBuildStatusCallback(this, out cookie);
+
       return VSConstants.S_OK;
     }
 
@@ -680,6 +775,30 @@ namespace ChartPoints
       return VSConstants.S_OK;
     }
 
+    public int BuildBegin(ref int pfContinue)
+    {
+      //cpBuildLogger = new TestLogger();
+      ////BuildManager bm = BuildManager.DefaultBuildManager;
+      ////Globals.bmAccessor.RegisterLogger(1, cpBuildLogger);
+      //ProjectCollection.GlobalProjectCollection.UnregisterAllLoggers();
+      //ProjectCollection.GlobalProjectCollection.RegisterLogger(cpBuildLogger);
+      IVsBuildManagerAccessor3 bma3 = (IVsBuildManagerAccessor3)ServiceProvider.GlobalProvider.GetService(typeof(SVsBuildManagerAccessor));
+      //bma3.UnregisterLoggers()
+
+      return VSConstants.S_OK;
+    }
+
+    public int BuildEnd(int fSuccess)
+    {
+      return VSConstants.S_OK;
+    }
+
+    public int Tick(ref int pfContinue)
+    {
+      return VSConstants.S_OK;
+    }
+
     #endregion
   }
+
 }
