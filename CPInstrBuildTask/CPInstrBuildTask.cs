@@ -138,8 +138,6 @@ namespace ChartPointsBuilder
     [Required]
     public ITaskItem[] InputHeaderFiles { get; set; }
     [Required]
-    public ITaskItem[] InputChartPoints { get; set; }
-    [Required]
     public string ProjectName { get; set; }
     [Required]
     public string ProjectFullName { get; set; }
