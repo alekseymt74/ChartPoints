@@ -57,10 +57,10 @@
     </Compile>
     <Compile Include="ChartPntToggleCmd.cs" />
     <Compile Include="ChartPointsGlyphFactory.cs" />
-    <Compile Include="ChartPointsEditorClassifier.cs" />
-    <Compile Include="ChartPointsEditorClassifierClassificationDefinition.cs" />
-    <Compile Include="ChartPointsEditorClassifierFormat.cs" />
-    <Compile Include="ChartPointsEditorClassifierProvider.cs" />
+    <Compile Include="Classifiers\CPClassifier.cs" />
+    <Compile Include="Classifiers\CPClassifierClassificationDefinition.cs" />
+    <Compile Include="Classifiers\CPClassifierFormat.cs" />
+    <Compile Include="Classifiers\CPClassifierProvider.cs" />
     <Compile Include="ChartPointsPackage.cs" />
     <Compile Include="ChartPointsTagger.cs" />
     <Compile Include="CPChartView\CPChartViewTW.cs" />

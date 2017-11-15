@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// <copyright file="ChartPointsEditorClassifierFormat.cs" company="Company">
+// <copyright file="CPClassifierFormat.cs" company="Company">
 //     Copyright (c) Company.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
@@ -12,22 +12,22 @@ using Microsoft.VisualStudio.Utilities;
 namespace ChartPoints
 {
   /// <summary>
-  /// Defines an editor format for the ChartPointsEditorClassifier type that has a purple background
+  /// Defines an editor format for the CPClassifier type that has a purple background
   /// and is underlined.
   /// </summary>
   [Export(typeof(EditorFormatDefinition))]
-  [ClassificationType(ClassificationTypeNames = "ChartPointsEditorClassifier")]
-  [Name("ChartPointsEditorClassifier")]
+  [ClassificationType(ClassificationTypeNames = "CPClassifier")]
+  [Name("CPClassifier")]
   [UserVisible(true)] // This should be visible to the end user
   [Order(Before = Priority.Default)] // Set the priority to be after the default classifiers
-  internal sealed class ChartPointsEditorClassifierFormat : ClassificationFormatDefinition
+  internal sealed class CPClassifierFormat : ClassificationFormatDefinition
   {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ChartPointsEditorClassifierFormat"/> class.
+    /// Initializes a new instance of the <see cref="CPClassifierFormat"/> class.
     /// </summary>
-    public ChartPointsEditorClassifierFormat()
+    public CPClassifierFormat()
     {
-      this.DisplayName = "ChartPointsEditorClassifier"; // Human readable version of the name
+      this.DisplayName = "CPClassifier"; // Human readable version of the name
       //this.BackgroundColor = Colors.BlueViolet;
       //this.TextDecorations = System.Windows.TextDecorations.Underline;
     }
