@@ -43,8 +43,15 @@ namespace ChartPoints.CPServices.impl
 
     private bool IsChartPointsMode()
     {
-      string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
-      return activeConfig.Contains(" [ChartPoints]");
+      EnvDTE.Property prop = Globals.dte.Solution.Properties.Item("ActiveConfig");
+      if (prop != null)
+      {
+        string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
+
+        return activeConfig.Contains(" [ChartPoints]");
+      }
+
+      return false;
     }
 
     public int Event(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent, ref Guid riidEvent, uint dwAttrib)

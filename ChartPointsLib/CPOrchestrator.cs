@@ -103,8 +103,15 @@ namespace ChartPoints
 
     private bool IsChartPointsMode()//!!! Move to global !!!
     {
-      string activeConfig = (string) Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
-      return activeConfig.Contains(" [ChartPoints]");
+      EnvDTE.Property prop = Globals.dte.Solution.Properties.Item("ActiveConfig");
+      if (prop != null)
+      {
+        string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
+
+        return activeConfig.Contains(" [ChartPoints]");
+      }
+
+      return false;
     }
 
     //private TestLogger cpBuildLogger;
