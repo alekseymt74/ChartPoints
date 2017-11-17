@@ -72,7 +72,11 @@ namespace ChartPoints
 
     public void Activate()
     {
-      cpViewTW.Activate();
+      if(cpViewTW == null)
+        cpViewTW = CPChartViewTWCmd.Instance;
+      //cpViewTW.Activate();
+      if(cpTableTW == null)
+        cpTableTW = CPTableViewTWCmd.Instance;
       cpTableTW.Activate();
       cpViewTW.SetTraceConsumer(cpTableTW.GetTraceConsumer());
       foreach (ICPProcessTracer pt in procTracers)

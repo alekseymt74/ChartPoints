@@ -41,14 +41,21 @@ namespace ChartPoints.CPServices.impl
       return true;
     }
 
-    private bool IsChartPointsMode()
+    public bool IsChartPointsMode()
     {
-      EnvDTE.Property prop = Globals.dte.Solution.Properties.Item("ActiveConfig");
-      if (prop != null)
+      try
       {
-        string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
+        EnvDTE.Property prop = Globals.dte.Solution.Properties.Item("ActiveConfig");
+        if (prop != null)
+        {
+          string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
 
-        return activeConfig.Contains(" [ChartPoints]");
+          return activeConfig.Contains(" [ChartPoints]");
+        }
+      }
+      catch(Exception /*ex*/)
+      {
+        ;
       }
 
       return false;

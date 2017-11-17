@@ -161,7 +161,11 @@ namespace ChartPoints
       Globals.orchestrator.InitSolutionConfigurations();
       string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
       if (activeConfig.Contains(" [ChartPoints]"))
+      {
+        if (CPChartViewTWCmd.Instance == null)
+          CPChartViewTWCmd.Initialize(package);
         CPChartViewTWCmd.Instance.Enable(true);
+      }
       LoadCPProps();
 
       return VSConstants.S_OK;

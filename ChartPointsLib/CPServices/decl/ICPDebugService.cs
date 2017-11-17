@@ -23,6 +23,7 @@ namespace ChartPoints.CPServices.decl
   {
     ICPEvent<CPProcEvArgs> debugProcCreateCPEvent { get; set; }
     ICPEvent<CPProcEvArgs> debugProcDestroyCPEvent { get; set; }
+    bool IsChartPointsMode();
   }
 
 }
