@@ -151,8 +151,13 @@ namespace ChartPoints
     public int OnBeforeCloseProject(IVsHierarchy pHierarchy, int fRemoved)
     {
       EnvDTE.Project proj = null;
-      if (IsCPPProject(pHierarchy, out proj) && CPPProjectsCount() == 1)
-        EnableCPVsGui(false);
+      if (IsCPPProject(pHierarchy, out proj))
+      {
+        Globals.processor.RemoveChartPoints(proj.Name);
+        if (CPPProjectsCount() == 1)
+          EnableCPVsGui(false);
+      }
+
       return VSConstants.S_OK;
     }
 
