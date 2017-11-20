@@ -100,9 +100,11 @@ namespace ChartPoints
       if (pPnts == null)
       {
         pPnts = ChartPntFactory.Instance.CreateProjectChartPoint(projName);
-        //pPnts.addCPFileEvent += AddProjectChartPoints;
-        //pPnts.remCPFileEvent += RemoveProjectChartPoints;
-        //data.projPoints.Add(pPnts);
+        if(!pPnts.Validate())
+        {
+          pPnts = null;
+          return false;
+        }
         AddProjectChartPoints(pPnts);
 
         return true;

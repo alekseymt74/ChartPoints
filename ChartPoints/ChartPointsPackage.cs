@@ -44,8 +44,9 @@ namespace ChartPoints
     public void SetPropsStream(Microsoft.VisualStudio.OLE.Interop.IStream _propsStream)
     {
       DataStreamFromComStream pStream = new DataStreamFromComStream(_propsStream);
-      if (propsStream == null)
-        propsStream = new MemoryStream();
+      if (propsStream != null)
+        propsStream = null;
+      propsStream = new MemoryStream();
       pStream.CopyTo(propsStream);
     }
 
@@ -403,29 +404,32 @@ namespace ChartPoints
             IProjectChartPoints projCPs = Globals.processor.GetProjectChartPoints(projName);
             if (projCPs == null)
               Globals.processor.AddProjectChartPoints(projName, out projCPs);
-            for (uint f = 0; f < filesCount; ++f)
+            if (projCPs != null)
             {
-              string fileName = info.GetString("fileName_" + p.ToString() + f.ToString());
-              IFileChartPoints fPnts = projCPs.AddFileChartPoints(fileName);
-              if (fPnts != null)
+              for (uint f = 0; f < filesCount; ++f)
               {
-                UInt32 linesCount = info.GetUInt32("linePoints.Count_" + p.ToString() + f.ToString());
-                for (uint l = 0; l < linesCount; ++l)
+                string fileName = info.GetString("fileName_" + p.ToString() + f.ToString());
+                IFileChartPoints fPnts = projCPs.AddFileChartPoints(fileName);
+                if (fPnts != null)
                 {
-                  //ITextPosition pos = (ITextPosition)info.GetValue("pos_" + p.ToString() + f.ToString() + l.ToString(), typeof(ITextPosition));
-                  UInt32 lineNum = info.GetUInt32("lineNum_" + p.ToString() + f.ToString() + l.ToString());
-                  UInt32 linePos = info.GetUInt32("linePos_" + p.ToString() + f.ToString() + l.ToString());
-                  ILineChartPoints lPnts = fPnts.AddLineChartPoints(/*pos.*/(int)lineNum, /*pos.*/(int)linePos);
-                  if (lPnts != null)
+                  UInt32 linesCount = info.GetUInt32("linePoints.Count_" + p.ToString() + f.ToString());
+                  for (uint l = 0; l < linesCount; ++l)
                   {
-                    UInt32 cpsCount = info.GetUInt32("cpsPoints.Count_" + p.ToString() + f.ToString() + l.ToString());
-                    for (uint cp = 0; cp < cpsCount; ++cp)
+                    //ITextPosition pos = (ITextPosition)info.GetValue("pos_" + p.ToString() + f.ToString() + l.ToString(), typeof(ITextPosition));
+                    UInt32 lineNum = info.GetUInt32("lineNum_" + p.ToString() + f.ToString() + l.ToString());
+                    UInt32 linePos = info.GetUInt32("linePos_" + p.ToString() + f.ToString() + l.ToString());
+                    ILineChartPoints lPnts = fPnts.AddLineChartPoints(/*pos.*/(int)lineNum, /*pos.*/(int)linePos);
+                    if (lPnts != null)
                     {
-                      IChartPoint chartPnt = null;
-                      string uniqueName = info.GetString("uniqueName_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
-                      bool enabled = info.GetBoolean("enabled_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
-                      if (lPnts.AddChartPoint(uniqueName, out chartPnt))
-                        chartPnt.SetStatus(enabled ? EChartPointStatus.SwitchedOn : EChartPointStatus.SwitchedOff);
+                      UInt32 cpsCount = info.GetUInt32("cpsPoints.Count_" + p.ToString() + f.ToString() + l.ToString());
+                      for (uint cp = 0; cp < cpsCount; ++cp)
+                      {
+                        IChartPoint chartPnt = null;
+                        string uniqueName = info.GetString("uniqueName_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
+                        bool enabled = info.GetBoolean("enabled_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
+                        if (lPnts.AddChartPoint(uniqueName, out chartPnt))
+                          chartPnt.SetStatus(enabled ? EChartPointStatus.SwitchedOn : EChartPointStatus.SwitchedOff);
+                      }
                     }
                   }
                 }
