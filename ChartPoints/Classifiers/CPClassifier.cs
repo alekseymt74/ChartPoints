@@ -67,19 +67,39 @@ namespace ChartPoints
         if (indFNameBegin >= 0)
         {
           if (text.IndexOf("__cp__.tracer.cpp") >= 0 || text.IndexOf("warning") >= 0)
-            textBuf.Delete(span);
-          else if(text.IndexOf(" error ") >= 0)
+          {
+            if (textBuf.CheckEditAccess())
+            {
+              ITextEdit te = textBuf.CreateEdit();
+              te.Delete(span);
+              te.Apply();
+            }
+            //textBuf.Delete(span);
+          }
+          else if (text.IndexOf(" error ") >= 0)
           {
             int indFNameEnd = 0;
             if ((indFNameEnd = text.IndexOf(' ', indFNameBegin)) < 0)
               indFNameEnd = text.Length - 1;
             string fName = text.Substring(indFNameBegin, indFNameEnd - indFNameBegin);
-            textBuf.Replace(span, "[ERROR]: Failed to add chartpoints to " + fName + ". Please first check successful build in non [ChartPoints] configuration\n");
+            if (textBuf.CheckEditAccess())
+            {
+              ITextEdit te = textBuf.CreateEdit();
+              te.Replace(span, "[ERROR]: Failed to add chartpoints to " + fName + ". Please first check successful build in non [ChartPoints] configuration\n");
+              te.Apply();
+            }
+            //textBuf.Replace(span, "[ERROR]: Failed to add chartpoints to " + fName + ". Please first check successful build in non [ChartPoints] configuration\n");
           }
           else
           {
             text = text.Replace("__cp__.", "Instrumenting chartpoints for ");
-            textBuf.Replace(span, text);
+            if (textBuf.CheckEditAccess())
+            {
+              ITextEdit te = textBuf.CreateEdit();
+              te.Replace(span, text);
+              te.Apply();
+            }
+            //textBuf.Replace(span, text);
           }
         }
       }
