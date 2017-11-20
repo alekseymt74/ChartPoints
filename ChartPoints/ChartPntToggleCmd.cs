@@ -134,7 +134,8 @@ namespace ChartPoints
     {
       SelectVarsDlg dlg = new SelectVarsDlg(checkPnt);
       dlg.ShowDialog();
-      checkPnt.Synchronize();
+      if(dlg.status == SelectVarsDlg.EExitStatus.Ok)
+        checkPnt.Synchronize();
     }
   }
 }

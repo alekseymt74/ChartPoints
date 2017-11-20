@@ -52,17 +52,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ChartGlyph.xaml.cs">
+    <Compile Include="Taggers\ChartGlyph.xaml.cs">
       <DependentUpon>ChartGlyph.xaml</DependentUpon>
     </Compile>
     <Compile Include="ChartPntToggleCmd.cs" />
-    <Compile Include="ChartPointsGlyphFactory.cs" />
+    <Compile Include="Taggers\ChartPointsGlyphFactory.cs" />
     <Compile Include="Classifiers\CPClassifier.cs" />
     <Compile Include="Classifiers\CPClassifierClassificationDefinition.cs" />
     <Compile Include="Classifiers\CPClassifierFormat.cs" />
     <Compile Include="Classifiers\CPClassifierProvider.cs" />
     <Compile Include="ChartPointsPackage.cs" />
-    <Compile Include="ChartPointsTagger.cs" />
+    <Compile Include="Taggers\ChartPointsTagger.cs" />
     <Compile Include="CPChartView\CPChartViewTW.cs" />
     <Compile Include="CPChartView\CPChartViewTWCmd.cs" />
     <Compile Include="CPChartView\CPChartView.cs">
@@ -71,12 +71,12 @@
     <Compile Include="CPChartView\CPChartView.designer.cs">
       <DependentUpon>CPChartView.cs</DependentUpon>
     </Compile>
-    <Compile Include="CPListTW.cs" />
-    <Compile Include="CPListTWCommand.cs" />
-    <Compile Include="CPListTWCtrl.cs">
+    <Compile Include="CPListTW\CPListTW.cs" />
+    <Compile Include="CPListTW\CPListTWCommand.cs" />
+    <Compile Include="CPListTW\CPListTWCtrl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="CPListTWCtrl.Designer.cs">
+    <Compile Include="CPListTW\CPListTWCtrl.Designer.cs">
       <DependentUpon>CPListTWCtrl.cs</DependentUpon>
     </Compile>
     <Compile Include="CPServices\impl\CPDebugService.cs" />
@@ -285,7 +285,7 @@
     <EmbeddedResource Include="CPChartView\CPChartView.resx">
       <DependentUpon>CPChartView.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="CPListTWCtrl.resx">
+    <EmbeddedResource Include="CPListTW\CPListTWCtrl.resx">
       <DependentUpon>CPListTWCtrl.cs</DependentUpon>
     </EmbeddedResource>
     <Resource Include="Resources\ChartPntGlyph.png">
@@ -307,7 +307,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="ChartGlyph.xaml">
+    <Page Include="Taggers\ChartGlyph.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

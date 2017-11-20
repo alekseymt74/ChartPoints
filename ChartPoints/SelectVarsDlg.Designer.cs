@@ -29,11 +29,11 @@
     private void InitializeComponent()
     {
       this.vars_dgv = new System.Windows.Forms.DataGridView();
-      this.ok_btn = new System.Windows.Forms.Button();
-      this.cancel_btn = new System.Windows.Forms.Button();
       this.chk_box_col = new System.Windows.Forms.DataGridViewCheckBoxColumn();
       this.name_col = new System.Windows.Forms.DataGridViewTextBoxColumn();
       this.type_col = new System.Windows.Forms.DataGridViewTextBoxColumn();
+      this.ok_btn = new System.Windows.Forms.Button();
+      this.cancel_btn = new System.Windows.Forms.Button();
       ((System.ComponentModel.ISupportInitialize)(this.vars_dgv)).BeginInit();
       this.SuspendLayout();
       // 
@@ -53,25 +53,6 @@
       this.vars_dgv.Name = "vars_dgv";
       this.vars_dgv.Size = new System.Drawing.Size(499, 302);
       this.vars_dgv.TabIndex = 0;
-      // 
-      // ok_btn
-      // 
-      this.ok_btn.Location = new System.Drawing.Point(144, 308);
-      this.ok_btn.Name = "ok_btn";
-      this.ok_btn.Size = new System.Drawing.Size(75, 23);
-      this.ok_btn.TabIndex = 1;
-      this.ok_btn.Text = "OK";
-      this.ok_btn.UseVisualStyleBackColor = true;
-      this.ok_btn.Click += new System.EventHandler(this.ok_btn_Click);
-      // 
-      // cancel_btn
-      // 
-      this.cancel_btn.Location = new System.Drawing.Point(242, 308);
-      this.cancel_btn.Name = "cancel_btn";
-      this.cancel_btn.Size = new System.Drawing.Size(75, 23);
-      this.cancel_btn.TabIndex = 2;
-      this.cancel_btn.Text = "Cancel";
-      this.cancel_btn.UseVisualStyleBackColor = true;
       // 
       // chk_box_col
       // 
@@ -95,6 +76,26 @@
       this.type_col.HeaderText = "Type";
       this.type_col.Name = "type_col";
       this.type_col.ReadOnly = true;
+      // 
+      // ok_btn
+      // 
+      this.ok_btn.Location = new System.Drawing.Point(144, 308);
+      this.ok_btn.Name = "ok_btn";
+      this.ok_btn.Size = new System.Drawing.Size(75, 23);
+      this.ok_btn.TabIndex = 1;
+      this.ok_btn.Text = "OK";
+      this.ok_btn.UseVisualStyleBackColor = true;
+      this.ok_btn.Click += new System.EventHandler(this.ok_btn_Click);
+      // 
+      // cancel_btn
+      // 
+      this.cancel_btn.Location = new System.Drawing.Point(242, 308);
+      this.cancel_btn.Name = "cancel_btn";
+      this.cancel_btn.Size = new System.Drawing.Size(75, 23);
+      this.cancel_btn.TabIndex = 2;
+      this.cancel_btn.Text = "Cancel";
+      this.cancel_btn.UseVisualStyleBackColor = true;
+      this.cancel_btn.Click += new System.EventHandler(this.cancel_btn_click);
       // 
       // SelectVarsDlg
       // 

@@ -13,6 +13,13 @@ namespace ChartPoints
 {
   public partial class SelectVarsDlg : Form
   {
+    public enum EExitStatus
+    {
+      Ok, Cancel
+    }
+
+    public EExitStatus status = EExitStatus.Cancel;
+
     public SelectVarsDlg(ICheckCPPoint checkPnt)
     {
       InitializeComponent();
@@ -37,8 +44,14 @@ namespace ChartPoints
         ICheckElem _elem = (ICheckElem) row.Tag;
         _elem.Toggle((bool)row.Cells[0].Value);
       }
+      status = EExitStatus.Ok;
       this.Close();
     }
 
+    private void cancel_btn_click(object sender, EventArgs e)
+    {
+      status = EExitStatus.Cancel;
+      this.Close();
+    }
   }
 }
