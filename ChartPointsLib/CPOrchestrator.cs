@@ -166,7 +166,7 @@ namespace ChartPoints
       }
       if (needAdd)
       {
-        SolutionConfiguration cpConf = solBuild.SolutionConfigurations.Add(confType + " [ChartPoints]", confType, true);
+        SolutionConfiguration cpConf = solBuild.SolutionConfigurations.Add(confType + " [ChartPoints]", confType, false/*true*/);
       }
       //foreach(EnvDTE.Project proj in Globals.dte.Solution.Projects)
       //{
