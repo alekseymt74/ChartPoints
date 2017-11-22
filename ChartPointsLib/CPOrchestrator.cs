@@ -156,6 +156,26 @@ namespace ChartPoints
       }
     }
 
+    private void AdjustSolConfMatrixRow(SolutionBuild2 solBuild, string confName)
+    {
+      //SolutionConfiguration solConf = solBuild.SolutionConfigurations.Item(confName);
+      foreach (SolutionConfiguration solConf in solBuild.SolutionConfigurations)
+      {
+        if (solConf.Name.Contains(confName))//(solConf != null)
+        {
+          foreach (SolutionContext context in solConf.SolutionContexts)
+            context.ConfigurationName = confName;
+        }
+      }
+    }
+
+    private void AdjustSolConfMatrix()
+    {
+      SolutionBuild2 solBuild = (SolutionBuild2)Globals.dte.Solution.SolutionBuild;
+      AdjustSolConfMatrixRow(solBuild, "Debug [ChartPoints]");
+      AdjustSolConfMatrixRow(solBuild, "Release [ChartPoints]");
+    }
+
     private void CheckAndAddSolConf(ref SolutionBuild2 solBuild, string confType)
     {
       bool needAdd = true;
@@ -191,6 +211,7 @@ namespace ChartPoints
       SolutionBuild2 solBuild = (SolutionBuild2)Globals.dte.Solution.SolutionBuild;
       CheckAndAddSolConf(ref solBuild, "Debug");
       CheckAndAddSolConf(ref solBuild, "Release");
+      AdjustSolConfMatrix();
       //IEnumerable<SolutionConfiguration> allSolConfs = ToIEnumerable<SolutionConfiguration>(solBuild.SolutionConfigurations.GetEnumerator());
       //IEnumerable<SolutionConfiguration> solConfs = allSolConfs.Where(sc => (sc.Name.Contains("|ChartPoints")));
       //IDictionary<string, SolutionConfiguration> allSolConfs = new Dictionary<string, SolutionConfiguration>();
@@ -245,15 +266,23 @@ namespace ChartPoints
         foreach (Configuration conf in projConfManager)
         {
           if (conf.ConfigurationName == confType + " [ChartPoints]")
+          {
             needAdd = false;
+            //Debug.WriteLine(conf.ConfigurationName);
+            //foreach (Property prop in conf.Properties)
+            //  Debug.WriteLine(prop.Name + ": " + prop.Value);
+          }
         }
         if (needAdd)
         {
           //Configuration activeConf = projConfManager.ActiveConfiguration;
-          Configurations cpConfs = projConfManager.AddConfigurationRow(confType + " [ChartPoints]", confType, false);// true);
+          Configurations cpConfs = projConfManager.AddConfigurationRow(confType + " [ChartPoints]", confType, false/*true*/);
           //Configuration srcConf = projConfManager.Item(confType);
-          //foreach(Configuration cpConf in cpConfs)
+          //foreach (Configuration cpConf in cpConfs)
           //{
+          //  Debug.WriteLine(cpConf.ConfigurationName);
+          //  foreach(Property prop in cpConf.Properties)
+          //    Debug.WriteLine(prop.Name + ": " + prop.Value);
           //  //Property platformProp = cpConf.Properties.Item("Platform");
           //  //platformProp.let_Value("x86");
           //}
@@ -266,6 +295,7 @@ namespace ChartPoints
       //Orchestrate(proj.FullName);
       CheckAndAddProjConf(proj, "Debug");
       CheckAndAddProjConf(proj, "Release");
+      AdjustSolConfMatrix();
 
       return true;
     }

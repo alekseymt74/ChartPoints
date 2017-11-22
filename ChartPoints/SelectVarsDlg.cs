@@ -33,7 +33,7 @@ namespace ChartPoints
       DataGridViewRow row = vars_dgv.Rows[vars_dgv.Rows.Count - 1];
       row.Tag = classVar;
       row.Cells[0].Value = classVar.exists;
-      row.Cells[1].Value = classVar.name;
+      row.Cells[1].Value = classVar.uniqueName;
       row.Cells[2].Value = classVar.type;
     }
 

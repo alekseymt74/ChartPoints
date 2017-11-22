@@ -273,7 +273,9 @@ namespace ChartPoints
         return null;
       //int height = view.Properties.Item("ActualHeight");
       //Type _t = typeof(T);
-      bool b = (typeof(T) == typeof(ChartPointTag));
+      //bool b = (typeof(T) == typeof(ChartPointTag));
+      if (Globals.dte == null)
+        return null;
 
       //!!! IGNORE NON-PROJECT FILES !!!
       ITextDocument thisTextDoc;

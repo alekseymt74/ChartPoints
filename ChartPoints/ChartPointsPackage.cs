@@ -26,11 +26,12 @@ using Microsoft.Build.Framework;
 using System.Security.Principal;
 using System.Windows.Forms;
 using Microsoft.Build.Evaluation;
+using System.Linq;
 
 namespace ChartPoints
 {
 
-  internal class VsSolutionEvents : IVsSolutionEvents, IVsSolutionEvents6//, IVsSolutionEvents3, IVsSolutionEvents2, IVsSolutionEvents4
+  internal class VsSolutionEvents : IVsSolutionEvents//, IVsSolutionEvents6//, IVsSolutionEvents3, IVsSolutionEvents2, IVsSolutionEvents4
   {
     private Package package;
     //private Microsoft.VisualStudio.OLE.Interop.IStream propsStream;
@@ -84,18 +85,24 @@ namespace ChartPoints
         ChartPntToggleCmd.Initialize(package);
       if (enable && CPTableViewTWCmd.Instance == null)
         CPTableViewTWCmd.Initialize(package);
-      CPTableViewTWCmd.Instance.Enable(enable);
+      if(CPTableViewTWCmd.Instance != null)
+        CPTableViewTWCmd.Instance.Enable(enable);
       if (enable && CPChartViewTWCmd.Instance == null)
         CPChartViewTWCmd.Initialize(package);
-      CPChartViewTWCmd.Instance.Enable(enable);
+      if(CPChartViewTWCmd.Instance != null)
+        CPChartViewTWCmd.Instance.Enable(enable);
       if (enable && CPListTWCommand.Instance == null)
         CPListTWCommand.Initialize(package);
-      CPListTWCommand.Instance.Enable(enable);
+      if(CPListTWCommand.Instance != null)
+        CPListTWCommand.Instance.Enable(enable);
       if(!enable)
       {
-        CPTableViewTWCmd.Instance.Close();
-        CPChartViewTWCmd.Instance.Close();
-        CPListTWCommand.Instance.Close();
+        if (CPTableViewTWCmd.Instance != null)
+          CPTableViewTWCmd.Instance.Close();
+        if (CPChartViewTWCmd.Instance != null)
+          CPChartViewTWCmd.Instance.Close();
+        if (CPListTWCommand.Instance != null)
+          CPListTWCommand.Instance.Close();
       }
     }
 
@@ -228,20 +235,20 @@ namespace ChartPoints
     //  return VSConstants.S_OK;
     //}
 
-    public static Guid newProjGuid = new Guid();
-    public static string newProjFullPath;
-    public int OnBeforeProjectRegisteredInRunningDocumentTable(Guid projectID, string projectFullPath)
-    {
-      newProjGuid = projectID;
-      newProjFullPath = projectFullPath;
+    ////public static Guid newProjGuid = new Guid();
+    ////public static string newProjFullPath;
+    //public int OnBeforeProjectRegisteredInRunningDocumentTable(Guid projectID, string projectFullPath)
+    //{
+    //  //newProjGuid = projectID;
+    //  //newProjFullPath = projectFullPath;
 
-      return VSConstants.S_OK;
-    }
+    //  return VSConstants.S_OK;
+    //}
 
-    public int OnAfterProjectRegisteredInRunningDocumentTable(Guid projectID, string projectFullPath, uint docCookie)
-    {
-      return VSConstants.S_OK;
-    }
+    //public int OnAfterProjectRegisteredInRunningDocumentTable(Guid projectID, string projectFullPath, uint docCookie)
+    //{
+    //  return VSConstants.S_OK;
+    //}
 
     //public int OnBeforeOpeningChildren(IVsHierarchy pHierarchy)
     //{
@@ -482,6 +489,124 @@ namespace ChartPoints
   //#####################################################################
 
 
+  public class CmdEventsHandler
+  {
+    private IVsSolution vsSolution;
+    private CommandEvents cmdEvents;
+    private CommandEvents createProjCmd;
+    private CommandEvents addNewProjCmd;
+    private SortedSet<EnvDTE.Project> beforeAddProjsCont;
+
+    public CmdEventsHandler(IVsSolution _vsSolution)
+    {
+      vsSolution = _vsSolution;
+      cmdEvents = Globals.dte.Events.CommandEvents;
+      string guidVSStd97 = "{5efc7975-14bc-11cf-9b2b-00aa00573819}".ToUpper();
+      createProjCmd = Globals.dte.Events.CommandEvents[guidVSStd97, (int) VSConstants.VSStd97CmdID.NewProject];
+      createProjCmd.BeforeExecute += NewProjCreated_BeforeExecute;
+      createProjCmd.AfterExecute += NewProjCreated_AfterExecute;
+      addNewProjCmd = Globals.dte.Events.CommandEvents[guidVSStd97, (int)VSConstants.VSStd97CmdID.AddNewProject];
+      addNewProjCmd.BeforeExecute += NewProjCreated_BeforeExecute;
+      addNewProjCmd.AfterExecute += NewProjCreated_AfterExecute;
+    }
+
+    private void AddExistingCPPProjs(out SortedSet<EnvDTE.Project> projsCont)
+    {
+      projsCont = null;
+      if (Globals.dte.Solution.Projects.Count > 0)
+      {
+        projsCont = new SortedSet<EnvDTE.Project>(Comparer<EnvDTE.Project>.Create((lh, rh) => (String.Compare(lh.FullName, rh.FullName, StringComparison.Ordinal))));
+        foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+        {
+          if (proj.Kind == "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" && proj.Name != "Miscellaneous Files")
+            projsCont.Add(proj);
+        }
+      }
+    }
+
+    private void NewProjCreated_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
+    {
+      AddExistingCPPProjs(out beforeAddProjsCont);
+    }
+
+    void NewProjCreated_AfterExecute(string Guid, int ID, object CustomIn, object CustomOut)
+    {
+      // if we are here - new project created 
+      string newProjFullName = string.Empty;
+      if (beforeAddProjsCont != null)
+      {
+        if (Globals.dte.Solution.Projects.Count > beforeAddProjsCont.Count)
+        {
+          SortedSet<EnvDTE.Project> afterAddProjsCont;
+          AddExistingCPPProjs(out afterAddProjsCont);
+          if (afterAddProjsCont.Count > beforeAddProjsCont.Count)
+          {
+            IEnumerable<EnvDTE.Project> newProjs = afterAddProjsCont.Except(beforeAddProjsCont);
+            newProjFullName = newProjs.First().FullName;
+          }
+        }
+      }
+      else
+      {
+        foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
+        {
+          if (proj.Kind == "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" && proj.Name != "Miscellaneous Files")
+          {
+            newProjFullName = proj.FullName;
+            break;
+          }
+        }
+      }
+      if (newProjFullName != string.Empty)
+      {
+        IVsSolution4 vsSolution4 = vsSolution as IVsSolution4;
+        IVsHierarchy projObj;
+        vsSolution.GetProjectOfUniqueName(newProjFullName, out projObj);
+        System.Guid projGuid = System.Guid.Empty;
+        vsSolution.GetGuidOfProject(projObj, out projGuid);
+        vsSolution4.UnloadProject(projGuid, (uint)_VSProjectUnloadStatus.UNLOADSTATUS_LoadPendingIfNeeded);
+        Globals.orchestrator.Orchestrate(newProjFullName);
+        vsSolution4.ReloadProject(projGuid);
+      }
+
+      /////////////////////////////////////////
+      //Globals.orchestrator.InitSolutionConfigurations();
+      //IVsSolution4 vsSolution4 = GetService(typeof(SVsSolution)) as IVsSolution4;
+      //IVsSolution vsSolution = vsSolution4 as IVsSolution;
+      //IEnumHierarchies hierarchies;
+      //vsSolution.GetProjectEnum((uint)__VSENUMPROJFLAGS.EPF_ALLPROJECTS/*EPF_MATCHTYPE*/, System.Guid.Empty, out hierarchies);
+      //IVsHierarchy[] foundHierarchies = new IVsHierarchy[1];
+      //uint count;
+      //while (hierarchies.Next(1, foundHierarchies, out count) == VSConstants.S_OK && count == 1)
+      //{
+      //  IVsProject vsProj = foundHierarchies[0] as IVsProject;
+      //  EnvDTE.Project proj = null;
+      //  object propProjObj = null;
+      //  foundHierarchies[0].GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_ExtObject, out propProjObj);
+      //  if (propProjObj != null)
+      //    proj = propProjObj as EnvDTE.Project;
+      //  System.Guid projGuid = System.Guid.Empty;
+      //  vsSolution.GetGuidOfProject(foundHierarchies[0], out projGuid);
+      //  if (proj != null && proj.Kind == "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" && proj.Name != "Miscellaneous Files")
+      //  {
+      //    string projName = proj.FullName;
+      //    vsSolution4.UnloadProject(projGuid, (uint)_VSProjectUnloadStatus.UNLOADSTATUS_LoadPendingIfNeeded);
+      //    Globals.orchestrator.Orchestrate(projName);
+      //    vsSolution4.ReloadProject(projGuid);
+      //  }
+      //}
+      ////if (VsSolutionEvents.newProjFullPath != null)
+      ////{
+      ////  vsSolution4.UnloadProject(VsSolutionEvents.newProjGuid, (uint)_VSProjectUnloadStatus.UNLOADSTATUS_LoadPendingIfNeeded);
+      ////  Globals.orchestrator.Orchestrate(VsSolutionEvents.newProjFullPath);
+      ////  vsSolution4.ReloadProject(VsSolutionEvents.newProjGuid);
+      ////}
+    }
+
+  }
+
+  //#####################################################################
+
   /// <summary>
   /// This is the class that implements the package exposed by this assembly.
   /// </summary>
@@ -504,8 +629,9 @@ namespace ChartPoints
   [Guid(ChartPointsPackage.PackageGuidString)]
   //[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
   //[ProvideAutoLoad(UIContextGuids80.SolutionExists)]
+  [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string)]
   [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string)]
-  [ProvideAutoLoad(VSConstants.UICONTEXT.VCProject_string)]
+  //[ProvideAutoLoad(VSConstants.UICONTEXT.VCProject_string)]
   [ProvideMenuResource("Menus.ctmenu", 1)]
   [ProvideToolWindow(typeof(CPChartViewTW))]
   [ProvideToolWindowVisibility(typeof(CPChartViewTW), VSConstants.UICONTEXT.VCProject_string/*SolutionExists_string*/)]
@@ -524,12 +650,12 @@ namespace ChartPoints
 
     private IVsSolutionBuildManager3 buildManager3;
     private VsSolutionEvents solEvents;
-    private CommandEvents cmdEvents;
-    private CommandEvents createCmd;
     //private RunningDocumentTable rdt;
 
     private IVsSolutionBuildManager2 sbm2;
     private uint _sbmCookie;
+
+    CmdEventsHandler cmdEvsHandler;
 
     //private SolutionEvents dteSolEvents;
     //private DTEEvents dteEvents;
@@ -573,14 +699,26 @@ namespace ChartPoints
       ICPExtension extensionServ = new CPExtension();
       cpServProv.RegisterService<ICPExtension>(extensionServ);
 
-      //string envPath = Environment.GetEnvironmentVariable("PATH");
-      string vsixInstPath = extensionServ.GetVSIXInstallPath();
-      //if (envPath.IndexOf(vsixInstPath) < 0)
-      //{
-      //  Environment.SetEnvironmentVariable("PATH", envPath + ";" + vsixInstPath, EnvironmentVariableTarget.User);//!!! Add to deployment !!!
-      //  envPath = Environment.GetEnvironmentVariable("PATH");
-      //}
+      Globals.dte = (DTE)GetService(typeof(DTE));
+      factory = new ChartPntFactoryImpl();
+      if(Globals.processor == null)
+        Globals.processor = factory.CreateProcessor();
+      Globals.orchestrator = factory.CreateOrchestrator();
+      Globals.outputWindow = GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+      IVsSolution vsSolution = GetService(typeof(SVsSolution)) as IVsSolution;
+      object objLoadMgr = this;   //the class that implements IVsSolutionManager  
+      vsSolution.SetProperty((int)__VSPROPID4.VSPROPID_ActiveSolutionLoadManager, objLoadMgr);
+      solEvents = new VsSolutionEvents(this);
+      uint solEvsCookie;
+      vsSolution.AdviseSolutionEvents(solEvents, out solEvsCookie);
+      buildManager3 = GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager3;
+      VSUpdateSolEvents solUpdateEvents = new VSUpdateSolEvents();
+      uint solUpdateEvsCookie;
+      buildManager3.AdviseUpdateSolutionEvents3(solUpdateEvents, out solUpdateEvsCookie);
+      //EnvDTE.DebuggerEvents debugEvents = _applicationObject.Events.DebuggerEvents;
+      cmdEvsHandler = new CmdEventsHandler(vsSolution);
 
+      string vsixInstPath = extensionServ.GetVSIXInstallPath();
       string regSrvFName = vsixInstPath + "\\cper.exe";
       if (File.Exists(regSrvFName))
       {
@@ -599,53 +737,6 @@ namespace ChartPoints
         }
       }
 
-      //bool isAsAdmin = WindowsIdentity.GetCurrent().Owner.IsWellKnown(WellKnownSidType.BuiltinAdministratorsSid);
-      //var p = new System.Diagnostics.Process();
-      //p.StartInfo.FileName = "cmd.exe";
-      //if (isAsAdmin)
-      //  p.StartInfo.Arguments = String.Format("/C {0} //RegServer", vsixInstPath + "\\CPTracer.exe");
-      //else
-      //  p.StartInfo.Arguments = String.Format("/C {0} //RegServerPerUser", vsixInstPath + "\\CPTracer.exe");
-      //p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-      //p.Start();
-      //p.WaitForExit();
-
-      ////////////////////////////////////////////////////
-      //var p = new System.Diagnostics.Process();
-      //p.StartInfo.FileName = "cmd.exe";
-      //p.StartInfo.Arguments = String.Format("/C {0} //RegServer", vsixInstPath + "\\CPTracer.exe");
-      ////p.StartInfo.FileName = vsixInstPath + "\\CPTracer.exe";
-      ////p.StartInfo.Arguments = " //RegServer";
-      ////p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-      //p.StartInfo.Verb = "runas";
-      //p.Start();
-      //p.WaitForExit();
-      ////////////////////////////////////////////////////
-
-      Globals.dte = (DTE)GetService(typeof(DTE));
-      factory = new ChartPntFactoryImpl();
-      if(Globals.processor == null)
-        Globals.processor = factory.CreateProcessor();
-      Globals.orchestrator = factory.CreateOrchestrator();
-      Globals.outputWindow = GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
-      IVsSolution vsSolution = GetService(typeof(SVsSolution)) as IVsSolution;
-      object objLoadMgr = this;   //the class that implements IVsSolutionManager  
-      vsSolution.SetProperty((int)__VSPROPID4.VSPROPID_ActiveSolutionLoadManager, objLoadMgr);
-      solEvents = new VsSolutionEvents(this);
-      uint solEvsCookie;
-      vsSolution.AdviseSolutionEvents(solEvents, out solEvsCookie);
-      buildManager3 = GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager3;
-      VSUpdateSolEvents solUpdateEvents = new VSUpdateSolEvents();
-      uint solUpdateEvsCookie;
-      buildManager3.AdviseUpdateSolutionEvents3(solUpdateEvents, out solUpdateEvsCookie);
-      //EnvDTE.DebuggerEvents debugEvents = _applicationObject.Events.DebuggerEvents;
-      cmdEvents = Globals.dte.Events.CommandEvents;
-      //cmdEvents.BeforeExecute += CmdEvents_BeforeExecute;
-      string guidVSStd97 = "{5efc7975-14bc-11cf-9b2b-00aa00573819}".ToUpper();
-      int cmdidNewProject = 216;
-      createCmd = Globals.dte.Events.CommandEvents[guidVSStd97, cmdidNewProject];
-      createCmd.AfterExecute += this.NewProjCreated_AfterExecute;
-
       //dteEvents = Globals.dte.Events.DTEEvents;
       //dteSolEvents = Globals.dte.Events.SolutionEvents;
       //dteSolEvents.ProjectAdded += DteSolEvents_ProjectAdded;
@@ -660,15 +751,6 @@ namespace ChartPoints
       //IVsMSBuildTaskFileManager
       //IVsBuildManagerAccessor3 vsBuildMgrAcc = GetService(typeof(SVsBuildManagerAccessor)) as IVsBuildManagerAccessor3;
       //IVsSolutionBuildManager vsSolBuildMgr = GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager;
-    }
-
-    void NewProjCreated_AfterExecute(string Guid, int ID, object CustomIn, object CustomOut)
-    {
-      // if we are here - new project created 
-      IVsSolution4 vsSolution = GetService(typeof(SVsSolution)) as IVsSolution4;
-      vsSolution.UnloadProject(VsSolutionEvents.newProjGuid, (uint)_VSProjectUnloadStatus.UNLOADSTATUS_LoadPendingIfNeeded);
-      Globals.orchestrator.Orchestrate(VsSolutionEvents.newProjFullPath);
-      vsSolution.ReloadProject(VsSolutionEvents.newProjGuid);
     }
 
     //private void DteSolEvents_ProjectAdded(EnvDTE.Project Project)
