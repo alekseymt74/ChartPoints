@@ -617,7 +617,7 @@ namespace ChartPoints
       {
         foreach (ILineChartPoints lPnts in linePoints.Reverse())
         {
-          if (lPnts.data.pos.lineNum >= lineNum)
+          if (lPnts.data.pos.lineNum >/*=*/ lineNum)
           {
             if (linesAdd < 0 && lineNum + (-linesAdd) > lPnts.data.pos.lineNum)
               RemoveLineChartPoints(lPnts);
