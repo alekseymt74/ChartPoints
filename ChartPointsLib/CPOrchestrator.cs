@@ -53,7 +53,7 @@ namespace ChartPoints
 
   public class CPOrchestrator : ICPOrchestrator
   {
-    private ServiceHost serviceHost;
+    private IDictionary<string, ServiceHost> serviceHostsCont = new SortedDictionary<string, ServiceHost>();
     private EnvDTE.DebuggerEvents debugEvents;
     private ISet<CPTraceHandler> traceHandlers = new SortedSet<CPTraceHandler>(Comparer<CPTraceHandler>.Create((lh, rh) => (lh.id.CompareTo(rh.id))));
     ICPServiceProvider cpServProv;
@@ -108,6 +108,7 @@ namespace ChartPoints
     {
       if (solConfig.Contains(" [ChartPoints]"))
       {
+        ServiceHost serviceHost = null;
         try
         {
           //cpBuildLogger = new TestLogger();
@@ -121,10 +122,13 @@ namespace ChartPoints
           IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(proj.Name);
           if (pPnts != null)
           {
-            pPnts.Validate(); }
+            pPnts.Validate();
+            if (!serviceHostsCont.TryGetValue(proj.FullName, out serviceHost))
+              serviceHostsCont.Add(proj.FullName, serviceHost);
             if (serviceHost == null)
             {
               serviceHost = new ServiceHost(typeof(IPCChartPoint));
+              serviceHostsCont[proj.FullName] = serviceHost;
               //if (serviceHost.State != CommunicationState.Opening && serviceHost.State != CommunicationState.Opened)
               //{
               NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
@@ -133,7 +137,7 @@ namespace ChartPoints
               serviceHost.Open();
               //}
             }
-          //}
+          }
         }
         catch(Exception ex)
         {
@@ -147,11 +151,14 @@ namespace ChartPoints
     {
       if (solConfig.Contains(" [ChartPoints]"))
       {
+        EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
+        ServiceHost serviceHost = null;
+        serviceHostsCont.TryGetValue(proj.FullName, out serviceHost);
         if (serviceHost != null)
         {
           if(serviceHost.State == CommunicationState.Opened)
             serviceHost.Close();
-          serviceHost = null;
+          serviceHostsCont[proj.FullName] = null;
         }
       }
     }
