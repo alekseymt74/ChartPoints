@@ -438,6 +438,8 @@ namespace ChartPoints
                           chartPnt.SetStatus(enabled ? EChartPointStatus.SwitchedOn : EChartPointStatus.SwitchedOff);
                       }
                     }
+                    if (lPnts.Count == 0)
+                      fPnts.RemoveLineChartPoints(lPnts);
                   }
                 }
               }

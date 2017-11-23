@@ -163,11 +163,39 @@ namespace ChartPoints
       int i = list.Rows.Add();
       DataGridViewRow row = list.Rows[i];
       row.Tag = new Tuple<ILineChartPoints, IChartPoint>(args.lineCPs, args.cp);
+      args.lineCPs.cpStatusChangedEvent += OnCPStatusChanged;
       row.Cells[0].Value = args.cp.data.enabled;
       row.Cells[1].Value = args.cp.data.uniqueName;
       row.Cells[2].Value = args.cp.data.type;
       //list.AutoResizeColumns();
       ignoreCellValEvents = false;
+    }
+
+    private void OnCPStatusChanged(CPLineEvArgs args)
+    {
+      Tuple<ILineChartPoints, IChartPoint> tagData = new Tuple<ILineChartPoints, IChartPoint>(args.lineCPs, args.cp);
+      foreach (DataGridViewRow row in list.Rows)
+      {
+        if (row.Tag.Equals(tagData))
+        {
+          ignoreCellValEvents = true;
+          switch (tagData.Item2.data.status)
+          {
+            case EChartPointStatus.Available:
+            case EChartPointStatus.SwitchedOn:
+            case EChartPointStatus.SwitchedOff:
+              row.Cells[0].ReadOnly = false;
+              row.DefaultCellStyle.ForeColor = System.Drawing.Color.Black;
+              break;
+            case EChartPointStatus.NotAvailable:
+              row.Cells[0].Value = false;
+              row.Cells[0].ReadOnly = true;
+              row.DefaultCellStyle.ForeColor = System.Drawing.Color.Red;
+              break;
+          }
+          ignoreCellValEvents = false;
+        }
+      }
     }
 
     private void OnAddCpEvent(CPLineEvArgs args)

@@ -68,6 +68,7 @@ namespace ChartPoints
   {
     ELineCPsStatus status { get; }
     ICPEvent<LineCPStatusEvArgs> lineCPStatusChangedEvent { get; set; }
+    ICPEvent<CPLineEvArgs> cpStatusChangedEvent { get; set; }
     ICPEvent<CPLineEvArgs> addCPEvent { get; set; }
     ICPEvent<CPLineEvArgs> remCPEvent { get; set; }
     ISet<IChartPoint> chartPoints { get; }
@@ -101,6 +102,7 @@ namespace ChartPoints
     int Count { get; }
     ILineChartPoints GetLineChartPoints(int lineNum);
     ILineChartPoints AddLineChartPoints(int lineNum, int linePos);
+    bool RemoveLineChartPoints(ILineChartPoints linePnts);
     bool ValidatePosition(int lineNum, int linesAdd);
     void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model);
     void Invalidate();
