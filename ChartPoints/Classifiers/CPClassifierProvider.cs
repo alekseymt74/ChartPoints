@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// <copyright file="ChartPointsEditorClassifierProvider.cs" company="Company">
+// <copyright file="CPClassifierProvider.cs" company="Company">
 //     Copyright (c) Company.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
@@ -16,7 +16,8 @@ namespace ChartPoints
   /// </summary>
   [Export(typeof(IClassifierProvider))]
   [ContentType("C/C++")]
-  internal class ChartPointsEditorClassifierProvider : IClassifierProvider
+  [ContentType("output")]
+  internal class CPClassifierProvider : IClassifierProvider
   {
     // Disable "Field is never assigned to..." compiler's warning. Justification: the field is assigned by MEF.
 #pragma warning disable 649
@@ -39,7 +40,7 @@ namespace ChartPoints
     /// <returns>A classifier for the text buffer, or null if the provider cannot do so in its current state.</returns>
     public IClassifier GetClassifier(ITextBuffer buffer)
     {
-      return buffer.Properties.GetOrCreateSingletonProperty<ChartPointsEditorClassifier>(creator: () => new ChartPointsEditorClassifier(this.classificationRegistry));
+      return buffer.Properties.GetOrCreateSingletonProperty<CPClassifier>(creator: () => new CPClassifier(this.classificationRegistry));
     }
 
     #endregion

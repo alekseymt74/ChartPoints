@@ -11,22 +11,59 @@ using EnvDTE80;
 using System.Diagnostics;
 using ChartPoints.CPServices.decl;
 using Microsoft.VisualStudio.VCProjectEngine;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Execution;
+using System.Windows.Shell;
+using System.Reflection;
 
 namespace ChartPoints
 {
+  public class TestLogger : Microsoft.Build.Utilities.Logger
+  {
+    public override void Initialize(Microsoft.Build.Framework.IEventSource eventSource)
+    {
+      //Register for the ProjectStarted, TargetStarted, and ProjectFinished events
+      eventSource.ProjectStarted += new ProjectStartedEventHandler(eventSource_ProjectStarted);
+      eventSource.TargetStarted += new TargetStartedEventHandler(eventSource_TargetStarted);
+      eventSource.ProjectFinished += new ProjectFinishedEventHandler(eventSource_ProjectFinished);
+      eventSource.MessageRaised += new BuildMessageEventHandler(eventSource_MessageRaised);
+    }
+    void eventSource_MessageRaised(object sender, BuildMessageEventArgs e)
+    {
+      Console.WriteLine("Project Started: " + e.ProjectFile);
+    }
+
+    void eventSource_ProjectStarted(object sender, ProjectStartedEventArgs e)
+    {
+      Console.WriteLine("Project Started: " + e.ProjectFile);
+    }
+
+    void eventSource_ProjectFinished(object sender, ProjectFinishedEventArgs e)
+    {
+      Console.WriteLine("Project Finished: " + e.ProjectFile);
+    }
+    void eventSource_TargetStarted(object sender, TargetStartedEventArgs e)
+    {
+      if (Verbosity == LoggerVerbosity.Detailed)
+      {
+        Console.WriteLine("Target Started: " + e.TargetName);
+      }
+    }
+  }
+
   public class CPOrchestrator : ICPOrchestrator
   {
-    private ServiceHost serviceHost;
+    private IDictionary<string, ServiceHost> serviceHostsCont = new SortedDictionary<string, ServiceHost>();
     private EnvDTE.DebuggerEvents debugEvents;
     private ISet<CPTraceHandler> traceHandlers = new SortedSet<CPTraceHandler>(Comparer<CPTraceHandler>.Create((lh, rh) => (lh.id.CompareTo(rh.id))));
     ICPServiceProvider cpServProv;
     bool cpTraceFlag = false;
+    private ICPDebugService debugServ;
 
 
     public CPOrchestrator()
     {
       cpServProv = ICPServiceProvider.GetProvider();
-      ICPDebugService debugServ;
       cpServProv.GetService<ICPDebugService>(out debugServ);
       if (debugServ != null)
       {
@@ -64,27 +101,48 @@ namespace ChartPoints
       }
     }
 
-    private bool IsChartPointsMode()//!!! Move to global !!!
-    {
-      string activeConfig = (string) Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
-      return activeConfig.Contains(" [ChartPoints]");
-    }
+    //private TestLogger cpBuildLogger;
 
     public void OnBuildProjConfigBegin(string projName, string projConfig
       , string platform, string solConfig)
     {
       if (solConfig.Contains(" [ChartPoints]"))
       {
-        EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
-        IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(proj.Name);
-        if (pPnts != null)
-          pPnts.Validate();
-        //string address = "net.pipe://localhost/ChartPoints/IPCChartPoint";
-        string address = "net.pipe://localhost/IPCChartPoint/" + System.IO.Path.GetFullPath(proj.FullName).ToLower();
-        serviceHost = new ServiceHost(typeof(IPCChartPoint));
-        NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
-        serviceHost.AddServiceEndpoint(typeof(IIPCChartPoint), binding, address);
-        serviceHost.Open();
+        ServiceHost serviceHost = null;
+        try
+        {
+          //cpBuildLogger = new TestLogger();
+          ////BuildManager bm = BuildManager.DefaultBuildManager;
+          ////Globals.bmAccessor.RegisterLogger(1, cpBuildLogger);
+          //ProjectCollection.GlobalProjectCollection.UnregisterAllLoggers();
+          //ProjectCollection.GlobalProjectCollection.RegisterLogger(cpBuildLogger);
+          EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
+          //!!! Needed for newly created project to update vcxproj file !!!
+          //Orchestrate(proj.FullName);
+          IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(proj.Name);
+          if (pPnts != null)
+          {
+            pPnts.Validate();
+            if (!serviceHostsCont.TryGetValue(proj.FullName, out serviceHost))
+              serviceHostsCont.Add(proj.FullName, serviceHost);
+            if (serviceHost == null)
+            {
+              serviceHost = new ServiceHost(typeof(IPCChartPoint));
+              serviceHostsCont[proj.FullName] = serviceHost;
+              //if (serviceHost.State != CommunicationState.Opening && serviceHost.State != CommunicationState.Opened)
+              //{
+              NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
+              string address = "net.pipe://localhost/IPCChartPoint/" + System.IO.Path.GetFullPath(proj.FullName).ToLower();
+              serviceHost.AddServiceEndpoint(typeof(IIPCChartPoint), binding, address);
+              serviceHost.Open();
+              //}
+            }
+          }
+        }
+        catch(Exception ex)
+        {
+          serviceHost = null;
+        }
       }
     }
 
@@ -93,12 +151,36 @@ namespace ChartPoints
     {
       if (solConfig.Contains(" [ChartPoints]"))
       {
+        EnvDTE.Project proj = Globals.dte.Solution.Projects.Item(projName);
+        ServiceHost serviceHost = null;
+        serviceHostsCont.TryGetValue(proj.FullName, out serviceHost);
         if (serviceHost != null)
         {
-          serviceHost.Close();
-          serviceHost = null;
+          if(serviceHost.State == CommunicationState.Opened)
+            serviceHost.Close();
+          serviceHostsCont[proj.FullName] = null;
         }
       }
+    }
+
+    private void AdjustSolConfMatrixRow(SolutionBuild2 solBuild, string confName)
+    {
+      //SolutionConfiguration solConf = solBuild.SolutionConfigurations.Item(confName);
+      foreach (SolutionConfiguration solConf in solBuild.SolutionConfigurations)
+      {
+        if (solConf.Name.Contains(confName))//(solConf != null)
+        {
+          foreach (SolutionContext context in solConf.SolutionContexts)
+            context.ConfigurationName = confName;
+        }
+      }
+    }
+
+    private void AdjustSolConfMatrix()
+    {
+      SolutionBuild2 solBuild = (SolutionBuild2)Globals.dte.Solution.SolutionBuild;
+      AdjustSolConfMatrixRow(solBuild, "Debug [ChartPoints]");
+      AdjustSolConfMatrixRow(solBuild, "Release [ChartPoints]");
     }
 
     private void CheckAndAddSolConf(ref SolutionBuild2 solBuild, string confType)
@@ -111,7 +193,7 @@ namespace ChartPoints
       }
       if (needAdd)
       {
-        SolutionConfiguration cpConf = solBuild.SolutionConfigurations.Add(confType + " [ChartPoints]", confType, true);
+        SolutionConfiguration cpConf = solBuild.SolutionConfigurations.Add(confType + " [ChartPoints]", confType, false/*true*/);
       }
       //foreach(EnvDTE.Project proj in Globals.dte.Solution.Projects)
       //{
@@ -136,6 +218,7 @@ namespace ChartPoints
       SolutionBuild2 solBuild = (SolutionBuild2)Globals.dte.Solution.SolutionBuild;
       CheckAndAddSolConf(ref solBuild, "Debug");
       CheckAndAddSolConf(ref solBuild, "Release");
+      AdjustSolConfMatrix();
       //IEnumerable<SolutionConfiguration> allSolConfs = ToIEnumerable<SolutionConfiguration>(solBuild.SolutionConfigurations.GetEnumerator());
       //IEnumerable<SolutionConfiguration> solConfs = allSolConfs.Where(sc => (sc.Name.Contains("|ChartPoints")));
       //IDictionary<string, SolutionConfiguration> allSolConfs = new Dictionary<string, SolutionConfiguration>();
@@ -161,7 +244,7 @@ namespace ChartPoints
       Globals.dte.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildProjConfigBegin;
       Globals.dte.Events.BuildEvents.OnBuildProjConfigDone += OnBuildProjConfigDone;
       debugEvents = Globals.dte.Events.DebuggerEvents;
-      //debugEvents.OnEnterRunMode += new _dispDebuggerEvents_OnEnterRunModeEventHandler(DebuggerEventsOnOnEnterRunMode);//DebuggerEventsOnOnEnterRunMode;
+      debugEvents.OnEnterRunMode += new _dispDebuggerEvents_OnEnterRunModeEventHandler(DebuggerEventsOnOnEnterRunMode);//DebuggerEventsOnOnEnterRunMode;
       debugEvents.OnEnterDesignMode += new _dispDebuggerEvents_OnEnterDesignModeEventHandler(DebugEventsOnOnEnterDesignMode);//DebugEventsOnOnEnterDesignMode
       //debugEvents.OnContextChanged += new _dispDebuggerEvents_OnContextChangedEventHandler(DebuggerEventsOnOnContextChanged);//DebuggerEventsOnOnContextChanged;
       //LoadChartPoints();
@@ -190,30 +273,54 @@ namespace ChartPoints
         foreach (Configuration conf in projConfManager)
         {
           if (conf.ConfigurationName == confType + " [ChartPoints]")
+          {
             needAdd = false;
+            //Debug.WriteLine(conf.ConfigurationName);
+            //foreach (Property prop in conf.Properties)
+            //  Debug.WriteLine(prop.Name + ": " + prop.Value);
+          }
         }
         if (needAdd)
-          projConfManager.AddConfigurationRow(confType + " [ChartPoints]", confType, true);
+        {
+          //Configuration activeConf = projConfManager.ActiveConfiguration;
+          Configurations cpConfs = projConfManager.AddConfigurationRow(confType + " [ChartPoints]", confType, false/*true*/);
+          //Configuration srcConf = projConfManager.Item(confType);
+          //foreach (Configuration cpConf in cpConfs)
+          //{
+          //  Debug.WriteLine(cpConf.ConfigurationName);
+          //  foreach(Property prop in cpConf.Properties)
+          //    Debug.WriteLine(prop.Name + ": " + prop.Value);
+          //  //Property platformProp = cpConf.Properties.Item("Platform");
+          //  //platformProp.let_Value("x86");
+          //}
+        }
       }
     }
 
     public bool InitProjConfigurations(EnvDTE.Project proj)
     {
+      //Orchestrate(proj.FullName);
       CheckAndAddProjConf(proj, "Debug");
       CheckAndAddProjConf(proj, "Release");
+      AdjustSolConfMatrix();
 
       return true;
     }
 
-    private void DebugEventsOnOnEnterDesignMode(dbgEventReason reason)
+    private void CheckShowCPTW()
     {
-      if (IsChartPointsMode() && cpTraceFlag)
+      if (debugServ.IsChartPointsMode() && cpTraceFlag)
       {
         ICPTracerService traceServ;
         cpServProv.GetService<ICPTracerService>(out traceServ);
         traceServ.Show();
         cpTraceFlag = false;
       }
+    }
+
+    private void DebugEventsOnOnEnterDesignMode(dbgEventReason reason)
+    {
+      CheckShowCPTW();
       //if (IsChartPointsMode() && traceHandler != null)
       //{
       //  traceHandler.Dispose();
@@ -234,12 +341,13 @@ namespace ChartPoints
     //  //throw new NotImplementedException();
     //}
 
-      //private void DebuggerEventsOnOnEnterRunMode(dbgEventReason reason)
-      //{
-      //  //LoadChartPoints();
-      //  if (IsChartPointsMode() && traceHandler == null)
-      //    traceHandler = new CPTraceHandler(1);
-      //}
+    private void DebuggerEventsOnOnEnterRunMode(dbgEventReason reason)
+    {
+      CheckShowCPTW();
+      //LoadChartPoints();
+      //if (IsChartPointsMode() && traceHandler == null)
+      //  traceHandler = new CPTraceHandler(1);
+    }
 
     public bool RemoveSolutionConfigurations()
     {
@@ -262,15 +370,36 @@ namespace ChartPoints
       return false;
     }
 
+    private bool CreateFileFromResource(string resName, string fileName)
+    {
+      try
+      {
+        var assembly = Assembly.GetExecutingAssembly();
+        string[] ress = assembly.GetManifestResourceNames();
+        using (Stream stream = assembly.GetManifestResourceStream(resName))
+        {
+          if (stream == null)
+            return false;
+          using (StreamReader reader = new StreamReader(stream))
+          {
+            if (reader == null)
+              return false;
+            string fileContent = reader.ReadToEnd();
+            File.WriteAllText(fileName, fileContent);
+          }
+        }
+      }
+      catch (Exception /*ex*/)
+      {
+        return false;
+      }
+
+      return true;
+    }
+
     public Microsoft.Build.Evaluation.Project Orchestrate(string projConfFile)
     {
       Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
-      //Microsoft.Build.Evaluation.Project msbuildProj = ProjectCollection.GlobalProjectCollection.LoadedProjects.FirstOrDefault(pr => pr.FullPath == projConfFile);
-      //if (msbuildProj != null)
-      //  ProjectCollection.GlobalProjectCollection.UnloadProject(msbuildProj);
-      //msbuildProj = ProjectCollection.GlobalProjectCollection.LoadProject(projConfFile);
-      //bool remRet = ProjectCollection.GlobalProjectCollection.LoadedProjects.Remove(msbuildProj);
-      //msbuildProj = null;
       if (msbuildProj == null)
       {
         msbuildProj = new Microsoft.Build.Evaluation.Project(projConfFile);
@@ -280,66 +409,55 @@ namespace ChartPoints
       ProjectRootElement projRoot = msbuildProj.Xml;
       if (projRoot == null)
         return null;
-      //#####################################
-      //IEnumerable<ProjectItemDefinitionGroupElement> defGroup = projRoot.ItemDefinitionGroups.Where(gr => (gr.Condition.Contains("[ChartPoints]") && gr.Condition.Contains("|$(Platform)")));
-      //#####################################
-      //Condition="'$(CONFIG)'=='DEBUG'"
-      ProjectUsingTaskElement usingTaskElem;
-      IEnumerable<ProjectUsingTaskElement> usingTaskElemCont
-        = projRoot.UsingTasks.Where(t => (t.TaskName == "ChartPointsBuilder.CPInstrBuildTask"
-        && t.AssemblyFile == @"e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll"));
-      if (usingTaskElemCont.Any())
-        usingTaskElem = usingTaskElemCont.ElementAt(0);
-      else
+      ICPExtension extensionServ;
+      cpServProv.GetService<ICPExtension>(out extensionServ);
+      string instPath = extensionServ.GetVSIXInstallPath();
+      bool need_save = false;
+      string cpTargetsFullPath = Path.GetDirectoryName(projConfFile) + "\\ChartPoints.targets";
+      if(!File.Exists(cpTargetsFullPath))
       {
-        usingTaskElem = projRoot.AddUsingTask("ChartPointsBuilder.CPInstrBuildTask",
-          @"e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll", null);
-        usingTaskElem.Condition = "$(Configuration.Contains('[ChartPoints]'))";
-        ProjectTargetElement target = projRoot.AddTarget("GenerateToolOutput");
-        target.BeforeTargets = "ClCompile";
-        target.Condition = "$(Configuration.Contains('[ChartPoints]'))";
-        ProjectTaskElement task = target.AddTask("CPInstrBuildTask");
-        task.SetParameter("InputSrcFiles", "@(ClCompile)");
-        task.SetParameter("InputHeaderFiles", "@(ClInclude)");
-        task.SetParameter("InputChartPoints", "@(ChartPointFile)");
-        task.SetParameter("ProjectName", "$(MSBuildProjectName)");
-        task.SetParameter("ProjectFullName", "$(MSBuildThisFileFullPath)");
-        task.AddOutputProperty("OutputSrcFiles", "OutputSrcFiles");
-        task.AddOutputProperty("OutputHeaderFiles", "OutputHeaderFiles");
-        task.AddOutputProperty("SrcFilesChanged", "SrcFilesChanged");
-        task.AddOutputProperty("HeaderFilesChanged", "HeaderFilesChanged");
-
-        ProjectItemGroupElement srcItemGroup = target.AddItemGroup();
-        srcItemGroup.Condition = "$(SrcFilesChanged) == True";
-        //ProjectItemElement addInclPath = srcItemGroup.AddItem("AdditionalIncludeDirectories", "$(TEMP)");
-        //addInclPath.Include = "";
-        //addInclPath.Remove = "";
-        ProjectItemElement srcRemoveItem = srcItemGroup.AddItem("ClCompile", "Fake");
-        srcRemoveItem.Include = "";
-        srcRemoveItem.Remove = "@(ClCompile)";
-        ProjectItemElement srcIncludeItem = srcItemGroup.AddItem("ClCompile", "$(OutputSrcFiles)");
-        srcIncludeItem.AddMetadata("AdditionalIncludeDirectories", "$(MSBuildProjectDirectory);%(AdditionalIncludeDirectories);");
-
-        ProjectItemGroupElement headerItemGroup = target.AddItemGroup();
-        headerItemGroup.Condition = "$(HeaderFilesChanged) == True";
-        ProjectItemElement headerRemoveItem = headerItemGroup.AddItem("ClInclude", "Fake");
-        headerRemoveItem.Include = "";
-        headerRemoveItem.Remove = "@(ClInclude)";
-        ProjectItemElement headerIncludeItem = headerItemGroup.AddItem("ClInclude", "$(OutputHeaderFiles)");
-
-        msbuildProj.ReevaluateIfNecessary();
+        bool res = CreateFileFromResource("ChartPointsLib.Resources.ChartPoints.targets", cpTargetsFullPath);
+      }
+      IEnumerable<ProjectImportElement> importElems = projRoot.Imports.Where(ig => (ig.Project == "ChartPoints.targets"));
+      if(!importElems.Any())
+      {
+        projRoot.AddImport("ChartPoints.targets");
+        need_save = true;
+      }
+      IEnumerable<ProjectPropertyGroupElement> cpPropsGroups = projRoot.PropertyGroups.Where(ig => (ig.Label == "CPTargetsVariables"));
+      if(!cpPropsGroups.Any())
+      {
+        ProjectPropertyGroupElement cpPropsGroup = projRoot.AddPropertyGroup();
+        cpPropsGroup.Label = "CPTargetsVariables";
+        cpPropsGroup.AddProperty("TargetFileFullPath", instPath + "\\CPInstrBuildTask.dll");
+        cpPropsGroup.AddProperty("ThisProjectFullName", "$(MSBuildThisFileFullPath)");
+      }
+      //////IEnumerable<ProjectTargetElement> cleanTargetElems
+      //////  = projRoot.Targets.Where(ig => (ig.Name == "CleanCPDeps") && ig.Tasks.Count() == 1 && ig.Tasks.ElementAt(0).Name == "CleanProjCPDeps");
+      //////if (!cleanTargetElems.Any())
+      //////{
+      //////  ProjectTargetElement cleanTargetElem = projRoot.AddTarget("CleanCPDeps");
+      //////  cleanTargetElem.BeforeTargets = "ClCompile";
+      //////  ProjectPropertyGroupElement targetPropsGroup = cleanTargetElem.AddPropertyGroup();
+      //////  targetPropsGroup.AddProperty("TargetFileFullPath", instPath + "\\CPInstrBuildTask.dll");
+      //////  ProjectTaskElement task = cleanTargetElem.AddTask("CleanProjCPDeps");
+      //////  task.Condition = "!exists('$(TargetFileFullPath)')";
+      //////  task.SetParameter("ProjFullName", "$(MSBuildProjectFullPath)");
+      //////  need_save = true;
+      //////}
+      if (need_save)
+      {
+        //msbuildProj.ReevaluateIfNecessary();
         msbuildProj.Save();
       }
-      //proj.Save();
-      //msbuildProj.Save();
-      //SaveProject(proj, msbuildProj);
-
       return msbuildProj;
     }
+
     public bool Build()
     {
       return false;
     }
+
     public bool Run()
     {
       return false;

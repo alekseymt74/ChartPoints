@@ -74,6 +74,14 @@ namespace ChartPoints
     //  //window.UpdateView();
     //}
 
+    public void Close()
+    {
+      if(window == null)
+        window = package.FindToolWindow(typeof(ChartPoints.CPChartViewTW), 0, true) as CPChartViewTW;
+      IVsWindowFrame frame = window?.Frame as IVsWindowFrame;
+      frame?.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
+    }
+
     public void Show()
     {
       IVsWindowFrame frame = window?.Frame as IVsWindowFrame;

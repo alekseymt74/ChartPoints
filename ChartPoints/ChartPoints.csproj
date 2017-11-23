@@ -52,17 +52,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ChartGlyph.xaml.cs">
+    <Compile Include="Taggers\ChartGlyph.xaml.cs">
       <DependentUpon>ChartGlyph.xaml</DependentUpon>
     </Compile>
     <Compile Include="ChartPntToggleCmd.cs" />
-    <Compile Include="ChartPointsGlyphFactory.cs" />
-    <Compile Include="ChartPointsEditorClassifier.cs" />
-    <Compile Include="ChartPointsEditorClassifierClassificationDefinition.cs" />
-    <Compile Include="ChartPointsEditorClassifierFormat.cs" />
-    <Compile Include="ChartPointsEditorClassifierProvider.cs" />
+    <Compile Include="Taggers\ChartPointsGlyphFactory.cs" />
+    <Compile Include="Classifiers\CPClassifier.cs" />
+    <Compile Include="Classifiers\CPClassifierClassificationDefinition.cs" />
+    <Compile Include="Classifiers\CPClassifierFormat.cs" />
+    <Compile Include="Classifiers\CPClassifierProvider.cs" />
     <Compile Include="ChartPointsPackage.cs" />
-    <Compile Include="ChartPointsTagger.cs" />
+    <Compile Include="Taggers\ChartPointsTagger.cs" />
     <Compile Include="CPChartView\CPChartViewTW.cs" />
     <Compile Include="CPChartView\CPChartViewTWCmd.cs" />
     <Compile Include="CPChartView\CPChartView.cs">
@@ -71,15 +71,16 @@
     <Compile Include="CPChartView\CPChartView.designer.cs">
       <DependentUpon>CPChartView.cs</DependentUpon>
     </Compile>
-    <Compile Include="CPListTW.cs" />
-    <Compile Include="CPListTWCommand.cs" />
-    <Compile Include="CPListTWCtrl.cs">
+    <Compile Include="CPListTW\CPListTW.cs" />
+    <Compile Include="CPListTW\CPListTWCommand.cs" />
+    <Compile Include="CPListTW\CPListTWCtrl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="CPListTWCtrl.Designer.cs">
+    <Compile Include="CPListTW\CPListTWCtrl.Designer.cs">
       <DependentUpon>CPListTWCtrl.cs</DependentUpon>
     </Compile>
     <Compile Include="CPServices\impl\CPDebugService.cs" />
+    <Compile Include="CPServices\impl\CPExtension.cs" />
     <Compile Include="CPTableView\CPTableView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -122,17 +123,12 @@
     <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="EnvDTE100, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
     <Reference Include="EnvDTE80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="EnvDTE90, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.Build, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Framework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Build.Utilities.Core, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -192,6 +188,9 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.12.0.12.0.30110\lib\Microsoft.VisualStudio.Shell.Interop.12.0.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.12.1.DesignTime, Version=12.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.8.0.8.0.50727\lib\Microsoft.VisualStudio.Shell.Interop.8.0.dll</HintPath>
@@ -259,6 +258,9 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\ChartPntIcon.png">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Resources\ChartPointsViewTWCommand.png" />
     <Content Include="Resources\CPListTWCommand.png" />
     <Content Include="Resources\CPTableViewCommand.png" />
@@ -286,14 +288,17 @@
     <EmbeddedResource Include="CPChartView\CPChartView.resx">
       <DependentUpon>CPChartView.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="CPListTWCtrl.resx">
+    <EmbeddedResource Include="CPListTW\CPListTWCtrl.resx">
       <DependentUpon>CPListTWCtrl.cs</DependentUpon>
     </EmbeddedResource>
     <Resource Include="Resources\ChartPntGlyph.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Content Include="Resources\ChartPntToggleCmd.png" />
-    <Content Include="Resources\ChartPointsPackage.ico" />
+    <Content Include="Resources\ChartPointsPackage.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="SelectVarsDlg.resx">
@@ -308,7 +313,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="ChartGlyph.xaml">
+    <Page Include="Taggers\ChartGlyph.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -321,6 +326,26 @@
       <Project>{82a926d0-46e9-42d7-80c2-ff4f14f467ad}</Project>
       <Name>ChartPointsLib</Name>
       <EmbedInteropTypes>False</EmbedInteropTypes>
+    </ProjectReference>
+    <ProjectReference Include="..\cper\cper.csproj">
+      <Project>{6ff9b8c6-a4d3-423e-8c9f-56a201787b24}</Project>
+      <Name>cper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CPInstrBuildTask\CPInstrBuildTask.csproj">
+      <Project>{449b3905-9540-4bd1-a920-d47092c6520a}</Project>
+      <Name>CPInstrBuildTask</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\cpti64\cpti64.vcxproj">
+      <Project>{afab5ec2-1049-489f-a7e8-a9810e3d7eb3}</Project>
+      <Name>cpti64</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\cpti\cpti.vcxproj">
+      <Project>{57ed0155-79d6-4c6a-ba08-796ba1f24ef4}</Project>
+      <Name>cpti</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CPTracer\CPTracer.vcxproj">
+      <Project>{840f9864-1d14-4301-9971-30698df11928}</Project>
+      <Name>CPTracer</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

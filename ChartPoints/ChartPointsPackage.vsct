@@ -93,7 +93,7 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>ChartPointsViewTW</ButtonText>
+          <ButtonText>ChartPoints [trace::chart]</ButtonText>
         </Strings>
       </Button>
       <Button guid="guidChartPointsPackageCmdSet" id="cmdidCPListTWCommand" priority="0x0100" type="Button">
@@ -102,7 +102,7 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>CPListTW</ButtonText>
+          <ButtonText>ChartPoints [design::list]</ButtonText>
         </Strings>
       </Button>
       <Button guid="guidChartPointsPackageCmdSet" id="cmdidCPTableViewCommand" priority="0x0100" type="Button">
@@ -111,7 +111,7 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>CPTableView</ButtonText>
+          <ButtonText>ChartPoints [trace::list]</ButtonText>
         </Strings>
       </Button>
     </Buttons>

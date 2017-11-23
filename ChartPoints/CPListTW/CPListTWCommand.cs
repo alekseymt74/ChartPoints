@@ -65,6 +65,13 @@ namespace ChartPoints
       private set;
     }
 
+    public void Close()
+    {
+      CPListTW window = package.FindToolWindow(typeof(ChartPoints.CPListTW), 0, true) as CPListTW;
+      IVsWindowFrame frame = window?.Frame as IVsWindowFrame;
+      frame?.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
+    }
+
     public void Enable(bool flag)
     {
       menuItem.Visible = flag;

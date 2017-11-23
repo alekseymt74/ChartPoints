@@ -126,6 +126,8 @@ namespace ChartPoints
     public TextChangedListener()
     {
       Globals.textChangedListener = this;
+      if (Globals.cpTrackManager == null)
+        Globals.cpTrackManager = new CPTrackManager();
       Globals.cpTrackManager.addFTrackerEvent += OnAddFTracker;
       Globals.cpTrackManager.remFTrackerEvent += OnRemFTracker;
     }

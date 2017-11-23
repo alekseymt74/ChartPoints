@@ -100,9 +100,11 @@ namespace ChartPoints
       if (pPnts == null)
       {
         pPnts = ChartPntFactory.Instance.CreateProjectChartPoint(projName);
-        //pPnts.addCPFileEvent += AddProjectChartPoints;
-        //pPnts.remCPFileEvent += RemoveProjectChartPoints;
-        //data.projPoints.Add(pPnts);
+        if(!pPnts.Validate())
+        {
+          pPnts = null;
+          return false;
+        }
         AddProjectChartPoints(pPnts);
 
         return true;
@@ -115,7 +117,21 @@ namespace ChartPoints
     {
       IProjectChartPoints pcp = GetProjectChartPoints(projName);
       if (pcp != null)
+      {
+        IFileChartPoints fCPs = null;
+        while ((fCPs = pcp.filePoints.FirstOrDefault()) != null)
+        {
+          ILineChartPoints lCPs = null;
+          while ((lCPs = fCPs.linePoints.FirstOrDefault()) != null)
+          {
+            IChartPoint cp = null;
+            while ((cp = lCPs.chartPoints.FirstOrDefault()) != null)
+              lCPs.RemoveChartPoint(cp);
+          }
+        }
         data.projPoints.Remove(pcp);
+      }
+
       return true;
     }
 

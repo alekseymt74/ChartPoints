@@ -248,6 +248,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -289,8 +290,8 @@
     <ClCompile Include="test_01.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <UsingTask TaskName="ChartPointsBuilder.CPInstrBuildTask" AssemblyFile="e:\projects\tests\MSVS.ext\ChartPoints\CPInstrBuildTask\bin\Debug\CPInstrBuildTask.dll" Condition="$(Configuration.Contains('[ChartPoints]'))" />
-  <Target Name="GenerateToolOutput" BeforeTargets="ClCompile" Condition="$(Configuration.Contains('[ChartPoints]'))">
+  <UsingTask TaskName="ChartPointsBuilder.CPInstrBuildTask" AssemblyFile="c:\users\aleksey_m_t\appdata\local\microsoft\visualstudio\14.0exp\extensions\amt\chartpoints\1.0\CPInstrBuildTask.dll" Condition="$(Configuration.Contains('[ChartPoints]'))" />
+  <Target Name="CPInstrBuildTarget" BeforeTargets="ClCompile" Condition="$(Configuration.Contains('[ChartPoints]'))">
     <CPInstrBuildTask InputSrcFiles="@(ClCompile)" InputHeaderFiles="@(ClInclude)" InputChartPoints="@(ChartPointFile)" ProjectName="$(MSBuildProjectName)" ProjectFullName="$(MSBuildThisFileFullPath)">
       <Output TaskParameter="OutputSrcFiles" PropertyName="OutputSrcFiles" />
       <Output TaskParameter="OutputHeaderFiles" PropertyName="OutputHeaderFiles" />

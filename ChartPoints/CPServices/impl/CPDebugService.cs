@@ -11,6 +11,7 @@ using Microsoft.VisualStudio;
 
 namespace ChartPoints.CPServices.impl
 {
+
   class CPDebugService
     : ICPDebugService
     , IDebugEventCallback2
@@ -40,10 +41,24 @@ namespace ChartPoints.CPServices.impl
       return true;
     }
 
-    private bool IsChartPointsMode()
+    public bool IsChartPointsMode()
     {
-      string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
-      return activeConfig.Contains(" [ChartPoints]");
+      try
+      {
+        EnvDTE.Property prop = Globals.dte.Solution.Properties.Item("ActiveConfig");
+        if (prop != null)
+        {
+          string activeConfig = (string)Globals.dte.Solution.Properties.Item("ActiveConfig").Value;
+
+          return activeConfig.Contains(" [ChartPoints]");
+        }
+      }
+      catch(Exception /*ex*/)
+      {
+        ;
+      }
+
+      return false;
     }
 
     public int Event(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent, ref Guid riidEvent, uint dwAttrib)

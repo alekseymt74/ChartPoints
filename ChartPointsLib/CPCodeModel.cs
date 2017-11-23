@@ -177,16 +177,23 @@ namespace CP
 
       public VCCodeVariable GetCodeVar(string uniqueName)
       {
-        foreach (CodeElement _elem in ent.Variables)
+        try
         {
-          VCCodeVariable varElem = (VCCodeVariable)_elem;
-          if (varElem.FullName == uniqueName)
+          foreach (CodeElement _elem in ent.Variables)
           {
-            if (IsTypeSupported(varElem))
+            VCCodeVariable varElem = (VCCodeVariable)_elem;
+            if (varElem.FullName == uniqueName)
             {
-              return varElem;
+              if (IsTypeSupported(varElem))
+              {
+                return varElem;
+              }
             }
           }
+        }
+        catch(Exception ex)
+        {
+          Debug.WriteLine(ex);
         }
 
         return null;
@@ -328,14 +335,31 @@ namespace CP
       {
         if (codeElem.Kind == vsCMElement.vsCMElementFunction)
         {
-          if ((lineNum > codeElem.StartPoint.Line && lineNum < codeElem.EndPoint.Line) ||
-              (lineNum == codeElem.StartPoint.Line && linePos >= codeElem.StartPoint.LineCharOffset) ||
-              (lineNum == codeElem.EndPoint.Line && linePos <= codeElem.EndPoint.LineCharOffset))
+          VCCodeFunction targetFunc = codeElem as VCCodeFunction;
+          if (targetFunc != null)
           {
-            VCCodeFunction targetFunc = (VCCodeFunction)codeElem;
-            if (targetFunc != null)
-              return targetFunc;
+            TextPoint startFuncBody = targetFunc.StartPointOf[vsCMPart.vsCMPartBody, vsCMWhere.vsCMWhereDefinition];
+            TextPoint endFuncBody = targetFunc.EndPointOf[vsCMPart.vsCMPartBody, vsCMWhere.vsCMWhereDefinition];
+            EditPoint startPnt = startFuncBody.CreateEditPoint();
+            EditPoint endPnt = endFuncBody.CreateEditPoint();
+            startPnt.FindPattern("{", (int)vsFindOptions.vsFindOptionsBackwards);
+            endPnt.FindPattern("}");
+            if ((lineNum > startPnt.Line && lineNum < endPnt.Line) ||
+                (lineNum == startPnt.Line && linePos >= startPnt.LineCharOffset) ||
+                (lineNum == endPnt.Line && linePos <= endPnt.LineCharOffset))
+            {
+                return targetFunc;
+            }
           }
+
+          //if ((lineNum > codeElem.StartPoint.Line && lineNum < codeElem.EndPoint.Line) ||
+          //  (lineNum == codeElem.StartPoint.Line && linePos >= codeElem.StartPoint.LineCharOffset) ||
+          //  (lineNum == codeElem.EndPoint.Line && linePos <= codeElem.EndPoint.LineCharOffset))
+          //{
+          //  VCCodeFunction targetFunc = (VCCodeFunction)codeElem;
+          //  if (targetFunc != null)
+          //    return targetFunc;
+          //}
         }
         else
         {

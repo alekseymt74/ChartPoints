@@ -259,6 +259,7 @@ namespace ChartPoints
 
     private CP.Code.IClassMethodElement codeClassMethod;
     public ICPEvent<LineCPStatusEvArgs> lineCPStatusChangedEvent { get; set; } = new CPEvent<LineCPStatusEvArgs>();
+    public ICPEvent<CPLineEvArgs> cpStatusChangedEvent { get; set; } = new CPEvent<CPLineEvArgs>();
     public ICPEvent<CPLineEvArgs> addCPEvent { get; set; } = new CPEvent<CPLineEvArgs>();
     public ICPEvent<CPLineEvArgs> remCPEvent { get; set; } = new CPEvent<CPLineEvArgs>();
 
@@ -326,6 +327,7 @@ namespace ChartPoints
     protected void OnCPStatusChanged(CPStatusEvArgs args)
     {
       CalcStatus();
+      cpStatusChangedEvent.Fire(new CPLineEvArgs(this, args.cp));
     }
 
     public bool RemoveChartPoint(IChartPoint chartPnt)
@@ -562,7 +564,7 @@ namespace ChartPoints
       return false;
     }
 
-    protected bool RemoveLineChartPoints(ILineChartPoints linePnts)
+    public bool RemoveLineChartPoints(ILineChartPoints linePnts)
     {
       bool ret = linePoints.Remove(linePnts);
       if (ret)
@@ -597,8 +599,8 @@ namespace ChartPoints
           lPnts = ChartPntFactory.Instance.CreateLineChartPoint(classMethodElem, lineNum, linePos, data);
           AddLineChartPoints(lPnts);
         }
-        else
-          ;
+        //else
+          //;
       }
 
       return lPnts;
@@ -617,7 +619,7 @@ namespace ChartPoints
       {
         foreach (ILineChartPoints lPnts in linePoints.Reverse())
         {
-          if (lPnts.data.pos.lineNum >= lineNum)
+          if (lPnts.data.pos.lineNum >/*=*/ lineNum)
           {
             if (linesAdd < 0 && lineNum + (-linesAdd) > lPnts.data.pos.lineNum)
               RemoveLineChartPoints(lPnts);
