@@ -122,6 +122,17 @@ namespace ChartPoints
           IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(proj.Name);
           if (pPnts != null)
           {
+            VCProject vcProj = (VCProject)proj.Object;
+            VCConfiguration vcConfig = vcProj.Configurations.Item(projConfig);
+            IVCCollection tools = vcConfig.Tools as IVCCollection;
+            VCLinkerTool tool = tools.Item("VCLinkerTool") as VCLinkerTool;
+            tool.GenerateDebugInformation = false;
+            //foreach(IVCRulePropertyStorage rule in vcConfig.Rules)
+            //{
+            //  foreach(var v in rule.)
+            //}
+            //foreach (Property prop in proj.ConfigurationManager.ActiveConfiguration.Properties)
+            //  Debug.WriteLine(prop.Name + ": " + prop.Value.ToString());
             pPnts.Validate();
             if (!serviceHostsCont.TryGetValue(proj.FullName, out serviceHost))
               serviceHostsCont.Add(proj.FullName, serviceHost);
