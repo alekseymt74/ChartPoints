@@ -151,7 +151,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\cpti\tracer_impl.cpp" />
-    <ClCompile Include="..\cpti\__cp__.tracer.cpp" />
+    <ClCompile Include="..\cpti\__cp__.tracer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

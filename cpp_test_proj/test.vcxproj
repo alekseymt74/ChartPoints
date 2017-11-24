@@ -97,6 +97,7 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
+    <Import Project="ChartPoints.targets" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -147,6 +148,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release [ChartPoints]|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Label="CPTargetsVariables">
+    <TargetFileFullPath>c:\users\aleksey_m_t\appdata\local\microsoft\visualstudio\14.0exp\extensions\amt\chartpoints\1.0\CPInstrBuildTask.dll</TargetFileFullPath>
+    <ThisProjectFullName>$(MSBuildThisFileFullPath)</ThisProjectFullName>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>
@@ -158,7 +163,8 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <FullProgramDatabaseFile>false</FullProgramDatabaseFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug [ChartPoints]|Win32'">
@@ -172,7 +178,8 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <FullProgramDatabaseFile>false</FullProgramDatabaseFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -290,23 +297,4 @@
     <ClCompile Include="test_01.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <UsingTask TaskName="ChartPointsBuilder.CPInstrBuildTask" AssemblyFile="c:\users\aleksey_m_t\appdata\local\microsoft\visualstudio\14.0exp\extensions\amt\chartpoints\1.0\CPInstrBuildTask.dll" Condition="$(Configuration.Contains('[ChartPoints]'))" />
-  <Target Name="CPInstrBuildTarget" BeforeTargets="ClCompile" Condition="$(Configuration.Contains('[ChartPoints]'))">
-    <CPInstrBuildTask InputSrcFiles="@(ClCompile)" InputHeaderFiles="@(ClInclude)" InputChartPoints="@(ChartPointFile)" ProjectName="$(MSBuildProjectName)" ProjectFullName="$(MSBuildThisFileFullPath)">
-      <Output TaskParameter="OutputSrcFiles" PropertyName="OutputSrcFiles" />
-      <Output TaskParameter="OutputHeaderFiles" PropertyName="OutputHeaderFiles" />
-      <Output TaskParameter="SrcFilesChanged" PropertyName="SrcFilesChanged" />
-      <Output TaskParameter="HeaderFilesChanged" PropertyName="HeaderFilesChanged" />
-    </CPInstrBuildTask>
-    <ItemGroup Condition="$(SrcFilesChanged) == True">
-      <ClCompile Remove="@(ClCompile)" />
-      <ClCompile Include="$(OutputSrcFiles)">
-        <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);%(AdditionalIncludeDirectories);</AdditionalIncludeDirectories>
-      </ClCompile>
-    </ItemGroup>
-    <ItemGroup Condition="$(HeaderFilesChanged) == True">
-      <ClInclude Remove="@(ClInclude)" />
-      <ClInclude Include="$(OutputHeaderFiles)" />
-    </ItemGroup>
-  </Target>
 </Project>

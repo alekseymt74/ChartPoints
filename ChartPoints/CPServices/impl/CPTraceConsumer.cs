@@ -123,7 +123,7 @@ namespace ChartPoints
       }
       for (int i = 0; i < tms_out.Count; ++i)
       {
-        TimeSpan tmSpan = TimeSpan.FromMilliseconds(tms_out[i]);
+        TimeSpan tmSpan = TimeSpan.FromMilliseconds(tms_out[i] / 1000.0);
         if (series.Points.Count != 0)
           series.Points.AddXY(tmSpan.TotalDays/*((double)tms_out[i]) / 1000.0 / 3600.0 / 24.0*/, series.Points.ElementAt(series.Points.Count - 1).YValues[0]);
         series.Points.AddXY(tmSpan.TotalDays/*((double)tms_out[i]) / 1000.0 / 3600.0 / 24.0*/, vals_out[i]);

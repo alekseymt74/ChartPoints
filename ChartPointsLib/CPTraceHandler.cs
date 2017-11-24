@@ -107,7 +107,7 @@ namespace ChartPoints
     private void RegElem(string name, UInt64 elem_id, UInt16 typeID)
     {
       //Debug.WriteLine("[*** CPTraceHandler::RegElem ***]; thread id: " + System.Threading.Thread.CurrentThread.ManagedThreadId.ToString());
-      outputWindowPane.OutputString("[RegElem]; name: " + name + "\tid: " + elem_id + "\ttypeID: " + typeID + "\n");
+      //outputWindowPane.OutputString("$$$$$$$$$$[RegElem]; name: " + name + "\tid: " + elem_id + "\ttypeID: " + typeID + "\n");
       ICPTracerDelegate cpDelegate = localProcTracer?.RegTraceEnt(elem_id, name);
     }
 
