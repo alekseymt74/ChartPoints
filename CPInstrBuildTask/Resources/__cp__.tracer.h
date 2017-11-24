@@ -26,8 +26,8 @@ namespace cptracer
   public:
     typedef std::shared_ptr<tracer> tracer_ptr;
   protected:
-    virtual void reg_elem(const char *name, uint64_t id, uint32_t _type_id) const = 0;
-    virtual void trace(uint64_t id, double val) const = 0;
+    virtual void reg_elem(const char *name, uint64_t id, uint32_t _type_id) = 0;
+    virtual void trace(uint64_t id, double val) = 0;
   public:
     virtual ~tracer();
     static tracer_ptr instance();

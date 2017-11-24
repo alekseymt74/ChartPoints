@@ -135,6 +135,13 @@ public:
 };
 
 #define TM_WAIT_MS 1
+#define N_LOOPS 3000
+#define N_DUPLICATES 3
+
+inline void sleep()
+{
+	std::this_thread::sleep_for(std::chrono::milliseconds(TM_WAIT_MS));
+}
 
 int main()
 {
@@ -158,38 +165,49 @@ int main()
     //});
     std::thread thr1([&]()
     {
-        for(int j = 0; j < 3; ++j)
+        for(int j = 0; j < N_DUPLICATES; ++j)
         {
             temp_utest tst;
-            for(int i = 0; i < 1000; ++i)
+			for(int i = 0; i < N_LOOPS; ++i)
             {
                 tst.f3();
-                //tst.f1(i);
+                tst.f1(i);
                 //tst_01.func_01();
-                std::this_thread::sleep_for(std::chrono::milliseconds(TM_WAIT_MS));
+				sleep();
             }
             //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
     });
     std::thread thr2([&]()
     {
-        temp_utest tst;
-        for(int i = 0; i < 3000; ++i)
-        {
-            //tst.f3();
-            tst.f1(i);
-            //tst_01.func_01();
-            std::this_thread::sleep_for(std::chrono::milliseconds(TM_WAIT_MS));
-        }
+		for (int j = 0; j < N_DUPLICATES; ++j)
+		{
+			temp_utest tst;
+			for (int i = 0; i < N_LOOPS; ++i)
+			{
+				tst.f3();
+				tst.f1(i);
+				sleep();
+			}
+		}
+		//temp_utest tst;
+		//temp_utest tst1, tst2, tst3, tst4, tst5;
+		//for(int i = 0; i < N_LOOPS; ++i)
+        //{
+        //    //tst.f3();
+        //    tst.f1(i);
+        //    //tst_01.func_01();
+        //    std::this_thread::sleep_for(std::chrono::milliseconds(TM_WAIT_MS));
+        //}
     });
-    for(int i = 0; i < 3000; ++i)
+    for(int i = 0; i < N_DUPLICATES * N_LOOPS; ++i)
     {
         //tst.f3();
         //tst.f1(i);
         tst_01.func_01();
-        std::this_thread::sleep_for(std::chrono::milliseconds(TM_WAIT_MS));
+		sleep();
     }
-    //thr0.join();
+    ////thr0.join();
     thr1.join();
     thr2.join();
     std::chrono::system_clock::rep tm_ellapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - tm_start).count();

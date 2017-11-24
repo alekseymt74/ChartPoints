@@ -22,21 +22,23 @@
 
 using namespace ATL;
 
+struct trace_ent
+{
+  uint64_t id;
+  uint64_t tm;
+  double val;
+  trace_ent() {}
+  trace_ent( uint64_t _id, uint64_t _tm, double _val )
+    : id( _id ), tm( _tm ), val( _val )
+  {}
+};
+typedef trace_ent data_ent;
+
+template<typename TData>
 class data_queue
 {
 public:
-  struct trace_ent
-  {
-    uint64_t id;
-    uint64_t tm;
-    double val;
-    trace_ent() {}
-    trace_ent( uint64_t _id, uint64_t _tm, double _val )
-      : id( _id ), tm( _tm ), val( _val )
-    {}
-  };
-  typedef trace_ent data_ent;
-  typedef std::queue< data_ent > data_cont;
+  typedef std::queue< TData > data_cont;
   //typedef std::queue< data_ent, boost::circular_buffer<data_ent> > data_cont;
 private:
   data_cont data_1;
@@ -45,8 +47,6 @@ public:
   data_cont *in_ptr;
   data_cont *out_ptr;
   data_queue()
-    //: data_1( boost::circular_buffer<data_ent>(10000) )
-    //, data_2( boost::circular_buffer<data_ent>( 10000 ) )
   {
     in_ptr = &data_1;
     out_ptr = &data_2;
@@ -69,20 +69,9 @@ class ATL_NO_VTABLE CCPProcTracer :
   std::atomic_bool active;
   std::thread *consumer_thr;
 
-  std::thread *reg_thread;
-  std::atomic_bool reg_thr_active;
-  std::mutex need_reg_mtx;
-  std::condition_variable need_reg_cond;
-  bool need_reg;
-  void reg_proc();
-  CComBSTR _name;
-  ULONGLONG _id;
-  USHORT _typeID;
-
+  std::mutex send_trace_queue_mtx;
   std::mutex mtx;
-  std::mutex mtx1;
-  //std::shared_mutex mtx1;
-  data_queue data;
+  data_queue< data_ent > data;
   typedef std::vector<TraceEnt> te_data;
   typedef std::shared_ptr< te_data > te_data_ptr;
   typedef std::map<uint64_t, te_data_ptr > tes_data_cont;
@@ -90,7 +79,6 @@ class ATL_NO_VTABLE CCPProcTracer :
   tes_data_cont tes;
   void send();
   void cons_proc();
-  //static std::chrono::system_clock::time_point tm_start;
 public:
   CCPProcTracer();
   ~CCPProcTracer();

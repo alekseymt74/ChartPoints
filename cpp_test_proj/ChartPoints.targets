@@ -1,0 +1,90 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="CleanCPDeps;CPInstrBuildTarget">  
+	<UsingTask
+		TaskName="CleanProjCPDeps"
+		TaskFactory="CodeTaskFactory"
+		AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" >  
+		<ParameterGroup>  
+			<ProjFullName ParameterType="System.String" Required="true" /> 
+		</ParameterGroup>  
+		<Task>  
+			<Reference Include="Microsoft.Build"/>
+			<Reference Include="System.Xml"/>
+			<Using Namespace="Microsoft.Build.Evaluation"/>  
+			<Using Namespace="Microsoft.Build.Construction"/>  
+			<Using Namespace="System.Diagnostics"/>
+			<Code Type="Fragment" Language="cs">  
+				<![CDATA[  
+					string confSubType = " [ChartPoints]";
+					Project proj = ProjectCollection.GlobalProjectCollection.LoadProject(ProjFullName);//new Project(ProjFullName);
+					proj.ReevaluateIfNecessary();
+					Log.LogMessage(MessageImportance.High, "Removing ChartPoints extension dependencies from " + ProjFullName);
+					ProjectRootElement projRoot = proj.Xml;
+					Log.LogMessage(MessageImportance.High, "Removing ChartPoints configurations");
+					IEnumerable<ProjectItemGroupElement> projConfsGroup
+						= projRoot.ItemGroups.Where(ig => (ig.Label == "ProjectConfigurations"));
+					foreach (ProjectItemGroupElement confGroup in projConfsGroup)
+					{
+						IEnumerable<ProjectElement> confs
+							= confGroup.Children.Where(c => (((ProjectItemElement)c).ItemType == "ProjectConfiguration"
+							&& ((ProjectItemElement)c).Include.Contains(confSubType)));
+						foreach(ProjectElement el in confs)
+							confGroup.RemoveChild(el);
+					}
+					IEnumerable<ProjectPropertyGroupElement> propGroups
+						= projRoot.PropertyGroups.Where(ig => (ig.Condition.Contains(confSubType)));
+					foreach (ProjectPropertyGroupElement el in propGroups)
+					  projRoot.RemoveChild(el);
+					IEnumerable<ProjectImportGroupElement> importGroups
+						= projRoot.ImportGroups.Where(ig => (ig.Condition.Contains(confSubType)));
+					foreach (ProjectImportGroupElement el in importGroups)
+					  projRoot.RemoveChild(el);
+					IEnumerable<ProjectItemDefinitionGroupElement> itemDefGroups
+						= projRoot.ItemDefinitionGroups.Where(ig => (ig.Condition.Contains(confSubType)));
+					foreach (ProjectItemDefinitionGroupElement el in itemDefGroups)
+					  projRoot.RemoveChild(el);
+					Log.LogMessage(MessageImportance.High, "Removing ChartPoints targets properties");
+					IEnumerable<ProjectPropertyGroupElement> cpPropsGroups
+						= projRoot.PropertyGroups.Where(ig => (ig.Label == "CPTargetsVariables"));
+					foreach (ProjectPropertyGroupElement el in cpPropsGroups)
+						projRoot.RemoveChild(el);
+					Log.LogMessage(MessageImportance.High, "Removing 'ChartPoints.targets' import");
+					IEnumerable<ProjectImportElement> importElems
+						= projRoot.Imports.Where(ig => (ig.Project == "ChartPoints.targets"));
+					foreach (ProjectImportElement el in importElems)
+					  el.Parent.RemoveChild(el);
+					Log.LogMessage(MessageImportance.High, "Removing self-cleaning target 'CleanCPDeps'");
+					IEnumerable<ProjectTargetElement> cleanTargetElems = projRoot.Targets.Where(ig => (ig.Name == "CleanCPDeps"));
+					foreach (ProjectTargetElement el in cleanTargetElems)
+					  projRoot.RemoveChild(el);
+					Log.LogMessage(MessageImportance.High, "Removing 'ChartPoints.targets' file");
+					File.Delete("ChartPoints.targets");
+					Log.LogMessage(MessageImportance.High, "Saving project. Need to reload.");
+					Log.LogMessage(MessageImportance.High, "Answer 'Reload' on 'File modification detected dialog'");
+					proj.Save();
+				]]>  
+			</Code>  
+		</Task>  
+	</UsingTask>  
+  <Target Name="CleanCPDeps" BeforeTargets="ClCompile">
+    <CleanProjCPDeps Condition="!exists('$(TargetFileFullPath)')" ProjFullName="$(MSBuildProjectFullPath)" />
+  </Target>
+	<UsingTask TaskName="ChartPointsBuilder.CPInstrBuildTask" Condition="exists('$(TargetFileFullPath)')" AssemblyFile="$(TargetFileFullPath)"/>
+	<Target Name="CPInstrBuildTarget" BeforeTargets="ClCompile" Condition="exists('$(TargetFileFullPath)') AND $(Configuration.Contains(' [ChartPoints]'))">
+		<CPInstrBuildTask InputSrcFiles="@(ClCompile)" InputHeaderFiles="@(ClInclude)" ProjectName="$(MSBuildProjectName)" ProjectFullName="$(ThisProjectFullName)">
+		  <Output TaskParameter="OutputSrcFiles" PropertyName="OutputSrcFiles" />
+		  <Output TaskParameter="OutputHeaderFiles" PropertyName="OutputHeaderFiles" />
+		  <Output TaskParameter="SrcFilesChanged" PropertyName="SrcFilesChanged" />
+		  <Output TaskParameter="HeaderFilesChanged" PropertyName="HeaderFilesChanged" />
+		</CPInstrBuildTask>
+		<ItemGroup Condition="$(SrcFilesChanged) == True">
+		  <ClCompile Remove="@(ClCompile)" />
+		  <ClCompile Include="$(OutputSrcFiles)">
+			<AdditionalIncludeDirectories>$(MSBuildProjectDirectory);%(AdditionalIncludeDirectories);</AdditionalIncludeDirectories>
+		  </ClCompile>
+		</ItemGroup>
+		<ItemGroup Condition="$(HeaderFilesChanged) == True">
+		  <ClInclude Remove="@(ClInclude)" />
+		  <ClInclude Include="$(OutputHeaderFiles)" />
+		</ItemGroup>
+	</Target>
+</Project>

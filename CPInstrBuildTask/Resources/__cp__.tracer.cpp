@@ -41,8 +41,9 @@ namespace cptracer
   };
   HMODULE temp::h_mod = NULL;
 
-  tracer::tracer_ptr create_tracer_impl(tracer::tracer_ptr &_tracer)
+  tracer::tracer_ptr create_tracer_impl(/*tracer::tracer_ptr &_tracer*/)
   {
+    tracer::tracer_ptr _tracer;
     try
     {
 #ifdef _WIN64
@@ -85,8 +86,8 @@ namespace cptracer
 
   tracer::tracer_ptr tracer::instance()
   {
-    static tracer_ptr _temp;
-    static tracer_ptr _this = create_tracer_impl(_temp);
+    //static tracer_ptr _temp;
+    static tracer_ptr _this = create_tracer_impl();// _temp);
 
     return _this;
   }

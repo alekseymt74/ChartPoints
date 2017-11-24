@@ -147,6 +147,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release [ChartPoints]|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Label="CPTargetsVariables">
+    <TargetFileFullPath>c:\users\aleksey_m_t\appdata\local\microsoft\visualstudio\14.0exp\extensions\amt\chartpoints\1.0\CPInstrBuildTask.dll</TargetFileFullPath>
+    <ThisProjectFullName>$(MSBuildThisFileFullPath)</ThisProjectFullName>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>
@@ -281,5 +285,6 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="ChartPoints.targets" />
   </ImportGroup>
-  </Project>
+</Project>
