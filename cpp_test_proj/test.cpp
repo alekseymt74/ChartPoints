@@ -147,7 +147,6 @@ int main()
 {
 
     //temp_utest tst;
-    test_01 tst_01;
     //test_cpp_types tst_cpp_t;
     //for (int i = 0; i < 10; ++i)
     //{
@@ -168,10 +167,14 @@ int main()
         for(int j = 0; j < N_DUPLICATES; ++j)
         {
             temp_utest tst;
+            test_01 tst_01(-1000);
 			for(int i = 0; i < N_LOOPS; ++i)
             {
+                tst.f2();
                 tst.f3();
                 tst.f1(i);
+                tst_01.func_01();
+                tst_01.func_02();
                 //tst_01.func_01();
 				sleep();
             }
@@ -183,10 +186,14 @@ int main()
 		for (int j = 0; j < N_DUPLICATES; ++j)
 		{
 			temp_utest tst;
+            test_01 tst_01(1000);
 			for (int i = 0; i < N_LOOPS; ++i)
 			{
+                tst.f2();
 				tst.f3();
 				tst.f1(i);
+                tst_01.func_01();
+                tst_01.func_02();
 				sleep();
 			}
 		}
@@ -200,11 +207,13 @@ int main()
         //    std::this_thread::sleep_for(std::chrono::milliseconds(TM_WAIT_MS));
         //}
     });
+    test_01 tst_01(0);
     for(int i = 0; i < N_DUPLICATES * N_LOOPS; ++i)
     {
         //tst.f3();
         //tst.f1(i);
         tst_01.func_01();
+        tst_01.func_02();
 		sleep();
     }
     ////thr0.join();
