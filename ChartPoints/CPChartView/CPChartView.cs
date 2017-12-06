@@ -330,7 +330,7 @@ namespace ChartPoints
       chartArea.Name = chartName;
       this.chart.ChartAreas.Add(chartArea);
       chartTitle.DockedToChartArea = chartName;
-      chartTitle.Text = procName + "[" + procID.ToString() + "]";
+      //chartTitle.Text = procName + "[" + procID.ToString() + "]";
       chartTitle.Name = "CATitle" + procID.ToString();
       this.chart.Titles.Add(chartTitle);
 

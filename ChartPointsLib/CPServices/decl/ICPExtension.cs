@@ -6,8 +6,17 @@ using System.Threading.Tasks;
 
 namespace ChartPoints.CPServices.decl
 {
+    public enum EMode
+    {
+      Design
+      , Build
+      , Run
+    }
+
     public interface ICPExtension : ICPService
     {
-        string GetVSIXInstallPath();
+      string GetVSIXInstallPath();
+      EMode GetMode();
+      EMode SetMode(EMode newMode);
     }
 }

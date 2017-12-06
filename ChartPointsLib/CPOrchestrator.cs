@@ -59,7 +59,7 @@ namespace ChartPoints
     ICPServiceProvider cpServProv;
     bool cpTraceFlag = false;
     private ICPDebugService debugServ;
-
+    ICPExtension extensionServ;
 
     public CPOrchestrator()
     {
@@ -70,6 +70,7 @@ namespace ChartPoints
         debugServ.debugProcCreateCPEvent += OnProcDebugCreate;
         debugServ.debugProcDestroyCPEvent += OnProcDebugDestroy;
       }
+      cpServProv.GetService<ICPExtension>(out extensionServ);
     }
 
     private void OnProcDebugCreate(CPProcEvArgs args)
@@ -108,6 +109,7 @@ namespace ChartPoints
     {
       if (solConfig.Contains(" [ChartPoints]"))
       {
+        extensionServ.SetMode(EMode.Build);
         ServiceHost serviceHost = null;
         try
         {
@@ -122,6 +124,17 @@ namespace ChartPoints
           IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(proj.Name);
           if (pPnts != null)
           {
+            VCProject vcProj = (VCProject)proj.Object;
+            VCConfiguration vcConfig = vcProj.Configurations.Item(projConfig);
+            IVCCollection tools = vcConfig.Tools as IVCCollection;
+            VCLinkerTool tool = tools.Item("VCLinkerTool") as VCLinkerTool;
+            tool.GenerateDebugInformation = false;
+            //foreach(IVCRulePropertyStorage rule in vcConfig.Rules)
+            //{
+            //  foreach(var v in rule.)
+            //}
+            //foreach (Property prop in proj.ConfigurationManager.ActiveConfiguration.Properties)
+            //  Debug.WriteLine(prop.Name + ": " + prop.Value.ToString());
             pPnts.Validate();
             if (!serviceHostsCont.TryGetValue(proj.FullName, out serviceHost))
               serviceHostsCont.Add(proj.FullName, serviceHost);
@@ -160,6 +173,7 @@ namespace ChartPoints
             serviceHost.Close();
           serviceHostsCont[proj.FullName] = null;
         }
+        extensionServ.SetMode(EMode.Design);
       }
     }
 
@@ -320,6 +334,7 @@ namespace ChartPoints
 
     private void DebugEventsOnOnEnterDesignMode(dbgEventReason reason)
     {
+      extensionServ.SetMode(EMode.Design);
       CheckShowCPTW();
       //if (IsChartPointsMode() && traceHandler != null)
       //{
@@ -343,6 +358,7 @@ namespace ChartPoints
 
     private void DebuggerEventsOnOnEnterRunMode(dbgEventReason reason)
     {
+      extensionServ.SetMode(EMode.Run);
       CheckShowCPTW();
       //LoadChartPoints();
       //if (IsChartPointsMode() && traceHandler == null)
@@ -409,8 +425,6 @@ namespace ChartPoints
       ProjectRootElement projRoot = msbuildProj.Xml;
       if (projRoot == null)
         return null;
-      ICPExtension extensionServ;
-      cpServProv.GetService<ICPExtension>(out extensionServ);
       string instPath = extensionServ.GetVSIXInstallPath();
       bool need_save = false;
       string cpTargetsFullPath = Path.GetDirectoryName(projConfFile) + "\\ChartPoints.targets";

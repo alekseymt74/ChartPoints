@@ -3,9 +3,10 @@
   <Metadata>
     <Identity Id="ChartPoints.Company.e30d52ec-2648-4c70-a05c-b17f760ba637" Version="1.0" Language="en-US" Publisher="AMT" />
     <DisplayName>ChartPoints</DisplayName>
-    <Description xml:space="preserve">Chart Points</Description>
-    <Icon>Resources\ChartPointsPackage.ico</Icon>
-    <PreviewImage>Resources\ChartPointsPackage.ico</PreviewImage>
+    <Description xml:space="preserve">ChartPoints.
+Debugger data visualizer.</Description>
+    <Icon>if_line-chart_322458.png</Icon>
+    <PreviewImage>if_line-chart_322458.png</PreviewImage>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[14.0]" />

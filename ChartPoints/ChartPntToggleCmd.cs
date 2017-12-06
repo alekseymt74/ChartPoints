@@ -14,6 +14,7 @@ using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
+using ChartPoints.CPServices.decl;
 
 namespace ChartPoints
 {
@@ -40,6 +41,8 @@ namespace ChartPoints
     /// VS Package that provides this command, not null.
     /// </summary>
     private readonly Package package;
+    ICPServiceProvider cpServProv;
+    private ICPExtension extensionServ;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ChartPntToggleCmd"/> class.
@@ -54,6 +57,8 @@ namespace ChartPoints
       }
 
       this.package = package;
+      cpServProv = ICPServiceProvider.GetProvider();
+      cpServProv.GetService<ICPExtension>(out extensionServ);
 
       OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
       if (commandService != null)
@@ -78,6 +83,8 @@ namespace ChartPoints
       {
         menuCommand.Visible = false;
         menuCommand.Enabled = false;
+        if (extensionServ.GetMode() != EMode.Design)
+          return;
         IProjectChartPoints pPnts = Globals.processor.GetProjectChartPoints(Globals.dte.ActiveDocument.ProjectItem.ContainingProject.Name);
         if (pPnts == null)
           Globals.processor.AddProjectChartPoints(Globals.dte.ActiveDocument.ProjectItem.ContainingProject.Name, out pPnts);
