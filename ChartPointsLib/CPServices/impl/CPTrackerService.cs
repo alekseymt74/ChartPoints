@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ChartPoints.CPServices.decl;
 
-namespace ChartPoints
+namespace ChartPoints.CPServices.impl
 {
 
   public class CPTracker : ICPEntTracker
@@ -135,11 +136,22 @@ namespace ChartPoints
     }
   }
 
-  public class CPTrackManager : ICPTrackManager
+  public class CPTrackService : ICPTrackService
   {
     public ICPEvent<FileTrackerArgs> addFTrackerEvent { get; set; } = new CPEvent<FileTrackerArgs>();
     public ICPEvent<FileTrackerArgs> remFTrackerEvent { get; set; } = new CPEvent<FileTrackerArgs>();
     private ISet<IFileTracker> filesTrackers = new SortedSet<IFileTracker>(Comparer<IFileTracker>.Create((lh, rh) => (String.Compare(lh.fileFullName, rh.fileFullName, StringComparison.Ordinal))));
+
+    public CPTrackService()
+    {
+      ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
+      ICPEventService cpEvsService;
+      cpServProv.GetService<ICPEventService>(out cpEvsService);
+      IConstructEvents constrEvents = cpEvsService.GetConstructEvents();
+      constrEvents.createdFileCPsEvent += OnFileCPsCreated;
+      constrEvents.deletedFileCPsEvent += OnFileCPsDeleted;
+    }
+
     protected IFileTracker AddFileTracker(string fileFullName)
     {
       IFileTracker fTracker = GetFileTracker(fileFullName);
@@ -152,42 +164,42 @@ namespace ChartPoints
 
       return fTracker;
     }
+
     public IFileTracker GetFileTracker(string fileFullName)
     {
       return filesTrackers.FirstOrDefault((lp) => (lp.fileFullName == fileFullName));
     }
 
-    private void OnEmptyCpEvent(FileTrackerArgs args)
+    void OnFileCPsCreated(IConstructEventArgs<IFileChartPoints> args)
     {
-      IFileTracker fTracker = GetFileTracker(args.fileTracker.fileFullName);
-      if (fTracker != null)
-      {
-        filesTrackers.Remove(args.fileTracker);
-        remFTrackerEvent.Fire(new FileTrackerArgs(args.fileTracker));
-      }
-    }
-
-    public void Register(IChartPoint cp)
-    {
-      //IFileTracker fTracker = AddFileTracker(cp.data.lineData.fileData.fileFullName);
-      //ICPEntTracker cpValidator = new CPTracker(cp);
-      //fTracker.Add(cpValidator);
-    }
-
-    //public void Register(ILineChartPoints lcp)
-    //{
-    //  IFileTracker fTracker = AddFileTracker(lcp.data.fileData.fileFullName);
-    //  ICPEntTracker cpValidator = new LineCPTracker(lcp);
-    //  fTracker.Add(cpValidator);
-    //  addFTrackerEvent.Fire(new FileTrackerArgs(fTracker));
-    //}
-
-    public void Register(IFileChartPoints fcp)
-    {
-      IFileTracker fTracker = AddFileTracker(fcp.data.fileFullName);
-      ICPEntTracker cpValidator = new FileCPTracker(fcp);
+      IFileTracker fTracker = AddFileTracker(args.obj.data.fileFullName);
+      ICPEntTracker cpValidator = new FileCPTracker(args.obj);
       fTracker.Add(cpValidator);
       addFTrackerEvent.Fire(new FileTrackerArgs(fTracker));
+    }
+
+    void OnFileCPsDeleted(IConstructEventArgs<IFileChartPoints> args)
+    {
+      RemoveFileTracker(args.obj.data.fileFullName);
+    }
+
+    private void OnEmptyCpEvent(FileTrackerArgs args)
+    {
+      RemoveFileTracker(args.fileTracker.fileFullName);
+    }
+
+    private bool RemoveFileTracker(string fileFullName)
+    {
+      IFileTracker fTracker = GetFileTracker(fileFullName);
+      if (fTracker != null)
+      {
+        filesTrackers.Remove(fTracker);
+        remFTrackerEvent.Fire(new FileTrackerArgs(fTracker));
+
+        return true;
+      }
+
+      return false;
     }
   }
 

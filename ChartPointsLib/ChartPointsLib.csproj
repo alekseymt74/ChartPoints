@@ -86,7 +86,7 @@
     <Compile Include="CPOrchestrator.cs" />
     <Compile Include="CPServices\impl\CPServiceProvider.cs" />
     <Compile Include="CPTraceHandler.cs" />
-    <Compile Include="CPTracker.cs" />
+    <Compile Include="CPServices\impl\CPTrackerService.cs" />
     <Compile Include="IChartPoint.cs" />
     <Compile Include="IChartPointsProcessor.cs" />
     <Compile Include="ICPCodeModel.cs" />
@@ -94,7 +94,7 @@
     <Compile Include="ICPOrchestrator.cs" />
     <Compile Include="CPServices\decl\ICPServiceProvider.cs" />
     <Compile Include="CPServices\decl\ICPTracerService.cs" />
-    <Compile Include="ICPTracker.cs" />
+    <Compile Include="CPServices\decl\ICPTrackerService.cs" />
     <Compile Include="IPCChartPoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resource.Designer.cs">

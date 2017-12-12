@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChartPoints.CPServices.impl;
 
-namespace ChartPoints
+namespace ChartPoints.CPServices.decl
 {
 
   public interface ICPEntTracker
@@ -21,14 +22,11 @@ namespace ChartPoints
     void Validate(int lineNum, int linesAdd);
   }
 
-  public interface ICPTrackManager
+  public interface ICPTrackService : ICPService
   {
     ICPEvent<FileTrackerArgs> addFTrackerEvent { get; set; }
     ICPEvent<FileTrackerArgs> remFTrackerEvent { get; set; }
     IFileTracker GetFileTracker(string fileFullName);
-    void Register(IChartPoint cp);
-    //void Register(ILineChartPoints lcp);
-    void Register(IFileChartPoints fcp);
   }
 
 }

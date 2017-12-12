@@ -5,6 +5,8 @@ using System.Runtime.Serialization;
 using CP.Code;
 using EnvDTE80;
 using System.Security.Permissions;
+using ChartPoints.CPServices.decl;
+using ChartPoints.CPServices.impl;
 
 namespace ChartPoints
 {

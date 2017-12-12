@@ -1,4 +1,7 @@
-﻿namespace ChartPoints
+﻿using ChartPoints.CPServices.decl;
+using ChartPoints.CPServices.impl;
+
+namespace ChartPoints
 {
 
   /// <summary>
@@ -14,10 +17,10 @@
       if (ChartPntFactory.factory == null)
         ChartPntFactory.factory = this;
       var cpServProv = ICPServiceProvider.GetProvider();
-      ICPEventService cpEvsService;
-      cpServProv.GetService<ICPEventService>(out cpEvsService);
+      ICPEventService cpEvsService = new CPEventService();
+      cpServProv.RegisterService<ICPEventService>(cpEvsService);
       constrEvents = cpEvsService.GetConstructEvents();
-      Globals.cpTrackManager = new CPTrackManager();
+      cpServProv.RegisterService<ICPTrackService>(new CPTrackService());
     }
 
     public override IChartPointsProcessor CreateProcessor()
@@ -47,7 +50,6 @@
     public override IFileChartPoints CreateFileChartPoint(CP.Code.IFileElem _fileElem, ICPProjectData _projData)
     {
       IFileChartPoints fcps = new FileChartPoints(_fileElem, _projData);
-      Globals.cpTrackManager.Register(fcps);
       constrEvents.createdFileCPsEvent.Fire(new ConstructEventArgs<IFileChartPoints>(fcps));
 
       return fcps;
@@ -55,7 +57,6 @@
     public override ILineChartPoints CreateLineChartPoint(CP.Code.IClassMethodElement _classMethodElem, int _lineNum, int _linePos, ICPFileData _fileData)
     {
       ILineChartPoints lcps = new LineChartPoints(_classMethodElem, _lineNum, _linePos, _fileData);
-      //Globals.cpTrackManager.Register(lcps);
       constrEvents.createdLineCPsEvent.Fire( new ConstructEventArgs<ILineChartPoints>( lcps ) );
 
       return lcps;
@@ -64,7 +65,6 @@
     public override IChartPoint CreateChartPoint(CP.Code.IClassVarElement codeElem, ICPLineData _lineData)
     {
       IChartPoint cp = new ChartPoint(codeElem, _lineData);
-      Globals.cpTrackManager.Register(cp);
       constrEvents.createdCPEvent.Fire(new ConstructEventArgs<IChartPoint>(cp));
 
       return cp;

@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using ChartPoints;
+using ChartPoints.CPServices.decl;
+using ChartPoints.CPServices.impl;
 
 namespace CP
 {

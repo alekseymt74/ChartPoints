@@ -9,6 +9,8 @@ using EnvDTE80;
 using Microsoft.VisualStudio.VCCodeModel;
 using ChartPoints;
 using System.Diagnostics;
+using ChartPoints.CPServices.decl;
+using ChartPoints.CPServices.impl;
 
 namespace CP
 {
@@ -551,19 +553,19 @@ namespace CP
           if (!targetFunc.File.Equals(activeDoc.FullName, StringComparison.OrdinalIgnoreCase))
             break;
           // we are working only with class methods not global function
-          //targetFunc.CodeModel.Synchronize();
-          //targetFunc.CodeModel.SynchronizeFiles();
-          //foreach (CodeElement _cl in targetFunc.CodeModel.Classes)
-          //{
-          //  foreach (CodeElement _f in _cl.Children)
-          //  {
-          //    if (targetFunc.FullName.Equals(_f.FullName, StringComparison.OrdinalIgnoreCase))
-          //    {
-          //      targetFunc = (VCCodeFunction)_f;
-          //      break;
-          //    }
-          //  }
-          //}
+          targetFunc.CodeModel.Synchronize();
+          targetFunc.CodeModel.SynchronizeFiles();
+          foreach (CodeElement _cl in targetFunc.CodeModel.Classes)
+          {
+            foreach (CodeElement _f in _cl.Children)
+            {
+              if (targetFunc.FullName.Equals(_f.FullName, StringComparison.OrdinalIgnoreCase))
+              {
+                targetFunc = (VCCodeFunction)_f;
+                break;
+              }
+            }
+          }
           targetClassElem = (VCCodeElement)targetFunc.Parent;
           if (targetClassElem == null)
             break;

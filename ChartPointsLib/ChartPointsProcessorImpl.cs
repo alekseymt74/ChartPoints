@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using ChartPoints.CPServices.impl;
 
 namespace ChartPoints
 {
@@ -121,12 +122,22 @@ namespace ChartPoints
         IFileChartPoints fCPs = null;
         while ((fCPs = pcp.filePoints.FirstOrDefault()) != null)
         {
-          ILineChartPoints lCPs = null;
-          while ((lCPs = fCPs.linePoints.FirstOrDefault()) != null)
+          if (fCPs.linePoints.Count == 0)
+            pcp.filePoints.Remove(fCPs);
+          else
           {
-            IChartPoint cp = null;
-            while ((cp = lCPs.chartPoints.FirstOrDefault()) != null)
-              lCPs.RemoveChartPoint(cp);
+            ILineChartPoints lCPs = null;
+            while ((lCPs = fCPs.linePoints.FirstOrDefault()) != null)
+            {
+              if (lCPs.chartPoints.Count == 0)
+                fCPs.RemoveLineChartPoints(lCPs);
+              else
+              {
+                IChartPoint cp = null;
+                while ((cp = lCPs.chartPoints.FirstOrDefault()) != null)
+                  lCPs.RemoveChartPoint(cp);
+              }
+            }
           }
         }
         data.projPoints.Remove(pcp);
