@@ -21,7 +21,6 @@ STDMETHODIMP CCPProcTracer::RegElem( BSTR name, ULONGLONG id, USHORT typeID )
     active = true;
     consumer_thr = new std::thread( std::bind( &CCPProcTracer::cons_proc, this ) );
   }
-  std::unique_lock<std::mutex> lock( send_trace_queue_mtx );
   it_tes it = tes.find( id );
   if( it == tes.end() )
   {
@@ -29,7 +28,6 @@ STDMETHODIMP CCPProcTracer::RegElem( BSTR name, ULONGLONG id, USHORT typeID )
     it = it_ins.first;
   }
   send();
-  lock.unlock();
   Fire_OnRegElem( CComBSTR(name), id, typeID );
   //CoUninitialize();
 
@@ -50,7 +48,7 @@ STDMETHODIMP CCPProcTracer::Trace( ULONGLONG id, ULONGLONG tm, DOUBLE val )
 void CCPProcTracer::send()
 {
   //std::unique_lock<std::mutex> lock( send_trace_queue_mtx );
-  
+  std::lock_guard<std::mutex> lock( send_trace_queue_mtx );
   data_ent val;
   {
     std::lock_guard< std::mutex > lock(mtx);
@@ -94,10 +92,7 @@ void CCPProcTracer::cons_proc()
   CoInitializeEx( NULL, COINIT_MULTITHREADED );
   while( active )
   {
-    {
-      std::unique_lock<std::mutex> lock( send_trace_queue_mtx );
-      send();
-    }
+    send();
     std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
   }
 

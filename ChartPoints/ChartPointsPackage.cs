@@ -232,7 +232,7 @@ namespace ChartPoints
     , IVsPersistSolutionOpts
     , IVsSolutionLoadManager
   {
-    private ChartPntFactory factory;
+    //private ChartPntFactory factory;
 
     private IVsSolutionBuildManager3 buildManager3;
     private VsSolutionEvents solEvents;
@@ -271,10 +271,10 @@ namespace ChartPoints
       cpServProv.RegisterService<ICPExtension>(extensionServ);
 
       Globals.dte = (DTE)GetService(typeof(DTE));
-      factory = new ChartPntFactoryImpl();
+      //factory = new ChartPntFactoryImpl();
       if(Globals.processor == null)
-        Globals.processor = factory.CreateProcessor();
-      Globals.orchestrator = factory.CreateOrchestrator();
+        Globals.processor = CP.Utils.IClassFactory.GetInstance().CreateCPProc();
+      Globals.orchestrator = CP.Utils.IClassFactory.GetInstance().CreateCPOrchestrator();
       IVsSolution vsSolution = GetService(typeof(SVsSolution)) as IVsSolution;
       object objLoadMgr = this;   //the class that implements IVsSolutionManager  
       vsSolution.SetProperty((int)__VSPROPID4.VSPROPID_ActiveSolutionLoadManager, objLoadMgr);

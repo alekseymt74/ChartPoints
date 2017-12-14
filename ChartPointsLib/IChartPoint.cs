@@ -18,11 +18,11 @@ namespace ChartPoints
 
   public interface IChartPointData
   {
-    bool enabled { get; }
+    bool enabled { get; set; }
     string name { get; }
     string uniqueName { get; }
     string type { get; }
-    EChartPointStatus status { get; }
+    EChartPointStatus status { get; set; }
     ICPLineData lineData { get; }
   }
 

@@ -12,8 +12,8 @@ namespace ChartPoints
 {
 
   [DataContract]
-  [Serializable]
-  public class ChartPointData : IChartPointData, ISerializable
+  //[Serializable]
+  public abstract class ChartPointData : IChartPointData//, ISerializable
   {
     [DataMember]
     public bool enabled { get; set; }
@@ -24,6 +24,15 @@ namespace ChartPoints
     public EChartPointStatus status { get; set; }
     public ICPLineData lineData { get; set; }
     public ChartPointData() { }
+    public ChartPointData(string _name, string _uniqueName, string _type, bool _enabled, EChartPointStatus _status, ICPLineData _lineData)
+    {
+      name = _name;
+      uniqueName = _uniqueName;
+      type = _type;
+      enabled = _enabled;
+      status = _status;
+      lineData = _lineData;
+    }
     public ChartPointData(IChartPointData _data)
     {
       enabled = _data.enabled;
@@ -31,33 +40,34 @@ namespace ChartPoints
       uniqueName = _data.uniqueName;
       type = _data.type;
     }
-    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-    public void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-      info.AddValue("uniqueName", uniqueName);
-      info.AddValue("enabled", enabled);
-    }
+    //[SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    //public void GetObjectData(SerializationInfo info, StreamingContext context)
+    //{
+    //  info.AddValue("uniqueName", uniqueName);
+    //  info.AddValue("enabled", enabled);
+    //}
   }
 
-  public class Data<T, TData, TDataImpl> : IData<TData>
-    where TData : class
-    where TDataImpl : TData
-  {
-    public TDataImpl theData { get; set; }
+  //public class Data<T, TData, TDataImpl> : IData<TData>
+  //  where TData : class
+  //  where TDataImpl : TData
+  //{
+  //  public TDataImpl theData { get; set; }
 
-    public TData data
-    {
-      get { return theData; }
-      //set { theData = (TDataImpl)value; }
-    }
-  }
+  //  public TData data
+  //  {
+  //    get { return theData; }
+  //    //set { theData = (TDataImpl)value; }
+  //  }
+  //}
 
   /// <summary>
   /// Implementation of IChartPoint interface
   /// </summary>
-  [Serializable]
-  public class ChartPoint : Data<ChartPoint, IChartPointData, ChartPointData>, IChartPoint, ISerializable
+  //[Serializable]
+  public abstract class ChartPoint : IChartPoint//Data<ChartPoint, IChartPointData, ChartPointData>, IChartPoint, ISerializable
   {
+    public IChartPointData data { get; }
     public ICPEvent<CPStatusEvArgs> cpStatusChangedEvent { get; set; } = new CPEvent<CPStatusEvArgs>();
     private CP.Code.IClassVarElement codeElem;
     protected ChartPoint() { }
@@ -67,22 +77,14 @@ namespace ChartPoints
       codeElem = _codeElem;
       codeElem.classVarChangedEvent += ClassVarChangedEventOn;
       codeElem.classVarDeletedEvent += ClassVarDeletedEventOn;
-      theData = new ChartPointData
-      {
-        enabled = true,
-        status = EChartPointStatus.SwitchedOn,
-        name = codeElem.name,
-        uniqueName = codeElem.uniqueName/*varName*/,
-        type = codeElem.type,
-        lineData = _lineData
-      };
+      data = CP.Utils.IClassFactory.GetInstance().CreateCPData(codeElem.name, codeElem.uniqueName, codeElem.type, true, EChartPointStatus.SwitchedOn, _lineData);
     }
 
-    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-    public void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-      info.AddValue(data.GetType().ToString(), data, data.GetType());
-    }
+    //[SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    //public void GetObjectData(SerializationInfo info, StreamingContext context)
+    //{
+    //  info.AddValue(data.GetType().ToString(), data, data.GetType());
+    //}
 
     private void ClassVarChangedEventOn(ClassVarElemTrackerArgs args)
     {
@@ -97,13 +99,13 @@ namespace ChartPoints
     public EChartPointStatus SetStatus(EChartPointStatus newStatus)
     {
       if (newStatus != EChartPointStatus.SwitchedOn)
-        theData.enabled = false;
+        data.enabled = false;
       else
-        theData.enabled = true;
-      EChartPointStatus curStatus = theData.status;
+        data.enabled = true;
+      EChartPointStatus curStatus = data.status;
       if (newStatus != curStatus)
       {
-        theData.status = newStatus;
+        data.status = newStatus;
         cpStatusChangedEvent.Fire(new CPStatusEvArgs(this));
       }
 
@@ -184,686 +186,6 @@ namespace ChartPoints
     {
       return codeElem.Validate(data.uniqueName);
     }
-  }
-
-  [Serializable]
-  public class TextPosition : ITextPosition, ISerializable
-  {
-    public int lineNum { get; set; }
-    public int linePos { get; set; }
-
-    //delegate void UpdatePosition(IChartPoint cp, int _lineNum, int _linePos);
-
-    //private UpdatePosition updPos;
-
-    public TextPosition(int _lineNum, int _linePos)//, Action<IChartPoint, int, int> _updPos)
-    {
-      lineNum = _lineNum;
-      linePos = _linePos;
-      //updPos = new UpdatePosition(_updPos);
-    }
-
-    //public void Move(IChartPoint cp, int _lineNum, int _linePos)
-    //{
-    //  updPos(cp, _lineNum, _linePos);
-    //}
-
-    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-    public void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-      info.AddValue("lineNum", lineNum, lineNum.GetType());
-      info.AddValue("linePos", linePos, linePos.GetType());
-    }
-  }
-
-  [Serializable]
-  public class CPLineData : ICPLineData, ISerializable
-  {
-    public ITextPosition pos { get; set; }
-    public ICPFileData fileData { get; set; }
-    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-    public void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-      info.AddValue("pos", pos, pos.GetType());
-    }
-  }
-
-  [Serializable]
-  public class LineChartPoints : Data<LineChartPoints, ICPLineData, CPLineData>, ILineChartPoints, ISerializable
-  {
-    private ELineCPsStatus theStatus = ELineCPsStatus.NotAvailable;
-    public ELineCPsStatus status
-    {
-      get { return theStatus; }
-    }
-
-    private ELineCPsStatus UpdateStatus(IChartPoint cp)
-    {
-      ELineCPsStatus curStatus = theStatus;
-      theStatus = (ELineCPsStatus)((int)theStatus | (int)cp.data.status);
-      if (curStatus != theStatus)
-        lineCPStatusChangedEvent.Fire(new LineCPStatusEvArgs(this));
-
-      return theStatus;
-    }
-
-    private ELineCPsStatus CalcStatus()
-    {
-      ELineCPsStatus curStatus = theStatus;
-      theStatus = ELineCPsStatus.NotAvailable;
-      foreach (IChartPoint cp in chartPoints)
-        theStatus = (ELineCPsStatus)((int)theStatus | (int)cp.data.status);
-      if (curStatus != theStatus)
-        lineCPStatusChangedEvent.Fire(new LineCPStatusEvArgs(this));
-
-      return theStatus;
-    }
-
-    private CP.Code.IClassMethodElement codeClassMethod;
-    public ICPEvent<LineCPStatusEvArgs> lineCPStatusChangedEvent { get; set; } = new CPEvent<LineCPStatusEvArgs>();
-    public ICPEvent<CPLineEvArgs> cpStatusChangedEvent { get; set; } = new CPEvent<CPLineEvArgs>();
-    public ICPEvent<CPLineEvArgs> addCPEvent { get; set; } = new CPEvent<CPLineEvArgs>();
-    public ICPEvent<CPLineEvArgs> remCPEvent { get; set; } = new CPEvent<CPLineEvArgs>();
-
-    public ISet<IChartPoint> chartPoints { get; set; } =
-      new SortedSet<IChartPoint>(
-        Comparer<IChartPoint>.Create((lh, rh) => (lh.data.uniqueName.CompareTo(rh.data.uniqueName))));
-
-    public int Count
-    {
-      get { return chartPoints.Count; }
-    }
-
-    public LineChartPoints(CP.Code.IClassMethodElement _classMethodElem, int _lineNum, int _linePos, ICPFileData _fileData)
-    {
-      codeClassMethod = _classMethodElem;
-      theData = new CPLineData() {pos = new TextPosition(_lineNum, _linePos/*, MoveChartPoint*/), fileData = _fileData};
-    }
-
-    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-    public void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-      info.AddValue(data.GetType().ToString(), data, data.GetType());
-      info.AddValue("cpsPoints.Count", (UInt32)chartPoints.Count);
-      foreach (IChartPoint cp in chartPoints)
-      {
-        info.AddValue("cp", cp, cp.GetType());
-      }
-    }
-    //public void MoveChartPoint(IChartPoint cp, int _lineNum, int _linePos)
-    //{
-    //  RemoveChartPoint(cp);
-    //  theData.fileData.Move(this, cp, _lineNum, _linePos);
-    //}
-
-    public virtual IChartPoint GetChartPoint(string varName)
-    {
-      return chartPoints.FirstOrDefault((lp) => (lp.data.uniqueName == varName));
-    }
-
-    public bool AddChartPoint(string varName, out IChartPoint chartPnt)
-    {
-      chartPnt = null;
-      IClassElement codeClass = codeClassMethod.GetClass();
-      CP.Code.IClassVarElement codeElem = codeClass.GetVar(varName);
-      if (codeElem != null)
-        return AddChartPoint(codeElem, out chartPnt, false);
-
-      return false;
-    }
-
-    public bool AddChartPoint(IChartPoint chartPnt)
-    {
-      if (GetChartPoint(chartPnt.data.uniqueName) == null)
-      {
-        chartPoints.Add(chartPnt);
-        chartPnt.cpStatusChangedEvent += OnCPStatusChanged;
-        UpdateStatus(chartPnt);
-        addCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
-        return true;
-      }
-
-      return false;
-    }
-
-    protected void OnCPStatusChanged(CPStatusEvArgs args)
-    {
-      CalcStatus();
-      cpStatusChangedEvent.Fire(new CPLineEvArgs(this, args.cp));
-    }
-
-    public bool RemoveChartPoint(IChartPoint chartPnt)
-    {
-      bool ret = chartPoints.Remove(chartPnt);
-      if (ret)
-      {
-        chartPnt.cpStatusChangedEvent -= OnCPStatusChanged;
-        CalcStatus();
-        remCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
-      }
-
-      return ret;
-    }
-
-    public bool AddChartPoint(string varName, CP.Code.IClassElement codeClass, out IChartPoint chartPnt,
-      bool checkExistance = true)
-    {
-      if (checkExistance)
-      {
-        chartPnt = GetChartPoint(varName);
-        if (chartPnt != null)
-          return false;
-      }
-      CP.Code.IClassVarElement codeElem = codeClass.GetVar(varName);
-      chartPnt = ChartPntFactory.Instance.CreateChartPoint(codeElem, data);
-      chartPoints.Add(chartPnt);
-      chartPnt.cpStatusChangedEvent += OnCPStatusChanged;
-      UpdateStatus(chartPnt);
-      addCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
-
-      return true;
-    }
-
-    public bool AddChartPoint(CP.Code.IClassVarElement codeElem, out IChartPoint chartPnt, bool checkExistance = true)
-    {
-      if (checkExistance)
-      {
-        chartPnt = GetChartPoint(codeElem.uniqueName);
-        if (chartPnt != null)
-          return false;
-      }
-      chartPnt = ChartPntFactory.Instance.CreateChartPoint(codeElem, data);
-      chartPoints.Add(chartPnt);
-      chartPnt.cpStatusChangedEvent += OnCPStatusChanged;
-      UpdateStatus(chartPnt);
-      addCPEvent.Fire(new CPLineEvArgs(this, chartPnt));
-
-      return true;
-    }
-
-    public bool SyncChartPoint(ICheckElem checkElem)
-    {
-      if (checkElem.exists)
-      {
-        IChartPoint chartPnt = null;
-        AddChartPoint(checkElem.uniqueName, codeClassMethod.GetClass(), out chartPnt, false);
-      }
-      else
-      {
-        IChartPoint cp = chartPoints.FirstOrDefault((lp) => (lp.data.uniqueName == checkElem.uniqueName));
-        if (cp != null)
-          RemoveChartPoint(cp);
-      }
-
-      return false;
-    }
-
-    public bool ValidatePosition(int linesAdd)
-    {
-      bool changed = false;
-      foreach (IChartPoint cp in chartPoints)
-      {
-        bool cpValidated = cp.ValidatePosition(data.pos.lineNum + linesAdd, data.pos.linePos);
-        changed = changed || cpValidated;
-      }
-
-      return changed;
-    }
-
-    public void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model)
-    {
-      foreach (IChartPoint cp in chartPoints)
-      {
-        bool needDeclare = false;
-        if (cp.data.enabled)
-        {
-          IClassElement codeClass = codeClassMethod.GetClass();
-          CPTraceVar traceVar = cp.CalcInjectionPoints(cpInjPoints, codeClass.name, out needDeclare);
-          codeClass.CalcInjectionPoints(cpInjPoints, traceVar, needDeclare);
-          model.CalcInjectionPoints(cpInjPoints, traceVar);
-        }
-      }
-    }
-
-    public void Invalidate()
-    {
-      foreach (IChartPoint cp in chartPoints)
-        cp.Invalidate();
-    }
-
-    public bool Validate()
-    {
-      if(!codeClassMethod.Validate(data.pos))
-      {
-        Invalidate();
-
-        return false;
-      }
-      foreach (IChartPoint cp in chartPoints)
-      {
-        if (!cp.Validate())
-          cp.Invalidate();
-        else if (cp.data.status == EChartPointStatus.NotAvailable)
-          cp.SetStatus(EChartPointStatus.SwitchedOff);
-      }
-
-      return true;
-    }
-
-  }
-
-  [Serializable]
-  public class CPFileData : ICPFileData, ISerializable
-  {
-    public string fileName { get; set;  }
-    public string fileFullName { get; set; }
-    public ICPProjectData projData { get; set; }
-
-    //delegate void UpdatePosition(ILineChartPoints lcps, IChartPoint cp, int _lineNum, int _linePos);
-
-    //private UpdatePosition updPos;
-
-    public CPFileData(string _fileName, string _fileFullName, ICPProjectData _projData)//, Action<ILineChartPoints, IChartPoint, int, int> _updPos)
-    {
-      fileName = _fileName;
-      fileFullName = _fileFullName.ToLower();
-      projData = _projData;
-      //updPos = new UpdatePosition(_updPos);
-    }
-
-    private CPFileData(SerializationInfo info, StreamingContext context)
-    {
-      fileName = info.GetString("fileName");
-    }
-
-    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-    public void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-      info.AddValue("fileName", fileName);
-    }
-
-    //public void Move(ILineChartPoints lcps ,IChartPoint cp, int _lineNum, int _linePos)
-    //{
-    //  updPos(lcps, cp, _lineNum, _linePos);
-    //}
-  }
-
-  [Serializable]
-  public class FileChartPoints : Data<FileChartPoints, ICPFileData, CPFileData>, IFileChartPoints, ISerializable
-  {
-    public ICPEvent<CPFileEvArgs> addCPLineEvent { get; set; } = new CPEvent<CPFileEvArgs>();
-    public ICPEvent<CPFileEvArgs> remCPLineEvent { get; set; } = new CPEvent<CPFileEvArgs>();
-    public ICPEvent<CPLineMoveEvArgs> moveCPLineEvent { get; set; } = new CPEvent<CPLineMoveEvArgs>();
-
-    public ISet<ILineChartPoints> linePoints { get; set; }
-      =
-      new SortedSet<ILineChartPoints>(
-        Comparer<ILineChartPoints>.Create(
-          (lh, rh) =>
-            (lh.data.pos.lineNum > rh.data.pos.lineNum ? 1 : lh.data.pos.lineNum < rh.data.pos.lineNum ? -1 : 0)));
-
-    private CP.Code.IFileElem fileElem;
-
-    public int Count
-    {
-      get { return linePoints.Count; }
-    }
-
-    public FileChartPoints(CP.Code.IFileElem _fileElem, ICPProjectData _projData)
-    {
-      fileElem = _fileElem;
-      theData = new CPFileData(_fileElem.name, _fileElem.uniqueName, _projData);//, MoveChartPoint);
-    }
-
-    private FileChartPoints(SerializationInfo info, StreamingContext context)
-    {
-      theData = info.GetValue(Globals.GetTypeName(data), Globals.GetType(data)) as CPFileData;
-      UInt32 Count = info.GetUInt32("linePoints.Count");
-      for (uint i = 0; i < Count; ++i)
-      {
-        ILineChartPoints lineCPs = null;
-        lineCPs = info.GetValue(Globals.GetTypeName(lineCPs), Globals.GetType(lineCPs)) as ILineChartPoints;
-        AddLineChartPoints(lineCPs);
-      }
-    }
-
-    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-    public void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-      info.AddValue(data.GetType().ToString(), data, data.GetType());
-      info.AddValue("linePoints.Count", (UInt32)linePoints.Count);
-      foreach (ILineChartPoints lineCPs in linePoints)
-      {
-        info.AddValue("linePoints", lineCPs, lineCPs.GetType());
-      }
-    }
-
-    //public void MoveChartPoint(ILineChartPoints _lcps, IChartPoint cp, int _lineNum, int _linePos)
-    //{
-    //  ILineChartPoints lcps = AddLineChartPoints(_lineNum, _linePos);
-    //  lcps.AddChartPoint(cp);
-    //}
-
-    public ILineChartPoints GetLineChartPoints(int lineNum)
-    {
-      ILineChartPoints lPnts = linePoints.FirstOrDefault((lp) => (lp.data.pos.lineNum == lineNum));
-
-      return lPnts;
-    }
-
-    protected bool AddLineChartPoints(ILineChartPoints linePnts)
-    {
-      ILineChartPoints lPnts = GetLineChartPoints(linePnts.data.pos.lineNum);
-      if (lPnts == null)
-      {
-        linePoints.Add(linePnts);
-        linePnts.remCPEvent += OnRemCp;
-        addCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
-
-        return true;
-      }
-
-      return false;
-    }
-
-    public bool RemoveLineChartPoints(ILineChartPoints linePnts)
-    {
-      bool ret = linePoints.Remove(linePnts);
-      if (ret)
-        remCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
-
-      return ret;
-    }
-
-    protected bool MoveLineChartPoints(ILineChartPoints linePnts, int linesAdd)
-    {
-      bool ret = linePoints.Remove(linePnts);
-      if (ret)
-      {
-        int prevLine = ((TextPosition)((LineChartPoints)linePnts).theData.pos).lineNum;
-        ((TextPosition)((LineChartPoints)linePnts).theData.pos).lineNum += linesAdd;
-        linePoints.Add(linePnts);
-        //addCPLineEvent.Fire(new CPFileEvArgs(this, linePnts));
-        moveCPLineEvent.Fire(new CPLineMoveEvArgs(linePnts, prevLine, prevLine + linesAdd));
-      }
-
-      return ret;
-    }
-
-    public ILineChartPoints AddLineChartPoints(int lineNum, int linePos)
-    {
-      ILineChartPoints lPnts = GetLineChartPoints(lineNum);
-      if (lPnts == null)
-      {
-        CP.Code.IClassMethodElement classMethodElem = fileElem.GetMethodFromFilePos(lineNum, linePos);
-        if (classMethodElem != null)
-        {
-          lPnts = ChartPntFactory.Instance.CreateLineChartPoint(classMethodElem, lineNum, linePos, data);
-          AddLineChartPoints(lPnts);
-        }
-        //else
-          //;
-      }
-
-      return lPnts;
-    }
-
-    private void OnRemCp(CPLineEvArgs args)
-    {
-      if (args.lineCPs.Count == 0)
-        RemoveLineChartPoints(args.lineCPs);
-    }
-
-    public bool ValidatePosition(int lineNum, int linesAdd)
-    {
-      bool changed = false;
-      if (linesAdd != 0)
-      {
-        foreach (ILineChartPoints lPnts in linePoints.Reverse())
-        {
-          if (lPnts.data.pos.lineNum >/*=*/ lineNum)
-          {
-            if (linesAdd < 0 && lineNum + (-linesAdd) > lPnts.data.pos.lineNum)
-              RemoveLineChartPoints(lPnts);
-            else
-              MoveLineChartPoints(lPnts, linesAdd);
-          }
-        }
-      }
-      //List<KeyValuePair<bool, ILineChartPoints>> changedLines = new List<KeyValuePair<bool, ILineChartPoints>>();
-      //foreach (ILineChartPoints lPnts in linePoints.Reverse())
-      //{
-      //  if (lPnts.data.pos.lineNum >= lineNum)
-      //  {
-      //    bool lineChanged = lPnts.ValidatePosition(linesAdd);
-      //    if (lineChanged)
-      //    {
-      //      if (linesAdd != 0)
-      //        changedLines.Add(new KeyValuePair<bool, ILineChartPoints>(true, lPnts));
-      //    }
-      //    else
-      //    {
-      //      changedLines.Add(new KeyValuePair<bool, ILineChartPoints>(false, lPnts));
-      //    }
-      //    changed = changed || lineChanged;
-      //  }
-      //}
-      //if (changedLines.Count > 0)
-      //{
-      //  foreach (KeyValuePair<bool, ILineChartPoints> lPnts in changedLines)
-      //  {
-      //    if (lPnts.Key == true)
-      //      MoveLineChartPoints(lPnts.Value, linesAdd);
-      //    else
-      //      RemoveLineChartPoints(lPnts.Value);
-      //    //linePoints.Remove(lPnts.Value);//!!!EVENT!!!
-      //    ////if (RemoveLineChartPoints(lPnts.Value))
-      //    //Globals.taggerUpdater?.RaiseChangeTagEvent(data.fileFullName, lPnts.Value);
-      //  }
-      //  //foreach (KeyValuePair<bool, ILineChartPoints> lPnts in changedLines)
-      //  //{
-      //  //  if (lPnts.Key == true)
-      //  //  {
-      //  //    ((TextPosition)((LineChartPoints) lPnts.Value).theData.pos).lineNum += linesAdd;
-      //  //    //linePoints.Add(lPnts.Value);
-      //  //    AddLineChartPoints(lPnts.Value);
-      //  //  }
-      //  //}
-      //  //if(linePoints.Count == 0)
-      //  //  remFunc(this);
-      //}
-
-      return changed;
-    }
-
-    public void CalcInjectionPoints(CPClassLayout cpInjPoints, CP.Code.IModel model)
-    {
-      foreach (var lPnts in linePoints)
-        lPnts.CalcInjectionPoints(cpInjPoints, model);
-    }
-
-    public void Invalidate()
-    {
-      foreach (var lPnts in linePoints)
-        lPnts.Invalidate();
-    }
-
-    public bool Validate()
-    {
-      if(!fileElem.Validate(data.fileName))
-      {
-        Invalidate();
-
-        return false;
-      }
-      foreach (var lPnts in linePoints)
-        lPnts.Validate();
-
-      return true;
-    }
-
-  }
-
-  [Serializable]
-  public class CPProjectData : ICPProjectData, ISerializable
-  {
-    public string projName { get; set; }
-
-    public CPProjectData(string _projName)
-    {
-      projName = _projName;
-    }
-
-    private CPProjectData(SerializationInfo info, StreamingContext context)
-    {
-      projName = info.GetString("projName");
-    }
-
-    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-    public void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-      info.AddValue("projName", projName);
-    }
-  }
-
-  [Serializable]
-  public class ProjectChartPoints : Data<ProjectChartPoints, ICPProjectData, CPProjectData>, IProjectChartPoints, ISerializable
-  {
-    private CP.Code.IModel cpCodeModel;
-    public ICPEvent<CPProjEvArgs> addCPFileEvent { get; set; } = new CPEvent<CPProjEvArgs>();
-    public ICPEvent<CPProjEvArgs> remCPFileEvent { get; set; } = new CPEvent<CPProjEvArgs>();
-    public ISet<IFileChartPoints> filePoints { get; set; } = new SortedSet<IFileChartPoints>(Comparer<IFileChartPoints>.Create((lh, rh) => (lh.data.fileName.CompareTo(rh.data.fileName))));
-
-    public int Count { get { return filePoints.Count; } }
-
-    public ProjectChartPoints(string _projName)
-    {
-      theData = new CPProjectData(_projName);
-      DTE2 dte2 = (DTE2)Globals.dte;
-      Events2 evs2 = (Events2)dte2.Events;
-      cpCodeModel = new CP.Code.Model(data.projName, evs2);
-    }
-
-    private ProjectChartPoints(SerializationInfo info, StreamingContext context)
-    {
-      theData = info.GetValue(Globals.GetTypeName(data), Globals.GetType(data)) as CPProjectData;
-      DTE2 dte2 = (DTE2)Globals.dte;
-      Events2 evs2 = (Events2)dte2.Events;
-      cpCodeModel = new CP.Code.Model(data.projName, evs2);
-      UInt32 Count = info.GetUInt32("filePoints.Count");
-      for (uint i = 0; i < Count; ++i)
-      {
-        IFileChartPoints fileCPs = null;
-        fileCPs = info.GetValue(Globals.GetTypeName(fileCPs), Globals.GetType(fileCPs)) as IFileChartPoints;
-        AddFileChartPoints(fileCPs, false);
-      }
-    }
-
-    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-    public void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-      info.AddValue(data.GetType().ToString(), data, data.GetType());
-      info.AddValue("filePoints.Count", (UInt32)filePoints.Count);
-      foreach (IFileChartPoints fileCPs in filePoints)
-      {
-        info.AddValue("filePoints", fileCPs, fileCPs.GetType());
-      }
-    }
-
-    public IFileChartPoints GetFileChartPoints(string fname)
-    {
-      IFileChartPoints fPnts = filePoints.FirstOrDefault((fp) => (fp.data.fileName == fname));
-
-      return fPnts;
-    }
-
-    public ILineChartPoints GetFileLineChartPoints(string fname, int lineNum)
-    {
-      ILineChartPoints lPnts = null;
-      IFileChartPoints fPnts = GetFileChartPoints(fname);
-      if (fPnts != null)
-        lPnts = fPnts.GetLineChartPoints(lineNum);
-
-      return lPnts;
-    }
-
-    protected bool AddFileChartPoints(IFileChartPoints filePnts, bool checkExistance = true)
-    {
-      if (checkExistance)
-      {
-        IFileChartPoints fPnts = GetFileChartPoints(filePnts.data.fileName);
-        if (fPnts != null)
-          return false;
-      }
-      filePoints.Add(filePnts);
-      filePnts.remCPLineEvent += OnRemLineCPs;
-      addCPFileEvent.Fire(new CPProjEvArgs(this, filePnts));
-
-      return true;
-    }
-
-    public ICheckCPPoint CheckCursorPos()
-    {
-      return cpCodeModel.CheckCursorPos();
-    }
-
-    private void OnRemLineCPs(CPFileEvArgs args)
-    {
-      if (args.fileCPs.Count == 0)
-        RemoveFileChartPoints(args.fileCPs);
-    }
-
-    protected bool RemoveFileChartPoints(IFileChartPoints filePnts)
-    {
-      bool ret = filePoints.Remove(filePnts);
-      if(ret)
-        remCPFileEvent.Fire(new CPProjEvArgs(this, filePnts));
-
-      return ret;
-    }
-
-    public IFileChartPoints AddFileChartPoints(string fileName)
-    {
-      IFileChartPoints fPnts = GetFileChartPoints(fileName);
-      if (fPnts == null)
-      {
-        IFileElem fileElem = cpCodeModel.GetFile(fileName);
-        if (fileElem != null)
-        {
-          fPnts = ChartPntFactory.Instance.CreateFileChartPoint(fileElem, data);
-          AddFileChartPoints(fPnts, false);
-        }
-      }
-
-      return fPnts;
-    }
-
-    public void CalcInjectionPoints(CPClassLayout cpInjPoints)
-    {
-      foreach (IFileChartPoints fPnts in filePoints)
-        fPnts.CalcInjectionPoints(cpInjPoints, cpCodeModel);
-    }
-
-    public void Invalidate()
-    {
-      foreach (IFileChartPoints fPnts in filePoints)
-        fPnts.Invalidate();
-    }
-
-    public bool Validate()
-    {
-      if (!cpCodeModel.Validate())
-      {
-        Invalidate();
-
-        return false;
-      }
-      foreach (IFileChartPoints fPnts in filePoints)
-        fPnts.Validate();
-
-      return true;
-    }
-
   }
 
 }

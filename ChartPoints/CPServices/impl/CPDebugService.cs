@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
 using Microsoft.VisualStudio;
-using ChartPoints.CPServices.decl;
 
 namespace ChartPoints.CPServices.impl
 {
