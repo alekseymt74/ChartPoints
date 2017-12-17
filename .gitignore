@@ -243,6 +243,8 @@ ModelManifest.xml
 
 index.html
 */__cp__.*
+!__cp__.tracer.h
+!__cp__.tracer.cpp
 **/*.asm
 **/*.tlog/*
 **/*.exe
