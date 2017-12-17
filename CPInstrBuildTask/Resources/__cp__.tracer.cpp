@@ -34,18 +34,21 @@ namespace cptracer
   int32_t type_id< char >::id = 12;
   int32_t type_id< unsigned char >::id = 13;
 
-  class temp
+  class cpt_loader
   {
+    HMODULE h_mod;
   public:
-    static HMODULE h_mod;
-  };
-  HMODULE temp::h_mod = NULL;
-
-  tracer::tracer_ptr create_tracer_impl(/*tracer::tracer_ptr &_tracer*/)
-  {
-    tracer::tracer_ptr _tracer;
-    try
+    cpt_loader() : h_mod(NULL){}
+    ~cpt_loader()
     {
+      if (h_mod != NULL)
+        FreeLibrary(h_mod);
+    }
+    tracer::tracer_ptr load()
+    {
+      tracer::tracer_ptr _tracer;
+      try
+      {
 #ifdef _WIN64
 #define DLLNAME "cpti64.dll"
 #else //_WIN32
@@ -57,37 +60,38 @@ namespace cptracer
 #define FULLNAME PATH2DLL ## "\\" ## DLLNAME
 
 #ifdef _UNICODE 
-      temp::h_mod = LoadLibrary(TEXT( FULLNAME ));
+        h_mod = LoadLibrary(TEXT(FULLNAME));
 #else
-      temp::h_mod = LoadLibrary( FULLNAME );
+        h_mod = LoadLibrary(FULLNAME);
 #endif
-      if(temp::h_mod == NULL)
-        return nullptr;
-      create_tracer_func get_tracer = reinterpret_cast<create_tracer_func>(GetProcAddress(temp::h_mod, "create_tracer"));
-      if (get_tracer == NULL)
-        return nullptr;
-      bool ret = (*get_tracer)(_tracer);
-      if( !ret )
-        return nullptr;
-    }
-    catch(...)
-    {
-      _tracer = nullptr;
-    }
+        if (h_mod == NULL)
+          return nullptr;
+        create_tracer_func get_tracer = reinterpret_cast<create_tracer_func>(GetProcAddress(h_mod, "create_tracer"));
+        if (get_tracer == NULL)
+          return nullptr;
+        bool ret = (*get_tracer)(_tracer);
+        if (!ret)
+          return nullptr;
+      }
+      catch (...)
+      {
+        _tracer = nullptr;
+        h_mod = NULL;
+      }
 
-    return _tracer;
-  }
+      return _tracer;
+    }
+  };
+  typedef std::shared_ptr<cpt_loader> cpt_loader_ptr;
 
   tracer::~tracer()
   {
-    if(temp::h_mod != NULL)
-      FreeLibrary(temp::h_mod);
   }
 
   tracer::tracer_ptr tracer::instance()
   {
-    //static tracer_ptr _temp;
-    static tracer_ptr _this = create_tracer_impl();// _temp);
+    static cpt_loader_ptr _loader = std::make_shared<cpt_loader>();
+    static tracer_ptr _this = _loader->load();
 
     return _this;
   }

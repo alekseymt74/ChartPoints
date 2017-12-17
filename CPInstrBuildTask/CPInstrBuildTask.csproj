@@ -64,10 +64,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\__cp__.tracer.cpp" />
+    <EmbeddedResource Include="Resources\__cp__.tracer.h" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\__cp__.tracer.h" />
+    <EmbeddedResource Include="Resources\__cp__.tracer.cpp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
