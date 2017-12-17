@@ -171,7 +171,7 @@ int main()
 			for(int i = 0; i < N_LOOPS; ++i)
             {
                 tst.f2();
-                tst.f3();
+                //tst.f3();
                 tst.f1(i);
                 tst_01.func_01();
                 tst_01.func_02();
@@ -190,7 +190,7 @@ int main()
 			for (int i = 0; i < N_LOOPS; ++i)
 			{
                 tst.f2();
-				tst.f3();
+				//tst.f3();
 				tst.f1(i);
                 tst_01.func_01();
                 tst_01.func_02();
