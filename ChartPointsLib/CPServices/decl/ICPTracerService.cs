@@ -14,7 +14,7 @@ namespace CPTracerLib
   }
 }
 
-namespace ChartPoints
+namespace ChartPoints.CPServices.decl
 {
 
   public interface ICPProcessTracer

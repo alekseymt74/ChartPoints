@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Diagnostics;
 using CPTracerLib;
+using ChartPoints.CPServices.decl;
+using ChartPoints.CPServices.impl;
 
 namespace ChartPoints
 {

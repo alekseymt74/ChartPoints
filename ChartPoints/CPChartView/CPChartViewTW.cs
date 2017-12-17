@@ -3,6 +3,7 @@
 //     Copyright (c) Company.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
+using ChartPoints.CPServices.decl;
 
 namespace ChartPoints
 {

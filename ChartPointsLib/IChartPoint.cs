@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using CP.Code;
+using ChartPoints.CPServices.decl;
+using ChartPoints.CPServices.impl;
 
 namespace ChartPoints
 {
@@ -16,11 +18,11 @@ namespace ChartPoints
 
   public interface IChartPointData
   {
-    bool enabled { get; }
+    bool enabled { get; set; }
     string name { get; }
     string uniqueName { get; }
     string type { get; }
-    EChartPointStatus status { get; }
+    EChartPointStatus status { get; set; }
     ICPLineData lineData { get; }
   }
 

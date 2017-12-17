@@ -11,6 +11,10 @@ using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio;
+using ChartPoints.CPServices.decl;
+using ChartPoints.CPServices.impl;
 
 namespace ChartPoints
 {
@@ -197,9 +201,7 @@ namespace ChartPoints
     public void CreateObserver(IFileChartPoints _fCPs)
     {
       fCPs = _fCPs;
-      if (fCPTagger == null)
-        ;//fCPs = _fCPs;
-      else
+      if (fCPTagger != null)
       {
         if (fCPObserver != null)
           fCPObserver.SetTagger(fCPTagger);
@@ -260,6 +262,24 @@ namespace ChartPoints
         fCPTagObserver.RemoveObserver();
     }
 
+    //private IWpfTextView GetWpfTextView(Microsoft.VisualStudio.TextManager.Interop.IVsTextView vTextView)
+    //{
+    //  IWpfTextView view = null;
+    //  Microsoft.VisualStudio.TextManager.Interop.IVsUserData userData = vTextView as Microsoft.VisualStudio.TextManager.Interop.IVsUserData;
+
+    //  if (null != userData)
+    //  {
+    //    IWpfTextViewHost viewHost;
+    //    object holder;
+    //    Guid guidViewHost = DefGuidList.guidIWpfTextViewHost;
+    //    userData.GetData(ref guidViewHost, out holder);
+    //    viewHost = (IWpfTextViewHost)holder;
+    //    view = viewHost.TextView;
+    //  }
+
+    //  return view;
+    //}
+
     public ITagger<T> CreateTagger<T>(ITextView view, ITextBuffer buffer) where T : ITag
     {
       if (buffer == null)
@@ -269,18 +289,37 @@ namespace ChartPoints
       if (view == null)
         return null;
       //provide highlighting only on the top-level buffer
-      if (view.TextBuffer != buffer)
+      if (view./*TextViewModel.EditBuffer*/TextBuffer != buffer)
         return null;
-      //int height = view.Properties.Item("ActualHeight");
-      //Type _t = typeof(T);
-      //bool b = (typeof(T) == typeof(ChartPointTag));
       if (Globals.dte == null)
         return null;
+      if (!view.Roles.Contains(PredefinedTextViewRoles.Editable))
+        return null;
 
-      //!!! IGNORE NON-PROJECT FILES !!!
       ITextDocument thisTextDoc;
       var rc = view.TextBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out thisTextDoc);
       string fileName = Path.GetFileName(thisTextDoc.FilePath);
+
+      //var dte2 = (EnvDTE80.DTE2)Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(Microsoft.VisualStudio.Shell.Interop.SDTE));
+      //Microsoft.VisualStudio.OLE.Interop.IServiceProvider sp = (Microsoft.VisualStudio.OLE.Interop.IServiceProvider)dte2;
+      //Microsoft.VisualStudio.Shell.ServiceProvider serviceProvider = new Microsoft.VisualStudio.Shell.ServiceProvider(sp);
+      //Microsoft.VisualStudio.Shell.Interop.IVsUIHierarchy uiHierarchy;
+      //uint itemID;
+      //Microsoft.VisualStudio.Shell.Interop.IVsWindowFrame windowFrame;
+      //Microsoft.VisualStudio.Text.Editor.IWpfTextView wpfTextView = null;
+      //if (Microsoft.VisualStudio.Shell.VsShellUtilities.IsDocumentOpen(serviceProvider, thisTextDoc.FilePath, VSConstants.LOGVIEWID.Code_guid,
+      //                                out uiHierarchy, out itemID, out windowFrame))
+      //{
+      //  Microsoft.VisualStudio.TextManager.Interop.IVsTextView vsTextView = Microsoft.VisualStudio.Shell.VsShellUtilities.GetTextView(windowFrame);
+      //  var window = Microsoft.VisualStudio.Shell.VsShellUtilities.GetWindowObject(windowFrame);
+      //  wpfTextView = GetWpfTextView(vsTextView);
+      //  if (wpfTextView != view)
+      //    return null;
+      //}
+      //else
+      //  return null;
+
+      //!!! IGNORE NON-PROJECT FILES !!!
       EnvDTE.Document dteDoc = Globals.dte.Documents.Item(fileName);
       if (dteDoc != null && dteDoc.ProjectItem != null && dteDoc.ProjectItem.ContainingProject != null
         && dteDoc.ProjectItem.ContainingProject.Name != "Miscellaneous Files" && dteDoc.ProjectItem.ContainingProject.UniqueName != "<MiscFiles>")
