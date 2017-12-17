@@ -6,6 +6,7 @@ using CPTracerLib;
 using EnvDTE;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
+using ChartPoints.CPServices.decl;
 
 namespace ChartPoints
 {
@@ -82,7 +83,7 @@ namespace ChartPoints
   class CPTraceHandler
   {
     private CPProcTracer procTracer;
-    private IVsOutputWindowPane outputWindowPane;
+    //private IVsOutputWindowPane outputWindowPane;
     private ICPProcessTracer localProcTracer;
     public ulong id { get; }
 
@@ -94,9 +95,9 @@ namespace ChartPoints
       cpServProv.GetService<ICPTracerService>(out traceServ);
       traceServ.RegProcTracer(_id, name, out localProcTracer);
 
-      Globals.outputWindow.GetPane(Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.DebugPane_guid, out outputWindowPane);
-      if (outputWindowPane != null)
-        outputWindowPane.Activate();
+      //Globals.outputWindow.GetPane(Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.DebugPane_guid, out outputWindowPane);
+      //if (outputWindowPane != null)
+      //  outputWindowPane.Activate();
       if(TraceTransport.GetProcTracer(id, out procTracer))
       {
         procTracer.OnRegElem += RegElem;

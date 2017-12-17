@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChartPoints
+namespace ChartPoints.CPServices.decl
 {
   public delegate void OnCPEvent<T>( T args );
   public abstract class ICPEvent<T>
@@ -32,7 +32,7 @@ namespace ChartPoints
     T prov { get; }
   }
 
-  public interface ICPEventService
+  public interface ICPEventService : ICPService
   {
     IConstructEvents GetConstructEvents();
   }

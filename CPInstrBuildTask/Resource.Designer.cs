@@ -77,9 +77,9 @@ namespace CPInstrBuildTask {
         ///  //int32_t type_id&lt; signed &gt;::id                 = 2;
         ///  //int32_t type_id&lt; signed i [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string @__cp___tracer_cpp {
+        internal static string @__cp___tracer {
             get {
-                return ResourceManager.GetString("__cp___tracer_cpp", resourceCulture);
+                return ResourceManager.GetString("__cp___tracer", resourceCulture);
             }
         }
         
@@ -100,19 +100,15 @@ namespace CPInstrBuildTask {
         ///
         ///namespace cptracer
         ///{
-        ///
+        ///  // variable type id wrapper declaration
         ///  template&lt; typename T &gt; class type_id
         ///  {
         ///  public:
         ///    static int32_t id;
         ///  };
         ///
-        ///  class CPTRACER_DLL_API tracer
-        ///  {
-        ///  public:
-        ///    typedef std::shared_ptr&lt;tracer&gt; tracer_ptr;
-        ///  protected:
-        /// [rest of string was truncated]&quot;;.
+        ///  // common tracer class visible to instrumented code
+        ///  class CPTRACER [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string @__cp___tracer_h {
             get {

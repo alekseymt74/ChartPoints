@@ -31,11 +31,10 @@ using System.Linq;
 namespace ChartPoints
 {
 
-  internal class VsSolutionEvents : IVsSolutionEvents//, IVsSolutionEvents6//, IVsSolutionEvents3, IVsSolutionEvents2, IVsSolutionEvents4
+  internal class VsSolutionEvents : IVsSolutionEvents
   {
     private Package package;
-    //private Microsoft.VisualStudio.OLE.Interop.IStream propsStream;
-    private MemoryStream propsStream;
+    private ICPProps cpProps;
 
     public VsSolutionEvents(Package _package)
     {
@@ -44,32 +43,16 @@ namespace ChartPoints
 
     public void SetPropsStream(Microsoft.VisualStudio.OLE.Interop.IStream _propsStream)
     {
-      DataStreamFromComStream pStream = new DataStreamFromComStream(_propsStream);
-      if (propsStream != null)
-        propsStream = null;
-      propsStream = new MemoryStream();
-      pStream.CopyTo(propsStream);
+      if (cpProps == null)
+        cpProps = new CPProps();
+      cpProps.SetPropsStream(_propsStream);
     }
 
     private bool LoadCPProps()
     {
-      if (propsStream == null || propsStream.Length == 0)
+      if (cpProps == null)
         return false;
-      BinaryFormatter formatter = new BinaryFormatter();
-      formatter.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
-      formatter.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;//!!! while develop !!!
-      propsStream.Position = 0;
-      CPPropsDeSerializator cpPropsDeser;
-      Func<CPPropsDeSerializator> desearalize = () => (CPPropsDeSerializator)formatter.Deserialize(propsStream);
-      if (SynchronizationContext.Current != null)
-      {
-        System.Threading.Tasks.Task.Run(desearalize);
-      }
-      else
-      {
-        cpPropsDeser = desearalize();
-      }
-      //CPPropsDeSerializator cpPropsDeser = (CPPropsDeSerializator)formatter.Deserialize(propsStream/*pStream*/);
+      cpProps.Load();
 
       return true;
     }
@@ -210,404 +193,7 @@ namespace ChartPoints
       return VSConstants.S_OK;
     }
 
-    //public int OnAfterMergeSolution(object pUnkReserved)
-    //{
-    //  return VSConstants.S_OK;
-    //}
-
-    //public int OnAfterRenameProject(IVsHierarchy pHierarchy)
-    //{
-    //  return VSConstants.S_OK;
-    //}
-
-    //public int OnQueryChangeProjectParent(IVsHierarchy pHierarchy, IVsHierarchy pNewParentHier, ref int pfCancel)
-    //{
-    //  return VSConstants.S_OK;
-    //}
-
-    //public int OnAfterChangeProjectParent(IVsHierarchy pHierarchy)
-    //{
-    //  return VSConstants.S_OK;
-    //}
-
-    //public int OnAfterAsynchOpenProject(IVsHierarchy pHierarchy, int fAdded)
-    //{
-    //  return VSConstants.S_OK;
-    //}
-
-    ////public static Guid newProjGuid = new Guid();
-    ////public static string newProjFullPath;
-    //public int OnBeforeProjectRegisteredInRunningDocumentTable(Guid projectID, string projectFullPath)
-    //{
-    //  //newProjGuid = projectID;
-    //  //newProjFullPath = projectFullPath;
-
-    //  return VSConstants.S_OK;
-    //}
-
-    //public int OnAfterProjectRegisteredInRunningDocumentTable(Guid projectID, string projectFullPath, uint docCookie)
-    //{
-    //  return VSConstants.S_OK;
-    //}
-
-    //public int OnBeforeOpeningChildren(IVsHierarchy pHierarchy)
-    //{
-    //  return VSConstants.S_OK;
-    //}
-
-    //public int OnAfterOpeningChildren(IVsHierarchy pHierarchy)
-    //{
-    //  return VSConstants.S_OK;
-    //}
-
-    //public int OnBeforeClosingChildren(IVsHierarchy pHierarchy)
-    //{
-    //  return VSConstants.S_OK;
-    //}
-
-    //public int OnAfterClosingChildren(IVsHierarchy pHierarchy)
-    //{
-    //  return VSConstants.S_OK;
-    //}
   }
-
-  internal class VSUpdateSolEvents : IVsUpdateSolutionEvents3
-  {
-    public int OnAfterActiveSolutionCfgChange(IVsCfg pOldActiveSlnCfg, IVsCfg pNewActiveSlnCfg)
-    {
-      string newConfName;
-      pNewActiveSlnCfg.get_DisplayName(out newConfName);
-      if (newConfName.Contains(" [ChartPoints]"))
-      {
-        //////CPChartViewTWCmd.Instance.Enable(true);
-        //////CPTableViewTWCmd.Instance.Enable(true);
-        //////CPListTWCommand.Instance.Enable(true);
-      }
-      else
-      {
-        string prevConfName;
-        if (pOldActiveSlnCfg != null)
-        {
-          pOldActiveSlnCfg.get_DisplayName(out prevConfName);
-          if (prevConfName.Contains(" [ChartPoints]"))
-          {
-            //////CPChartViewTWCmd.Instance.Enable(false);
-            //////CPTableViewTWCmd.Instance.Enable(false);
-            //////CPListTWCommand.Instance.Enable(false);
-          }
-        }
-      }
-
-      return VSConstants.S_OK;
-    }
-
-    public int OnBeforeActiveSolutionCfgChange(IVsCfg pOldActiveSlnCfg, IVsCfg pNewActiveSlnCfg)
-    {
-      return VSConstants.S_OK;
-    }
-  }
-
-
-  //internal class RunningDocTableEvents : IVsRunningDocTableEvents3
-  //{
-  //  private RunningDocumentTable rdt;
-
-  //  public RunningDocTableEvents(RunningDocumentTable _rdt)
-  //  {
-  //    rdt = _rdt;
-  //  }
-  //  public int OnBeforeSave(uint docCookie)
-  //  {
-  //    return VSConstants.S_OK;
-  //  }
-
-  //  public int OnAfterAttributeChange(uint docCookie, uint grfAttribs) { return VSConstants.S_OK; }
-  //  public int OnAfterAttributeChangeEx(uint docCookie, uint grfAttribs, IVsHierarchy pHierOld,
-  //                                      uint itemidOld, string pszMkDocumentOld, IVsHierarchy pHierNew,
-  //                                      uint itemidNew, string pszMkDocumentNew)
-  //  {
-  //    return VSConstants.S_OK;
-  //  }
-
-  //  public int OnAfterDocumentWindowHide(uint docCookie, IVsWindowFrame pFrame) { return VSConstants.S_OK; }
-  //  public int OnAfterFirstDocumentLock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining)
-  //  {
-  //    return VSConstants.S_OK;
-  //  }
-
-  //  public int OnAfterSave(uint docCookie)
-  //  {
-  //    return VSConstants.S_OK;
-  //  }
-  //  public int OnBeforeDocumentWindowShow(uint docCookie, int fFirstShow, IVsWindowFrame pFrame) { return VSConstants.S_OK; }
-
-  //  public int OnBeforeLastDocumentUnlock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining)
-  //  {
-  //    return VSConstants.S_OK;
-  //  }
-  //}
-
-  //#####################################################################
-
-  sealed class AllowAllAssemblyVersionsDeserializationBinder : System.Runtime.Serialization.SerializationBinder
-  {
-    public override Type BindToType(string assemblyName, string typeName)
-    {
-      //String currentAssembly = Assembly.GetExecutingAssembly().FullName;
-
-      //// In this case we are always using the current assembly
-      //assemblyName = currentAssembly;
-
-      //// Get the type using the typeName and assemblyName
-      //Type typeToDeserialize = Type.GetType(String.Format("{0}, {1}",
-      //    typeName, assemblyName));
-
-      //return typeToDeserialize;
-      //https://techdigger.wordpress.com/2007/12/22/deserializing-data-into-a-dynamically-loaded-assembly/
-      Type typeToDeserialize = null;
-      try
-      {
-        string ToAssemblyName = assemblyName.Split(',')[0];
-        Assembly[] Assemblies = AppDomain.CurrentDomain.GetAssemblies();
-        foreach (Assembly ass in Assemblies)
-        {
-          if (ass.FullName.Split(',')[0] == ToAssemblyName)
-          {
-            typeToDeserialize = ass.GetType(typeName);
-            break;
-          }
-        }
-      }
-      catch (System.Exception exception)
-      {
-        throw exception;
-      }
-
-      return typeToDeserialize;
-    }
-  }
-
-  [Serializable]
-  public class CPPropsDeSerializator : ISerializable
-  {
-    public CPPropsDeSerializator() {}
-    protected CPPropsDeSerializator(SerializationInfo info, StreamingContext context)
-    {
-      //if (Globals.processor == null)
-      //  Globals.processor = factor
-      //Globals.processor.DeserializeProps(info, context);
-      try
-      {
-        UInt32 projsCount = info.GetUInt32("projPoints.Count");
-        for (uint p = 0; p < projsCount; ++p)
-        {
-          //IProjectChartPoints projCPs = null;
-          string projName = info.GetString("projName_" + p.ToString());
-          Globals.processor.RemoveChartPoints(projName);
-          //Globals.processor.AddProjectChartPoints(projName, out projCPs);
-          UInt32 filesCount = info.GetUInt32("filePoints.Count_" + p.ToString());
-          if (filesCount > 0)
-          {
-            IProjectChartPoints projCPs = Globals.processor.GetProjectChartPoints(projName);
-            if (projCPs == null)
-              Globals.processor.AddProjectChartPoints(projName, out projCPs);
-            if (projCPs != null)
-            {
-              for (uint f = 0; f < filesCount; ++f)
-              {
-                string fileName = info.GetString("fileName_" + p.ToString() + f.ToString());
-                IFileChartPoints fPnts = projCPs.AddFileChartPoints(fileName);
-                if (fPnts != null)
-                {
-                  UInt32 linesCount = info.GetUInt32("linePoints.Count_" + p.ToString() + f.ToString());
-                  for (uint l = 0; l < linesCount; ++l)
-                  {
-                    //ITextPosition pos = (ITextPosition)info.GetValue("pos_" + p.ToString() + f.ToString() + l.ToString(), typeof(ITextPosition));
-                    UInt32 lineNum = info.GetUInt32("lineNum_" + p.ToString() + f.ToString() + l.ToString());
-                    UInt32 linePos = info.GetUInt32("linePos_" + p.ToString() + f.ToString() + l.ToString());
-                    ILineChartPoints lPnts = fPnts.AddLineChartPoints(/*pos.*/(int)lineNum, /*pos.*/(int)linePos);
-                    if (lPnts != null)
-                    {
-                      UInt32 cpsCount = info.GetUInt32("cpsPoints.Count_" + p.ToString() + f.ToString() + l.ToString());
-                      for (uint cp = 0; cp < cpsCount; ++cp)
-                      {
-                        IChartPoint chartPnt = null;
-                        string uniqueName = info.GetString("uniqueName_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
-                        bool enabled = info.GetBoolean("enabled_" + p.ToString() + f.ToString() + l.ToString() + cp.ToString());
-                        if (lPnts.AddChartPoint(uniqueName, out chartPnt))
-                          chartPnt.SetStatus(enabled ? EChartPointStatus.SwitchedOn : EChartPointStatus.SwitchedOff);
-                      }
-                    }
-                    if (lPnts.Count == 0)
-                      fPnts.RemoveLineChartPoints(lPnts);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      catch (Exception ex)
-      {
-        Console.WriteLine(ex);
-      }
-    }
-
-    public void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-      info.AddValue("projPoints.Count", (UInt32)Globals.processor.data.projPoints.Count);
-      int p = 0;
-      foreach (IProjectChartPoints projCPs in Globals.processor.data.projPoints)
-      {
-        info.AddValue("projName_" + p.ToString(), projCPs.data.projName);
-        info.AddValue("filePoints.Count_" + p.ToString(), (UInt32)projCPs.filePoints.Count);
-        int f = 0;
-        foreach (IFileChartPoints fileCPs in projCPs.filePoints)
-        {
-          info.AddValue("fileName_" + p.ToString() + f.ToString(), fileCPs.data.fileName);
-          info.AddValue("linePoints.Count_" + p.ToString() + f.ToString(), (UInt32)fileCPs.linePoints.Count);
-          int l = 0;
-          foreach (ILineChartPoints lineCPs in fileCPs.linePoints)
-          {
-            //info.AddValue("pos_" + p.ToString() + f.ToString() + l.ToString(), lineCPs.data.pos, lineCPs.data.pos.GetType());
-            info.AddValue("lineNum_" + p.ToString() + f.ToString() + l.ToString(), (UInt32) lineCPs.data.pos.lineNum);
-            info.AddValue("linePos_" + p.ToString() + f.ToString() + l.ToString(), (UInt32) lineCPs.data.pos.linePos);
-            info.AddValue("cpsPoints.Count_" + p.ToString() + f.ToString() + l.ToString(), (UInt32)lineCPs.chartPoints.Count);
-            int c = 0;
-            foreach (IChartPoint cp in lineCPs.chartPoints)
-            {
-              info.AddValue("uniqueName_" + p.ToString() + f.ToString() + l.ToString() + c.ToString(), cp.data.uniqueName);
-              info.AddValue("enabled_" + p.ToString() + f.ToString() + l.ToString() + c.ToString(), cp.data.enabled);
-              ++c;
-            }
-            ++l;
-          }
-          ++f;
-        }
-        ++p;
-      }
-    }
-  }
-  //#####################################################################
-
-
-  public class CmdEventsHandler
-  {
-    private IVsSolution vsSolution;
-    private CommandEvents cmdEvents;
-    private CommandEvents createProjCmd;
-    private CommandEvents addNewProjCmd;
-    private SortedSet<EnvDTE.Project> beforeAddProjsCont;
-
-    public CmdEventsHandler(IVsSolution _vsSolution)
-    {
-      vsSolution = _vsSolution;
-      cmdEvents = Globals.dte.Events.CommandEvents;
-      string guidVSStd97 = "{5efc7975-14bc-11cf-9b2b-00aa00573819}".ToUpper();
-      createProjCmd = Globals.dte.Events.CommandEvents[guidVSStd97, (int) VSConstants.VSStd97CmdID.NewProject];
-      createProjCmd.BeforeExecute += NewProjCreated_BeforeExecute;
-      createProjCmd.AfterExecute += NewProjCreated_AfterExecute;
-      addNewProjCmd = Globals.dte.Events.CommandEvents[guidVSStd97, (int)VSConstants.VSStd97CmdID.AddNewProject];
-      addNewProjCmd.BeforeExecute += NewProjCreated_BeforeExecute;
-      addNewProjCmd.AfterExecute += NewProjCreated_AfterExecute;
-    }
-
-    private void AddExistingCPPProjs(out SortedSet<EnvDTE.Project> projsCont)
-    {
-      projsCont = null;
-      if (Globals.dte.Solution.Projects.Count > 0)
-      {
-        projsCont = new SortedSet<EnvDTE.Project>(Comparer<EnvDTE.Project>.Create((lh, rh) => (String.Compare(lh.FullName, rh.FullName, StringComparison.Ordinal))));
-        foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-        {
-          if (proj.Kind == "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" && proj.Name != "Miscellaneous Files")
-            projsCont.Add(proj);
-        }
-      }
-    }
-
-    private void NewProjCreated_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
-    {
-      AddExistingCPPProjs(out beforeAddProjsCont);
-    }
-
-    void NewProjCreated_AfterExecute(string Guid, int ID, object CustomIn, object CustomOut)
-    {
-      // if we are here - new project created 
-      string newProjFullName = string.Empty;
-      if (beforeAddProjsCont != null)
-      {
-        if (Globals.dte.Solution.Projects.Count > beforeAddProjsCont.Count)
-        {
-          SortedSet<EnvDTE.Project> afterAddProjsCont;
-          AddExistingCPPProjs(out afterAddProjsCont);
-          if (afterAddProjsCont.Count > beforeAddProjsCont.Count)
-          {
-            IEnumerable<EnvDTE.Project> newProjs = afterAddProjsCont.Except(beforeAddProjsCont);
-            newProjFullName = newProjs.First().FullName;
-          }
-        }
-      }
-      else
-      {
-        foreach (EnvDTE.Project proj in Globals.dte.Solution.Projects)
-        {
-          if (proj.Kind == "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" && proj.Name != "Miscellaneous Files")
-          {
-            newProjFullName = proj.FullName;
-            break;
-          }
-        }
-      }
-      if (newProjFullName != string.Empty)
-      {
-        IVsSolution4 vsSolution4 = vsSolution as IVsSolution4;
-        IVsHierarchy projObj;
-        vsSolution.GetProjectOfUniqueName(newProjFullName, out projObj);
-        System.Guid projGuid = System.Guid.Empty;
-        vsSolution.GetGuidOfProject(projObj, out projGuid);
-        vsSolution4.UnloadProject(projGuid, (uint)_VSProjectUnloadStatus.UNLOADSTATUS_LoadPendingIfNeeded);
-        Globals.orchestrator.Orchestrate(newProjFullName);
-        vsSolution4.ReloadProject(projGuid);
-      }
-
-      /////////////////////////////////////////
-      //Globals.orchestrator.InitSolutionConfigurations();
-      //IVsSolution4 vsSolution4 = GetService(typeof(SVsSolution)) as IVsSolution4;
-      //IVsSolution vsSolution = vsSolution4 as IVsSolution;
-      //IEnumHierarchies hierarchies;
-      //vsSolution.GetProjectEnum((uint)__VSENUMPROJFLAGS.EPF_ALLPROJECTS/*EPF_MATCHTYPE*/, System.Guid.Empty, out hierarchies);
-      //IVsHierarchy[] foundHierarchies = new IVsHierarchy[1];
-      //uint count;
-      //while (hierarchies.Next(1, foundHierarchies, out count) == VSConstants.S_OK && count == 1)
-      //{
-      //  IVsProject vsProj = foundHierarchies[0] as IVsProject;
-      //  EnvDTE.Project proj = null;
-      //  object propProjObj = null;
-      //  foundHierarchies[0].GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_ExtObject, out propProjObj);
-      //  if (propProjObj != null)
-      //    proj = propProjObj as EnvDTE.Project;
-      //  System.Guid projGuid = System.Guid.Empty;
-      //  vsSolution.GetGuidOfProject(foundHierarchies[0], out projGuid);
-      //  if (proj != null && proj.Kind == "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" && proj.Name != "Miscellaneous Files")
-      //  {
-      //    string projName = proj.FullName;
-      //    vsSolution4.UnloadProject(projGuid, (uint)_VSProjectUnloadStatus.UNLOADSTATUS_LoadPendingIfNeeded);
-      //    Globals.orchestrator.Orchestrate(projName);
-      //    vsSolution4.ReloadProject(projGuid);
-      //  }
-      //}
-      ////if (VsSolutionEvents.newProjFullPath != null)
-      ////{
-      ////  vsSolution4.UnloadProject(VsSolutionEvents.newProjGuid, (uint)_VSProjectUnloadStatus.UNLOADSTATUS_LoadPendingIfNeeded);
-      ////  Globals.orchestrator.Orchestrate(VsSolutionEvents.newProjFullPath);
-      ////  vsSolution4.ReloadProject(VsSolutionEvents.newProjGuid);
-      ////}
-    }
-
-  }
-
-  //#####################################################################
 
   /// <summary>
   /// This is the class that implements the package exposed by this assembly.
@@ -645,22 +231,13 @@ namespace ChartPoints
     : Package
     , IVsPersistSolutionOpts
     , IVsSolutionLoadManager
-    , IVsUpdateSolutionEvents2
-    , IVsBuildStatusCallback
   {
-    private ChartPntFactory factory;
+    //private ChartPntFactory factory;
 
     private IVsSolutionBuildManager3 buildManager3;
     private VsSolutionEvents solEvents;
-    //private RunningDocumentTable rdt;
-
-    private IVsSolutionBuildManager2 sbm2;
-    private uint _sbmCookie;
 
     CmdEventsHandler cmdEvsHandler;
-
-    //private SolutionEvents dteSolEvents;
-    //private DTEEvents dteEvents;
 
     /// <summary>
     /// ChartPointsPackage GUID string.
@@ -683,17 +260,9 @@ namespace ChartPoints
     protected override void Initialize()
     {
       base.Initialize();
-
-
-      //ChartPntToggleCmd.Initialize(this);
-      //CPTableViewTWCmd.Initialize(this);
-      //CPChartViewTWCmd.Initialize(this);
-      //CPListTWCommand.Initialize(this);
-
       ICPServiceProvider cpServProv = ICPServiceProvider.GetProvider();
       cpServProv.RegisterService<ICPTracerService>(new CPTracerService());
 
-      //Globals.bmAccessor = GetService(typeof(SVsBuildManagerAccessor)) as IVsBuildManagerAccessor;
       IVsDebugger vsDebugService = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SVsShellDebugger)) as IVsDebugger;
       if (vsDebugService != null)
         cpServProv.RegisterService<ICPDebugService>(new CPDebugService(vsDebugService));
@@ -702,11 +271,10 @@ namespace ChartPoints
       cpServProv.RegisterService<ICPExtension>(extensionServ);
 
       Globals.dte = (DTE)GetService(typeof(DTE));
-      factory = new ChartPntFactoryImpl();
+      //factory = new ChartPntFactoryImpl();
       if(Globals.processor == null)
-        Globals.processor = factory.CreateProcessor();
-      Globals.orchestrator = factory.CreateOrchestrator();
-      Globals.outputWindow = GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+        Globals.processor = CP.Utils.IClassFactory.GetInstance().CreateCPProc();
+      Globals.orchestrator = CP.Utils.IClassFactory.GetInstance().CreateCPOrchestrator();
       IVsSolution vsSolution = GetService(typeof(SVsSolution)) as IVsSolution;
       object objLoadMgr = this;   //the class that implements IVsSolutionManager  
       vsSolution.SetProperty((int)__VSPROPID4.VSPROPID_ActiveSolutionLoadManager, objLoadMgr);
@@ -714,10 +282,6 @@ namespace ChartPoints
       uint solEvsCookie;
       vsSolution.AdviseSolutionEvents(solEvents, out solEvsCookie);
       buildManager3 = GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager3;
-      VSUpdateSolEvents solUpdateEvents = new VSUpdateSolEvents();
-      uint solUpdateEvsCookie;
-      buildManager3.AdviseUpdateSolutionEvents3(solUpdateEvents, out solUpdateEvsCookie);
-      //EnvDTE.DebuggerEvents debugEvents = _applicationObject.Events.DebuggerEvents;
       cmdEvsHandler = new CmdEventsHandler(vsSolution);
 
       string vsixInstPath = extensionServ.GetVSIXInstallPath();
@@ -738,49 +302,6 @@ namespace ChartPoints
           File.Delete(regSrvFName);
         }
       }
-
-      //dteEvents = Globals.dte.Events.DTEEvents;
-      //dteSolEvents = Globals.dte.Events.SolutionEvents;
-      //dteSolEvents.ProjectAdded += DteSolEvents_ProjectAdded;
-
-      //rdt = new RunningDocumentTable(this);
-      //rdt.Advise(new RunningDocTableEvents(rdt));
-
-
-      sbm2 = (IVsSolutionBuildManager2)ServiceProvider.GlobalProvider.GetService(typeof(SVsSolutionBuildManager));
-      sbm2.AdviseUpdateSolutionEvents(this, out _sbmCookie);
-      IVsBuildManagerAccessor3 bma3 = (IVsBuildManagerAccessor3)ServiceProvider.GlobalProvider.GetService(typeof(SVsBuildManagerAccessor));
-      //IVsMSBuildTaskFileManager
-      //IVsBuildManagerAccessor3 vsBuildMgrAcc = GetService(typeof(SVsBuildManagerAccessor)) as IVsBuildManagerAccessor3;
-      //IVsSolutionBuildManager vsSolBuildMgr = GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager;
-    }
-
-    //private void DteSolEvents_ProjectAdded(EnvDTE.Project Project)
-    //{
-    //}
-
-    //private void CmdEvents_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
-    //{
-    //  Command objCommand = Globals.dte.Commands.Item(Guid, ID);
-    //  Debug.WriteLine("CmdEvents_BeforeExecute: " + objCommand.Name);
-    //  if (objCommand.Name == "Debug.Start" || objCommand.Name == "Build.BuildSolution")
-    //  {
-    //    Debug.WriteLine("Debug.Start");
-    //  }
-    //}
-
-    private void OnStartupComplete()
-    {
-      ;
-    }
-
-    private void OnBeginShutdown()
-    {
-      ;
-    }
-    public static void StartEvents(DTE dte)
-    {
-      System.Windows.Forms.MessageBox.Show("Events are attached.");
     }
 
     public int QuerySaveSolutionProps([In] IVsHierarchy pHierarchy, [Out] VSQUERYSAVESLNPROPS[] pqsspSave)//!!! NOT CALLED !!!KKKH
@@ -788,20 +309,16 @@ namespace ChartPoints
       pqsspSave[0] = VSQUERYSAVESLNPROPS./*QSP_HasNoDirtyProps*/QSP_HasDirtyProps;
       return VSConstants.S_OK;
     }
-    public int SaveSolutionProps([In] IVsHierarchy pHierarchy, [In] IVsSolutionPersistence pPersistence)
-    {
-      return VSConstants.S_OK;
-    }
-    public int WriteSolutionProps([In] IVsHierarchy pHierarchy, [In] string pszKey, [In] IPropertyBag pPropBag)
-    {
-      return VSConstants.S_OK;
-    }
 
+    public int SaveSolutionProps([In] IVsHierarchy pHierarchy, [In] IVsSolutionPersistence pPersistence)
+    { return VSConstants.S_OK; }
+    public int WriteSolutionProps([In] IVsHierarchy pHierarchy, [In] string pszKey, [In] IPropertyBag pPropBag)
+    { return VSConstants.S_OK; }
     public int ReadSolutionProps([In] IVsHierarchy pHierarchy, [In] string pszProjectName, [In] string pszProjectMk, [In] string pszKey, [In] int fPreLoad, [In] IPropertyBag pPropBag)
-    {
-      return VSConstants.S_OK;
-    }
+    { return VSConstants.S_OK; }
+
     private readonly string cpSuoKey = "ChartPointsData";
+
     public int SaveUserOptions(IVsSolutionPersistence pPersistence)
     {
       pPersistence.SavePackageUserOpts(this, cpSuoKey);
@@ -822,12 +339,8 @@ namespace ChartPoints
       {
         if (Globals.processor.HasData())
         {
-          DataStreamFromComStream pStream = new DataStreamFromComStream(pOptionsStream);
-          BinaryFormatter formatter = new BinaryFormatter();
-          formatter.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
-          formatter.AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;//!!! while develop !!!
-          formatter.Serialize(pStream, new CPPropsDeSerializator());
-          //formatter.Serialize(pStream, Globals.processor);
+          ICPProps cpProps = new CPProps();
+          cpProps.Save(pOptionsStream);
         }
       }
 
@@ -847,9 +360,7 @@ namespace ChartPoints
     }
 
     public int OnDisconnect()
-    {
-      return VSConstants.S_OK;
-    }
+    { return VSConstants.S_OK; }
 
     public int OnBeforeOpenProject(ref Guid guidProjectID, ref Guid guidProjectType, string pszFileName, IVsSolutionLoadManagerSupport pSLMgrSupport)
     {
@@ -859,73 +370,6 @@ namespace ChartPoints
         Microsoft.Build.Evaluation.Project msbuildProj = Globals.orchestrator.Orchestrate(pszFileName);
       }
 
-      return VSConstants.S_OK;
-    }
-
-    public int UpdateSolution_Begin(ref int pfCancelUpdate)
-    {
-      return VSConstants.S_OK;
-    }
-
-    public int UpdateSolution_Done(int fSucceeded, int fModified, int fCancelCommand)
-    {
-      return VSConstants.S_OK;
-    }
-
-    public int UpdateSolution_StartUpdate(ref int pfCancelUpdate)
-    {
-      return VSConstants.S_OK;
-    }
-
-    public int UpdateSolution_Cancel()
-    {
-      return VSConstants.S_OK;
-    }
-
-    public int OnActiveProjectCfgChange(IVsHierarchy pIVsHierarchy)
-    {
-      return VSConstants.S_OK;
-    }
-
-    private TestLogger cpBuildLogger;
-    private IVsProjectCfg vsProjCfg;
-    private IVsBuildableProjectCfg vsBuildProjCfg;
-    private IVsBuildableProjectCfg2 vsBuildProjCfg2;
-    public int UpdateProjectCfg_Begin(IVsHierarchy pHierProj, IVsCfg pCfgProj, IVsCfg pCfgSln, uint dwAction, ref int pfCancel)
-    {
-      //vsProjCfg = pCfgProj as IVsProjectCfg;
-      //vsProjCfg.get_BuildableProjectCfg(out vsBuildProjCfg);
-      //uint cookie;
-      //vsBuildProjCfg.AdviseBuildStatusCallback(this, out cookie);
-
-      return VSConstants.S_OK;
-    }
-
-    public int UpdateProjectCfg_Done(IVsHierarchy pHierProj, IVsCfg pCfgProj, IVsCfg pCfgSln, uint dwAction, int fSuccess, int fCancel)
-    {
-      return VSConstants.S_OK;
-    }
-
-    public int BuildBegin(ref int pfContinue)
-    {
-      //cpBuildLogger = new TestLogger();
-      ////BuildManager bm = BuildManager.DefaultBuildManager;
-      ////Globals.bmAccessor.RegisterLogger(1, cpBuildLogger);
-      //ProjectCollection.GlobalProjectCollection.UnregisterAllLoggers();
-      //ProjectCollection.GlobalProjectCollection.RegisterLogger(cpBuildLogger);
-      IVsBuildManagerAccessor3 bma3 = (IVsBuildManagerAccessor3)ServiceProvider.GlobalProvider.GetService(typeof(SVsBuildManagerAccessor));
-      //bma3.UnregisterLoggers()
-
-      return VSConstants.S_OK;
-    }
-
-    public int BuildEnd(int fSuccess)
-    {
-      return VSConstants.S_OK;
-    }
-
-    public int Tick(ref int pfContinue)
-    {
       return VSConstants.S_OK;
     }
 

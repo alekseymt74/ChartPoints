@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ChartPoints.CPServices.decl;
+using ChartPoints.CPServices.impl;
 
 namespace ChartPoints
 {

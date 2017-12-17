@@ -71,6 +71,7 @@ class ATL_NO_VTABLE CCPProcTracer :
 
   std::mutex send_trace_queue_mtx;
   std::mutex mtx;
+  std::mutex reg_mtx;
   data_queue< data_ent > data;
   typedef std::vector<TraceEnt> te_data;
   typedef std::shared_ptr< te_data > te_data_ptr;

@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using ChartPoints.CPServices.impl;
+using CP.Utils;
 
 namespace ChartPoints
 {
   //[Serializable]
-  public class ChartPointsProcessorData : IChartPointsProcessorData//, ISerializable
+  public abstract class ChartPointsProcessorData : IChartPointsProcessorData//, ISerializable
   {
     /// <summary>
     /// Container of all chartpoints set in current cpp project
@@ -37,17 +39,18 @@ namespace ChartPoints
     //  }
     //}
   }
+
   /// <summary>
   /// Implementation of IChartPointsProcessor
   /// </summary>
-  [Serializable]
-  public class ChartPointsProcessor : IChartPointsProcessor, ISerializable
+  //[Serializable]
+  public abstract class ChartPointsProcessor : IChartPointsProcessor//, ISerializable
   {
     public IChartPointsProcessorData data { get; set; }
 
     public ChartPointsProcessor()
     {
-      data = new ChartPointsProcessorData();
+      data = CP.Utils.IClassFactory.GetInstance().CreateCPProcData();// new ChartPointsProcessorData();
     }
 
     private ChartPointsProcessor(SerializationInfo info, StreamingContext context)
@@ -62,16 +65,16 @@ namespace ChartPoints
       }
     }
 
-    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-    void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-      info.AddValue(Globals.GetTypeName(data), data, data.GetType());
-      info.AddValue("projPoints.Count", (UInt32)data.projPoints.Count);
-      foreach (IProjectChartPoints projCPs in data.projPoints)
-      {
-        info.AddValue("projPoints", projCPs, projCPs.GetType());
-      }
-    }
+    //[SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+    //void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
+    //{
+    //  info.AddValue(Globals.GetTypeName(data), data, data.GetType());
+    //  info.AddValue("projPoints.Count", (UInt32)data.projPoints.Count);
+    //  foreach (IProjectChartPoints projCPs in data.projPoints)
+    //  {
+    //    info.AddValue("projPoints", projCPs, projCPs.GetType());
+    //  }
+    //}
 
     public IProjectChartPoints GetProjectChartPoints(string projName)
     {
@@ -99,7 +102,7 @@ namespace ChartPoints
       pPnts = GetProjectChartPoints(projName);
       if (pPnts == null)
       {
-        pPnts = ChartPntFactory.Instance.CreateProjectChartPoint(projName);
+        pPnts = CP.Utils.IClassFactory.GetInstance().CreateProjectCPs(projName);
         if(!pPnts.Validate())
         {
           pPnts = null;
@@ -121,12 +124,22 @@ namespace ChartPoints
         IFileChartPoints fCPs = null;
         while ((fCPs = pcp.filePoints.FirstOrDefault()) != null)
         {
-          ILineChartPoints lCPs = null;
-          while ((lCPs = fCPs.linePoints.FirstOrDefault()) != null)
+          if (fCPs.linePoints.Count == 0)
+            pcp.filePoints.Remove(fCPs);
+          else
           {
-            IChartPoint cp = null;
-            while ((cp = lCPs.chartPoints.FirstOrDefault()) != null)
-              lCPs.RemoveChartPoint(cp);
+            ILineChartPoints lCPs = null;
+            while ((lCPs = fCPs.linePoints.FirstOrDefault()) != null)
+            {
+              if (lCPs.chartPoints.Count == 0)
+                fCPs.RemoveLineChartPoints(lCPs);
+              else
+              {
+                IChartPoint cp = null;
+                while ((cp = lCPs.chartPoints.FirstOrDefault()) != null)
+                  lCPs.RemoveChartPoint(cp);
+              }
+            }
           }
         }
         data.projPoints.Remove(pcp);
@@ -161,7 +174,5 @@ namespace ChartPoints
         bool ret = projCPs.Validate();
       }
     }
-
   }
-
 }

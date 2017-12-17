@@ -249,3 +249,4 @@ index.html
 **/*.idb
 **/*.iobj
 **/*.ipdb
+docs/*

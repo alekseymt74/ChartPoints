@@ -14,16 +14,18 @@
 
 namespace cptracer
 {
-
+  // variable type id wrapper declaration
   template< typename T > class type_id
   {
   public:
     static int32_t id;
   };
 
+  // common tracer class visible to instrumented code
   class CPTRACER_DLL_API tracer
   {
   public:
+    // singleton instance of tracer implementation
     typedef std::shared_ptr<tracer> tracer_ptr;
   protected:
     virtual void reg_elem(const char *name, uint64_t id, uint32_t _type_id) = 0;
@@ -31,11 +33,13 @@ namespace cptracer
   public:
     virtual ~tracer();
     static tracer_ptr instance();
+    // registration of tracked variable
     template< typename T >
     static void pub_reg_elem(const char *name, const T &val)
     {
       try
       {
+        // pass generated trace variable information to implementation method
         instance()->reg_elem(name, reinterpret_cast<uint64_t>(&val), cptracer::type_id<T>::id);
       }
       catch (...)

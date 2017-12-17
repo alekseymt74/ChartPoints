@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChartPoints.CPServices.decl;
 
-namespace ChartPoints
+namespace ChartPoints.CPServices.impl
 {
 
   public class CPProcTracer : ICPProcessTracer

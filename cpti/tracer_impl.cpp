@@ -186,6 +186,7 @@ namespace cptracer
 
   void tracer_impl::reg_proc()
   {
+    CoInitializeEx( NULL, COINIT_MULTITHREADED );
     while( reg_thr_active )
     {
       {
@@ -209,6 +210,7 @@ namespace cptracer
       }
       need_reg = false;
     }
+    CoUninitialize();
   }
 
   void tracer_impl::reg_elem( const char *name, uint64_t id, uint32_t _type_id )

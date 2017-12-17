@@ -8,8 +8,9 @@ using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using CPTracerLib;
 using System.Diagnostics;
+using ChartPoints.CPServices.decl;
 
-namespace ChartPoints
+namespace ChartPoints.CPServices.impl
 {
   internal class CPTracerDelegate : ICPTracerDelegate
   {
